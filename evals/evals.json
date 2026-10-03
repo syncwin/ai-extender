@@ -1,0 +1,43 @@
+{
+  "trigger": {
+    "should": [
+      "make me a skill that formats commit messages",
+      "add a connector for Notion to my plugin",
+      "turn this workflow into a Claude plugin",
+      "bump the version of my skill and update the changelog",
+      "audit my plugin before I ship it",
+      "write a hook that blocks edits to .env",
+      "package my extension as a zip for upload",
+      "update my agent so it only reads files"
+    ],
+    "should_not": [
+      "write a poem about plugins",
+      "how do I install npm packages",
+      "summarize this PDF",
+      "fix this CSS bug",
+      "what is the capital of France",
+      "explain how React hooks work",
+      "draft an email to my landlord",
+      "create a spreadsheet of my expenses"
+    ]
+  },
+  "trigger_heldout": {
+    "should": [
+      "I need a plugin that bundles three skills and a Slack connector",
+      "can you review my SKILL.md description, it never triggers",
+      "add a PostToolUse hook to my plugin",
+      "ship my plugin to my team through a private marketplace",
+      "write an agent definition for a code reviewer",
+      "split my giant skill into smaller ones"
+    ],
+    "should_not": [
+      "recommend a good pasta recipe",
+      "debug this Python traceback",
+      "translate this paragraph into French",
+      "what's the weather in Kolkata",
+      "write a cover letter for a marketing job",
+      "explain compound interest"
+    ]
+  },
+  "_note": "Trigger prompt sets for simulate.py. Task cases live in sibling directories in the official `claude plugin eval` layout (prompt.md + graders/)."
+}

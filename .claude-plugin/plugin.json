@@ -1,0 +1,28 @@
+{
+  "name": "ai-extender",
+  "displayName": "AI Extender for Claude",
+  "version": "0.5.0",
+  "description": "Plans, builds, maintains, reviews, and packages Claude extensions: plugins, skills, connectors, agents, hooks, MCP servers, and add-ons, for Claude Code and Cowork. Keeps its GitHub repo in sync.",
+  "author": {
+    "name": "@wasimness",
+    "company": "SyncWin",
+    "email": "support@syncwin.com",
+    "url": "https://syncwin.com"
+  },
+  "homepage": "https://github.com/syncwin/ai-extender",
+  "repository": "https://github.com/syncwin/ai-extender",
+  "license": "MIT",
+  "keywords": [
+    "extension",
+    "skills",
+    "connectors",
+    "plugins",
+    "agents",
+    "hooks",
+    "mcp",
+    "cowork"
+  ],
+  "metadata": {
+    "company": "SyncWin"
+  }
+}

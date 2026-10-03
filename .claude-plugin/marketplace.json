@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "syncwin",
+  "description": "SyncWin extensions for Claude.",
+  "owner": {
+    "name": "SyncWin",
+    "url": "https://syncwin.com"
+  },
+  "plugins": [
+    {
+      "name": "ai-extender",
+      "description": "Plans, builds, maintains, reviews, and packages Claude extensions: plugins, skills, connectors, agents, hooks, MCP servers, and add-ons, for Claude Code and Cowork. Keeps its GitHub repo in sync.",
+      "source": "./",
+      "category": "developer-tools"
+    }
+  ]
+}
