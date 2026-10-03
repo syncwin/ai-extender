@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 0.6.0 — Bare role slugs, mods, themes, directory checks
+
+**Changed (breaking: slugs)**
+- Role skills and agents dropped the repeated plugin name, because Claude Code already namespaces every component as `<plugin>:<name>` (a skill named like its plugin shows as `/<plugin>`): `ai-extender-planner|developer|maintainer|reviewer|packager` became `planner|developer|maintainer|reviewer|packager` (`/ai-extender:planner`, ...), agents `ai-extender-grader|comparator` became `grader|comparator`. The router stays `ai-extender`. Mapping is old to new with the `ai-extender-` prefix removed. The `ai-` prefix rule is gone; generated extensions get bare roles unless the user supplies an acronym (`scaffold_extension.py --prefix`).
+- `standards.md` records the rule: never repeat the plugin name inside a component name.
+
+**Added**
+- `developer/references/mods.md` (hooks modules, events, mods API, limits, admin settings) and `packager/references/directory-checklist.md` (Anthropic directory blocks, holds, scan, submission steps), both verified 2026-10-03.
+- Validator: `modules` checks (H006, H007), theme `base`/`overrides` checks (T003, T004), and `--target directory` (D001-D011: name rules, README of 40+ words, license, system files, symlinks, Windows-safe names, file size and count limits, unpinned launchers, non-https MCP URLs). Self-tests grew to 50.
+- Theme format details (`name`, `base`, `overrides`, `custom:<slug>`) in `components-extra.md`.
+
+**Fixed**
+- The validator reported a mods-only `hooks.json` as an unknown hook event.
+- `docs-sync.md` and `platform-facts.md` no longer list mods, themes, or the directory checklist as unfetched. The terminal-config themes page could not be fetched; theme facts rest on the changelog and secondary sources and say so.
+
+**Known**
+- `claude plugin eval` and `claude plugin validate` have not been run in a real Claude Code install from this build environment.
+
 ## 0.5.0 — Renamed to AI Extender
 
 **Changed (breaking: slugs)**
