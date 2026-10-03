@@ -6,9 +6,9 @@ Apply to this plugin and everything it creates, except items marked *(this plugi
 
 - **Visible names** (plugin, skills, connectors, agents, build outputs): Title Case, or the user's exact name. Brand spellings stay exact (`WordPress`, never `Wordpress`).
 - **Slugs:** kebab-case, lowercase, letters/numbers/hyphens, ≤64 chars, folder = frontmatter `name`. Never rename an existing slug without explicit confirmation.
-- **Skills, agents: role or designation, not activity:** `fswp-developer`, not `fswp-development`. Router slug = plugin slug. *(this plugin)* Skills start with `ai-`.
-- **Platform-neutral prefix** *(this plugin)*: every skill, agent, and the router slug starts with `ai-` (`ai-extender-<role>`); the plugin slug is `ai-extender`; "Claude" appears only in the display name ("AI Extender for Claude"). This avoids the reserved words `claude`/`anthropic` that Anthropic's skill docs bar in uploaded skill names, and lets other platforms be added later by changing the display name and docs, not the slugs.
-- **Acronym prefix** (generated extensions): the user picks it per project (`sw` is only an example); ask once at scoping. Apply to skill/agent/connector/command slugs, code identifiers, option and hook keys, generated file names. Never apply to fixed names (`SKILL.md`, `plugin.json`, `.mcp.json`, `agents/`), official field names, third-party brands, or reserved words. If it would break a rule or tool convention, keep the standard and say so.
+- **Skills, agents: role or designation, not activity:** `developer`, not `development`. Router slug = plugin slug.
+- **Never repeat the plugin name inside a component name** *(this plugin)*. Claude Code namespaces every component as `<plugin>:<name>` (and shows a skill named like its plugin as just `/<plugin>`), so role skills and agents are bare roles: `/ai-extender:planner`, `/ai-extender:developer`, agent `ai-extender:grader`. Repeating the plugin slug gives `/ai-extender:ai-extender-planner`. "Claude" appears only in the display name ("AI Extender for Claude"), never in slugs, so no slug contains the reserved words `claude`/`anthropic` and other platforms can be added by changing the display name and docs.
+- **Acronym prefix** (generated extensions): optional; the user picks it per project (`sw` is only an example) or says none (bare roles, the default); ask once at scoping. A prefix is for names that appear outside their plugin namespace (individually uploaded skills, a shared flat skills folder) or when the user's ecosystem uses one; it is a short acronym, never the plugin slug. When set, apply to skill/agent/connector/command slugs, code identifiers, option and hook keys, generated file names. Never apply to fixed names (`SKILL.md`, `plugin.json`, `.mcp.json`, `agents/`), official field names, third-party brands, or reserved words. If it would break a rule or tool convention, keep the standard and say so.
 - **Never drop `displayName` or other human-facing metadata** without a confirmed technical reason.
 
 ## 2. Download files
@@ -21,7 +21,7 @@ Apply to this plugin and everything it creates, except items marked *(this plugi
 - Ask the user once per new extension (all optional): author, company, contact, license. Set only what's given; omit the rest.
 - Locations: **every skill's** frontmatter `metadata` (`author`, `company`, `version`) plus `license`, and the plugin (`author`, `company`); `plugin.json` `author` object (name, company, email, url) and `keywords`; README; `marketplace.json` `owner.name` for publisher filtering. The company is metadata only: never in names, prefixes, or slugs.
 - *(this plugin and the extensions it ships)* Author `@wasimness` (never "Wasim Akram") and company `SyncWin` on every skill and the plugin; contact `support@syncwin.com`; license MIT.
-- Versions: start at `0.0.1`, semver; rules in `ai-extender-maintainer/references/versioning.md`.
+- Versions: start at `0.0.1`, semver; rules in `maintainer/references/versioning.md`.
 
 ## 4. Third-party material
 
@@ -39,7 +39,7 @@ Broadly useful capabilities are built once, portably, and copied into generated 
 | Scratchpad | `scratchpad.md` | a copy, ending every skill/connector/agent task |
 | Efficiency ladder | router §4 | the same ladder in their router |
 | Lean build | §5b | the same rule in their developer/authoring skill |
-| De-dup and semver | `ai-extender-maintainer/references/versioning.md` | changelog + version discipline |
+| De-dup and semver | `maintainer/references/versioning.md` | changelog + version discipline |
 | Naming, metadata | §1–3 | the same conventions |
 | Security | §5c | the same rules |
 
@@ -69,4 +69,4 @@ Write the least code, text, and files that meet the request. Reuse before creati
 
 ## 6. GitHub (standing rule)
 
-Repo: `syncwin/ai-extender` (this plugin). Keep GitHub current whenever this plugin or an extension built with it changes and GitHub tools are present: commit, tag on version bumps, and remove orphans. Procedure: `ai-extender-packager/references/github.md`. `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Issues go to `support@syncwin.com`.
+Repo: `syncwin/ai-extender` (this plugin). Keep GitHub current whenever this plugin or an extension built with it changes and GitHub tools are present: commit, tag on version bumps, and remove orphans. Procedure: `packager/references/github.md`. `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Issues go to `support@syncwin.com`.

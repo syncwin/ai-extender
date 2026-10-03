@@ -49,7 +49,7 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 ## Agent Skills spec / API constraints (platform docs; re-verify)
 - Upload/API skill `name`: lowercase letters, numbers, hyphens; ≤64 chars; no XML tags; docs bar the words `claude` and `anthropic`. `description`: non-empty, ≤1024 chars on the API.
 - Upload allowed keys: name, description, license, compatibility, metadata, allowed-tools. Keep all skills within that set so they work everywhere.
-- Claude Code plugin skills accept the wider field set; the `claude`-in-name bar is not documented on the Claude Code skills page. *(Project decision: this plugin's slugs use the neutral `ai-` prefix, so none contain reserved words.)*
+- Claude Code plugin skills accept the wider field set; the `claude`-in-name bar is not documented on the Claude Code skills page. *(Project decision: no slug contains a reserved word; "Claude" appears only in the display name. Plugin components are namespaced `plugin:name`, so role skills are bare names.)*
 ## Cowork (from the installed Cowork plugin tooling)
 - Cowork mounts plugins under `mnt/.local-plugins` / `mnt/.plugins`. A `.plugin` file is a zip of the plugin directory contents (root = plugin root). Plugins containing `bin/` are not installed by claude.ai/Cowork.
 
@@ -58,13 +58,18 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 - Surfaces don't sync: claude.ai zip upload (individual), API `/v1/skills` (workspace-wide, code-execution container, no network/pip), Claude Code folders `~/.claude/skills`, `.claude/skills`.
 - Skill bodies reference MCP tools as `ServerName:tool_name`.
 - MCPB: zip with `manifest.json` (spec 0.3; `uv` server type needs 0.4), types node/python/binary/uv, `user_config`, `privacy_policies` required for external services; CLI `@anthropic-ai/mcpb` (`mcpb init`, `mcpb pack`). Plugins may reference `.mcpb`/`.dxt` in `mcpServers`.
-- Plugin runtime components verified: LSP (`.lsp.json`), output styles, monitors (experimental), `bin/` (not installed by claude.ai/Cowork), plugin `settings.json` (only `agent`, `subagentStatusLine`), channels. Not yet fetched: theme and workflow file schemas.
+- Plugin runtime components verified: LSP (`.lsp.json`), output styles, monitors (experimental), `bin/` (not installed by claude.ai/Cowork), plugin `settings.json` (only `agent`, `subagentStatusLine`), channels. Theme and workflow schemas: see the 2026-10-02 and 2026-10-03 additions.
 
 ## Additions 2026-10-02 (plugins/components, workflows, publish, plugin-evals, plugins/org, platform-support, settings, Agent SDK skills)
-- Surface support table, themes/workflows formats, mods: `ai-extender-developer/references/components-extra.md`. Distribution routes, directory, tags/renames, organization policy keys: `ai-extender-packager/references/distribution-routes.md`. Eval format: `ai-extender-developer/references/testing.md`.
+- Surface support table, themes/workflows formats, mods: `developer/references/components-extra.md`. Distribution routes, directory, tags/renames, organization policy keys: `packager/references/distribution-routes.md`. Eval format: `developer/references/testing.md`.
 - `claude plugin validate --strict`, `claude plugin eval` (needs Claude Code ≥2.1.269, git ≥2.31), `claude plugin tag` (`{name}--v{version}`), `--plugin-dir`, `--plugin-url` (zip), `claude plugin update`.
 - Plugin agent files may sit in `agents/` subfolders (scoped `plugin:folder:agent`); supported plugin-agent frontmatter: name, description, model, effort, maxTurns, tools, disallowedTools, skills, memory, background, omitClaudeMd, isolation (worktree), color, experimental.cacheTtl.
 - `.mcp.json` servers: `/mcp` shows `plugin:<plugin>:<server>`; validate checks `.mcp.json` from v2.1.281; `.lsp.json` is NOT read by validate (a bad entry skips the whole file at load).
 - Settings precedence (highest first): managed, command line, project local, shared project, user. Lists merge. `permissions.defaultMode` auto/bypassPermissions ignored from project files.
 - Agent SDK: skills are filesystem artifacts (`.claude/skills/...`), loaded per `settingSources`/`setting_sources` (include `user`/`project`), scoped with the `skills` option (`"all"`, names, `[]`; `plugin:skill` for plugin skills); `plugins` option loads from a path; `/<name>` dispatch works regardless of `skills`.
-- Not yet verified: theme `base` values/override keys, mods reference, claude.com directory checklist pages.
+
+## Additions 2026-10-03 (mods, themes, directory)
+- Mods (Claude Code v2.1.287+): `hooks/hooks.json` `modules` (one path), module exports `register(on, options)`; details in `developer/references/mods.md`. Mods run with Claude Code's machine access.
+- Themes (v2.1.118+): `{name, base, overrides}`; selection stored as `custom:<slug>`; plugins ship themes in `themes/`. Official terminal-config page not fetched: secondary sources only.
+- Directory: portal at claude.ai/directory/manage, Plugin bundle, Validate then scan; blocking and held rules in `packager/references/directory-checklist.md`.
+- Component naming: every component is `<plugin>:<name>`; a skill named like its plugin shows as `/<plugin>`.

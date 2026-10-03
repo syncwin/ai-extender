@@ -3,12 +3,12 @@ name: ai-extender
 description: >
   Entry point and router for AI Extender for Claude. Use whenever the user wants to build, update,
   audit, version, package, or extend a Claude extension: plugin, skill, connector, agent, hook, MCP server, or add-on.
-  Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn this workflow into a
+  Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn this workflow into a Claude
   plugin or skill", "update my plugin", "audit my extension", "bump the version", "package this for Cowork", and
   mentions of /skill-creator, /skill-creator-plus, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:
-  version: 0.5.0
+  version: 0.6.0
   author: "@wasimness"
   company: SyncWin
 ---
@@ -29,15 +29,15 @@ New extension (plugin / skill / connector / agent / MCP / add-on) · Update exis
 
 | Mode | Skills, in order |
 |---|---|
-| New | `ai-extender-planner` → `ai-extender-developer` → `ai-extender-reviewer` → `ai-extender-packager` |
-| Update existing | `ai-extender-maintainer` → `ai-extender-reviewer` → `ai-extender-packager` |
-| Audit | `ai-extender-reviewer` → owning skill for each fix |
-| Convert | `ai-extender-planner` (extract intent) → as New |
+| New | `ai-extender:planner` → `ai-extender:developer` → `ai-extender:reviewer` → `ai-extender:packager` |
+| Update existing | `ai-extender:maintainer` → `ai-extender:reviewer` → `ai-extender:packager` |
+| Audit | `ai-extender:reviewer` → owning skill for each fix |
+| Convert | `ai-extender:planner` (extract intent) → as New |
 
 - Skip stages the request doesn't need; never chain by default.
-- User explicitly says the extension may be **publicly released on the marketplaces** → `ai-extender-packager/references/release.md`. Never raise it yourself.
+- User explicitly says the extension may be **publicly released on the marketplaces** → `packager/references/release.md`. Never raise it yourself.
 - Corrections stay in the active skill. Re-route only for an unrelated new build.
-- Cowork `.plugin` output and customizing: `ai-extender-packager/references/cowork.md`.
+- Cowork `.plugin` output and customizing: `packager/references/cowork.md`.
 
 ## 4. Efficiency ladder
 
