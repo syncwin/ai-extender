@@ -2,6 +2,28 @@
 
 Newest first.
 
+## 0.10.0: Companion prompts, metadata, pre-release hardening
+
+Pre-release. 1.0 waits for the final self-audit from a real install.
+
+**Added**
+- Companion prompt for every extension. `claude-packager/scripts/companion_prompt.py` writes a Prompt Builder JSON (`prompts/<title-slug>.json`, format `prompt-builder-plain` 2.0) from the manifest or from a spec, checks it, and copies it next to the package. The packager runs it on every build and stops on a broken prompt; the scaffolder writes a default one. Rules in `ai-extender/references/companion-prompt.md`, checked against the Prompt Builder help center and two real exports.
+- AI Extender's own companion prompt: `prompts/ai-extender-for-claude.json` (goal, request, audience, surface, files).
+- Validator: companion prompt checks (`C000`-`C003`) and version consistency between the manifest, its metadata, and every skill (`P015`, `S015`).
+- Router: how to find the bundled scripts when `${CLAUDE_SKILL_DIR}` is not substituted (Cowork, claude.ai), and what to do with no Python or shell.
+- Eight self-tests (58 in total): prompt written by the scaffolder, four broken-prompt cases, spec rewrite keeping the prompt `id`, prompt copied beside the package, no bytecode left in a checked plugin.
+
+**Changed**
+- Metadata everywhere: `plugin.json` has author `@wasimness` with company `SyncWin`, and a `metadata` block with display name, version, author, company, homepage, repository, license, and the companion prompt path. Every skill and agent carries `displayName`, `version`, `author`, `company`, and `plugin`. Generated extensions get the same keys from the scaffolder.
+- Planner shows the companion prompt's fields in the one plan approval; developer writes them; reviewer checks them; maintainer refreshes them when skills change (keeping the prompt `id`).
+- Scaffolded plugins get a README that passes the directory's 40-word rule (install, companion prompt, disclosure sections), a plain `## 0.0.1: <date>` changelog heading, and no placeholder author name.
+- GitHub procedure: attach the companion prompt to releases and label assets, since GitHub turns spaces in asset names into dots.
+
+**Fixed**
+- The validator left `__pycache__` inside the plugin it checked once it began importing the prompt checker; bytecode writing is now off.
+- Scaffold usage example suggested a `claude-` slug, which claude.ai and the API reject for uploaded skills.
+- The short-README self-test relied on the scaffold's README being short.
+
 ## 0.9.0: Public launch
 
 **Added**

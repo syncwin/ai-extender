@@ -9,14 +9,16 @@ description: >
   Cowork", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:
-  version: 0.9.0
+  displayName: "AI Extender for Claude"
+  version: 0.10.0
   author: "@wasimness"
   company: SyncWin
+  plugin: ai-extender
 ---
 
 # AI Extender for Claude
 
-Router only. Standards for every extension built or changed: `references/standards.md`. Platform layering: `references/platforms.md`; agent logic shared across platforms: `references/agent-protocols.md`.
+Router only. Standards for every extension built or changed: `references/standards.md`. Platform layering: `references/platforms.md`; agent logic shared across platforms: `references/agent-protocols.md`; the Prompt Builder companion prompt every extension ships: `references/companion-prompt.md`.
 
 ## 0. Start simple
 
@@ -31,6 +33,8 @@ The user should never need to know what a manifest, frontmatter, or MCP is. Talk
 ## 1. Environment (detect, never ask)
 
 Cowork if `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d 2>/dev/null` returns anything or a Cowork session is active. Otherwise standard (Claude Code, claude.ai, API).
+
+**Bundled scripts** live in this plugin's `skills/<skill>/scripts/` and need Python 3. Where `${CLAUDE_SKILL_DIR}` or `${CLAUDE_PLUGIN_ROOT}` is not substituted (it stays literal), find the plugin once with `find / -path '*/skills/claude-reviewer/scripts/validate_extension.py' -not -path '*/proc/*' 2>/dev/null | head -1` and use that folder for the rest of the session. No Python or no shell: do the checks by reading the files against the same rules and say the scripts did not run.
 
 ## 2. Mode (infer; ask one question only if unclear)
 
@@ -67,7 +71,7 @@ Cowork if `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d 2>/dev/null`
 
 ## 5. Finish
 
-Hand over the result first (file, install steps in two or three lines, one example prompt to try), then one scratchpad per `references/scratchpad.md`.
+Hand over the result first: the file, install steps in two or three lines, the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. Then one scratchpad per `references/scratchpad.md`.
 
 ## Absorbed skills
 

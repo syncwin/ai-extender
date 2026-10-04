@@ -5,7 +5,8 @@ Usage: package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-valida
   plugin: zip with the plugin root as archive root, extension .plugin (Cowork)
   zip:    zip with the extension folder as the top-level entry (skill upload, manual install)
 Filename: "<Visible Name> v<version>.<ext>" (displayName / skill title + metadata.version).
-Builds in a temp dir, then copies to --out (default ./dist).
+Always creates or checks the Prompt Builder companion prompt (prompts/<title-slug>.json, via companion_prompt.py)
+and copies it next to the package. Builds in a temp dir, then copies to --out (default ./dist).
 """
 import json, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
@@ -54,6 +55,10 @@ def main(argv):
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
     kind, visible, version = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
+    cp = Path(__file__).resolve().parent / "companion_prompt.py"
+    if cp.exists():
+        r = subprocess.run([sys.executable, str(cp), str(root), "--out", str(out)], capture_output=True, text=True)
+        if r.returncode != 0: print(r.stdout + r.stderr); print("Companion prompt failed: fix it, then package again."); return 1
     if not skip:
         v = Path(__file__).resolve().parents[2] / "claude-reviewer" / "scripts" / "validate_extension.py"
         if v.exists():
@@ -71,7 +76,7 @@ def main(argv):
         shutil.copyfile(tmp, dest)
     with zipfile.ZipFile(dest) as z:
         n = len(z.namelist())
-    print(f"### Scratchpad — Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|\n| File | `{dest}` |\n| Entries | {n} |\n| Version | {version} |")
+    print(f"### Scratchpad — Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|\n| File | `{dest}` |\n| Entries | {n} |\n| Version | {version} |\n| Companion prompt | `prompts/` checked and copied into `{out}` |")
     return 0
 
 if __name__ == "__main__":

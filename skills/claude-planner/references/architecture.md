@@ -7,6 +7,7 @@
 ├── .claude-plugin/plugin.json     # manifest (marketplace.json here too if private marketplace)
 ├── skills/<role-slug>/SKILL.md    # router = <plugin-slug>; + references/ scripts/ assets/
 ├── agents/*.md   hooks/hooks.json   .mcp.json   commands/ (legacy only)
+├── prompts/<title-slug>.json      # Prompt Builder companion prompt (always)
 ├── README.md  CHANGELOG.md  LICENSE
 ```
 
@@ -52,4 +53,4 @@ Component support differs by surface (agents, hooks, local MCP, LSP, `bin/` do n
 
 ## Output
 
-Confirmed tree, skill list with one-line roles, draft `plugin.json`. Loop back only if authoring shows a boundary was wrong.
+Confirmed tree, skill list with one-line roles, draft `plugin.json`, and the companion prompt's fields (3 to 6, per `ai-extender/references/companion-prompt.md` §4). Loop back only if authoring shows a boundary was wrong.

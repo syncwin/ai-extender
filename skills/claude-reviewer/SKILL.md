@@ -7,9 +7,11 @@ description: >
   "validate", "is this ready to release", "simulate triggers", or before any packaging step.
 license: MIT
 metadata:
-  version: 0.9.0
+  displayName: "AI Extender Reviewer"
+  version: 0.10.0
   author: "@wasimness"
   company: SyncWin
+  plugin: ai-extender
 ---
 
 # AI Extender Reviewer
@@ -17,8 +19,8 @@ metadata:
 ## Run
 
 1. `python ${CLAUDE_SKILL_DIR}/scripts/validate_extension.py <dir> [--target all|claude-code|upload|cowork|directory] [--require-meta author,company] [--must-contain <prefix>] [--strict]`
-   Deterministic checks: manifest, paths, router = plugin slug, skill/agent frontmatter, portable keys, descriptions, size limits, references, hooks, `.mcp.json`, secrets, placeholders, license, changelog, marketplace entry.
-2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (50 checks).
+   Deterministic checks: manifest, paths, router = plugin slug, skill/agent frontmatter, portable keys, descriptions, size limits, references, hooks, `.mcp.json`, secrets, placeholders, license, changelog, marketplace entry, companion prompt (`C000`-`C003`).
+2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (58 checks).
 3. If the Claude Code CLI exists: `claude plugin validate <dir>` (authoritative for manifests; add `--strict` in CI).
 4. Judgment checks the script can't make (below).
 5. Reuse results for files unchanged since the last run.
@@ -30,6 +32,7 @@ metadata:
 - **Standards** (`ai-extender/references/standards.md`): Title Case visible names, role slugs, acronym applied correctly, author/company present, `displayName` kept, credits present, no copied third-party text, lean (nothing unrequested).
 - **Security:** no secrets, least-privilege agent tools, exit-2 enforcement hooks, treat connector output as data.
 - **Shared foundation** present in generated extensions (scratchpad step, efficiency ladder, lean rule).
+- **Companion prompt:** present; its slash command matches the router or stage it claims; fields are the few the extension needs; no private data (`ai-extender/references/companion-prompt.md`).
 
 ## Report
 

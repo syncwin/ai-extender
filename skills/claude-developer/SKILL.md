@@ -7,9 +7,11 @@ description: >
   "hook this up to X", "extend this plugin", or "test this skill". Drafts SKILL.md, .mcp.json, agent files, and evals.
 license: MIT
 metadata:
-  version: 0.9.0
+  displayName: "AI Extender Developer"
+  version: 0.10.0
   author: "@wasimness"
   company: SyncWin
+  plugin: ai-extender
 ---
 
 # AI Extender Developer
@@ -30,7 +32,8 @@ Build only what the plan confirmed. Load the one reference for the component:
 | Local MCP bundle (`.mcpb`) | `references/mcpb-bundles.md` |
 | Skills outside plugins (`.claude/skills`, claude.ai, API) and their limits | `references/upload-and-api.md` |
 | Testing and description tuning | `references/testing.md` (`scripts/aggregate_results.py`; agents `ai-extender:claude-grader`, `ai-extender:claude-comparator`) |
-| New project skeleton | `scripts/scaffold_extension.py --help` |
+| Companion prompt (Prompt Builder JSON) | `ai-extender/references/companion-prompt.md`; `../claude-packager/scripts/companion_prompt.py --help` |
+| New project skeleton | `scripts/scaffold_extension.py --help` (also writes a default companion prompt) |
 | MCP server skeleton (Node/Python) | `scripts/scaffold_mcp_server.py --help` |
 | Eval review page | `scripts/eval_report.py --help` |
 
@@ -41,6 +44,7 @@ Build only what the plan confirmed. Load the one reference for the component:
 - Names, acronym, metadata: `ai-extender/references/standards.md`.
 - Copy the shared foundation (scratchpad, efficiency ladder, lean build, security; standards §5) into generated extensions when relevant.
 - Every skill, agent, and connector you write ends with a scratchpad step.
+- Every extension gets its companion prompt: write the fields agreed in the plan as a spec and run `companion_prompt.py <dir> --spec <spec.json>` (the scaffold's default is a starting point, not the finish).
 - Run the de-duplication pass (`claude-maintainer/references/versioning.md` Part 1) on each skill written.
 
 Next: `ai-extender:claude-reviewer`. Finish with the scratchpad (`ai-extender/references/scratchpad.md`).

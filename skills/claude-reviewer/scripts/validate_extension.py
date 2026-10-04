@@ -288,6 +288,25 @@ def check_directory(root, m, name):
         for cfg in (".npmrc", "bunfig.toml", "uv.toml"):
             if (root / cfg).exists(): add("error", "D008", root / cfg, "package-source config next to a launcher")
 
+def check_prompts(root):
+    """Prompt Builder companion prompt (prompts/*.json): created by claude-packager/scripts/companion_prompt.py."""
+    pd = root / "prompts"
+    files = sorted(pd.glob("*.json")) if pd.is_dir() else []
+    if not files:
+        add("info", "C000", root, "no companion prompt in prompts/: the packager creates one (companion_prompt.py)"); return
+    try:
+        sys.dont_write_bytecode = True  # never leave __pycache__ inside the plugin being checked
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "claude-packager" / "scripts"))
+        from companion_prompt import check as cp_check
+    except ImportError:
+        add("info", "C000", pd, "companion prompt checker not found; skipped"); return
+    for f in files:
+        d = load_json(f, "C001")
+        if d is None: continue
+        E, W = cp_check(d)
+        for e in E: add("error", "C002", f, e)
+        for w in W: add("warn", "C003", f, w)
+
 def check_plugin(root, opts):
     pj = root / ".claude-plugin" / "plugin.json"
     m = load_json(pj, "P001")
@@ -324,12 +343,20 @@ def check_plugin(root, opts):
     if name and sdirs and not (sk / name / "SKILL.md").exists(): add("warn", "P009", sk, f"no router skill named '{name}' (router slug must equal plugin slug)")
     md_files = [p for p in root.rglob("*.md") if ".git" not in p.parts and not p.is_symlink() and p.name != "CHANGELOG.md"]
     for d in sdirs: check_skill(d, opts, md_files)
+    meta = m.get("metadata") if isinstance(m.get("metadata"), dict) else {}
+    if meta.get("version") and meta["version"] != v: add("warn", "P015", pj, f"metadata.version {meta['version']} != version {v}")
+    if meta.get("displayName") and m.get("displayName") and meta["displayName"] != m["displayName"]: add("warn", "P015", pj, "metadata.displayName differs from displayName")
+    for d in sdirs:
+        fm, _ = parse_frontmatter(read(d / "SKILL.md") or "")
+        sv = (fm or {}).get("metadata", {}).get("version") if isinstance((fm or {}).get("metadata"), dict) else None
+        if sv and v and sv != v: add("warn", "S015", d / "SKILL.md", f"metadata.version {sv} != plugin version {v} (move them together)")
     if (root / "agents").exists():
         for f in (root / "agents").rglob("*.md"): check_agent(f)
     if (root / "hooks" / "hooks.json").exists(): check_hooks(root / "hooks" / "hooks.json")
     if (root / ".mcp.json").exists(): check_mcp(root / ".mcp.json")
     if isinstance(m.get("mcpServers"), dict): check_mcp(pj, m["mcpServers"])
     check_extras(root, m)
+    check_prompts(root)
     if opts["target"] == "directory": check_directory(root, m, name)
     if (root / "CLAUDE.md").exists(): add("warn", "P010", root, "root CLAUDE.md is not loaded; put instructions in a skill")
     if (root / "bin").exists(): add("error" if opts["target"] == "cowork" else "warn", "P011", root / "bin", "claude.ai/Cowork do not install plugins containing bin/")
@@ -370,7 +397,7 @@ def main(argv):
     root = Path(args[0]).resolve()
     if not root.is_dir(): print(f"not a directory: {root}"); return 2
     if (root / ".claude-plugin" / "plugin.json").exists(): kind = "plugin"; check_plugin(root, opts)
-    elif (root / "SKILL.md").exists(): kind = "skill"; check_skill(root, opts, [p for p in root.rglob("*.md")])
+    elif (root / "SKILL.md").exists(): kind = "skill"; check_skill(root, opts, [p for p in root.rglob("*.md")]); check_prompts(root)
     else: print(f"not a plugin or skill directory: {root}"); return 2
     F[:] = list(dict.fromkeys(F))
     E = [f for f in F if f[0] == "error"]; W = [f for f in F if f[0] == "warn"]; I = [f for f in F if f[0] == "info"]

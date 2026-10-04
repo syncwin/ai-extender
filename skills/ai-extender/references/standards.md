@@ -15,12 +15,13 @@ Apply to this plugin and everything it creates, except items marked *(this plugi
 
 - Filename = visible name + ` v<version>` (e.g. `AI Extender for Claude v0.0.1.plugin`).
 - Format: the officially required one (Cowork → `.plugin`; single-skill upload → `.zip`). ZIP only when none is required.
+- Companion prompt: `<title-slug>.json` (Prompt Builder's own naming), delivered next to the package and kept in `prompts/` (`companion-prompt.md`).
 
 ## 3. Metadata
 
 - Ask the user once per new extension (all optional): author, company, contact, license. Set only what's given; omit the rest.
-- Locations: **every skill's** frontmatter `metadata` (`author`, `company`, `version`) plus `license`, and the plugin (`author`, `company`); `plugin.json` `author` object (name, company, email, url) and `keywords`; README; `marketplace.json` `owner.name` for publisher filtering. The company is metadata only: never in names, prefixes, or slugs.
-- *(this plugin)* Author `@wasimness` and company `SyncWin` on every skill and the plugin; contact `support@syncwin.com`; license MIT. Never copy this plugin's author, company, contact, or repository into an extension built for a user: theirs carries only what they supply.
+- Locations: **every skill's** frontmatter `metadata` (`displayName`, `version`, `author`, `company`) plus `license`; every agent's frontmatter `metadata` (same keys); `plugin.json`: `displayName`, `version`, `author` object (name, company, email, url), `keywords`, and a `metadata` block repeating `displayName`, `version`, `author`, `company` (plus `homepage`, `repository`, `license` when real) so every surface that shows free-form metadata has them; README; `marketplace.json` `owner.name` for publisher filtering. `author.company` and the metadata keys are not in the official schema: Claude Code accepts them (validated with `claude plugin validate --strict`) and they cost nothing. The company is metadata only: never in names, prefixes, or slugs.
+- *(this plugin)* Author `@wasimness` and company `SyncWin` on the plugin, every skill, and every agent; display name `AI Extender for Claude`; contact `support@syncwin.com`; license MIT. Never copy this plugin's author, company, contact, or repository into an extension built for a user: theirs carries only what they supply.
 - Versions: start at `0.0.1`, semver; rules in `claude-maintainer/references/versioning.md`.
 
 ## 4. Third-party material
@@ -42,6 +43,7 @@ Broadly useful capabilities are built once, portably, and copied into generated 
 | De-dup and semver | `claude-maintainer/references/versioning.md` | changelog + version discipline |
 | Naming, metadata | §1–3 | the same conventions |
 | Security | §5c | the same rules |
+| Companion prompt | `companion-prompt.md` | a Prompt Builder JSON that starts the extension |
 
 Same quality bar, architecture, and standards for this plugin and its output.
 

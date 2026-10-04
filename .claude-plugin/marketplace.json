@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "ai-extender",
-      "description": "Describe what you want Claude to do, and AI Extender plans, builds, checks, and packages it: skills, plugins, connectors, agents, hooks, MCP servers, add-ons, and internal tools for your team. Works in Claude Code and Cowork.",
+      "description": "Describe what you want Claude to do, and AI Extender plans, builds, checks, and packages it: skills, plugins, connectors, agents, hooks, MCP servers, add-ons, and internal tools for your team, each with a ready-to-import Prompt Builder companion prompt. Works in Claude Code and Cowork.",
       "source": "./",
       "category": "developer-tools"
     }

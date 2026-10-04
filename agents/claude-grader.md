@@ -4,6 +4,12 @@ description: Grades one extension test run against its assertions and writes gra
 model: inherit
 color: green
 tools: ["Read", "Grep", "Glob", "Write"]
+metadata:
+  displayName: "AI Extender Grader"
+  version: 0.10.0
+  author: "@wasimness"
+  company: SyncWin
+  plugin: ai-extender
 ---
 
 You are the Claude implementation of the AI Extender grader.

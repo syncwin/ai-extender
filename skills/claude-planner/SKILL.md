@@ -8,9 +8,11 @@ description: >
   extension need"; and any structural decision.
 license: MIT
 metadata:
-  version: 0.9.0
+  displayName: "AI Extender Planner"
+  version: 0.10.0
   author: "@wasimness"
   company: SyncWin
+  plugin: ai-extender
 ---
 
 # AI Extender Planner
@@ -18,7 +20,7 @@ metadata:
 1. **Scope:** `references/scoping.md`. Reuse context; ask only real gaps.
 2. **Design:** `references/architecture.md`. Include only confirmed components.
 3. **Lean check:** for every planned file or component ask "does the request need this?" Cut the rest; report `skipped: X, add when Y`.
-4. **One approval:** show the plan in plain words (what it does, what gets built, how it's installed, anything skipped) and wait for a yes. This is the only approval gate before building.
+4. **One approval:** show the plan in plain words (what it does, what gets built, how it's installed, the companion prompt's form fields, anything skipped) and wait for a yes. This is the only approval gate before building.
 5. **Hand off** to `ai-extender:claude-developer`. Names, acronym, metadata, licensing: `ai-extender/references/standards.md`.
 
 Finish with the scratchpad (`ai-extender/references/scratchpad.md`).

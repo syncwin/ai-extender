@@ -4,6 +4,12 @@ description: Blind-compares two outputs for the same task (labeled A and B) and 
 model: inherit
 color: blue
 tools: ["Read", "Grep", "Glob"]
+metadata:
+  displayName: "AI Extender Comparator"
+  version: 0.10.0
+  author: "@wasimness"
+  company: SyncWin
+  plugin: ai-extender
 ---
 
 You are the Claude implementation of the AI Extender comparator.

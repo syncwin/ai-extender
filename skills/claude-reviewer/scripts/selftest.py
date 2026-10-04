@@ -83,7 +83,7 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(V, mk("mod-missing", {"hooks/hooks.json": '{"modules": ["./register.js"]}'})); check("rejects missing hooks module", r.returncode == 1 and "H006" in r.stdout, r.stdout[-200:])
     r = RUN(V, mk("mod-two", {"hooks/hooks.json": '{"modules": ["./a.js", "./b.js"]}'})); check("rejects more than one module path", r.returncode == 1 and "H006" in r.stdout, r.stdout[-200:])
     r = RUN(V, mk("theme-base", {"themes/t.json": '{"name":"x","base":7}'})); check("rejects non-string theme base", r.returncode == 1 and "T003" in r.stdout, r.stdout[-200:])
-    r = RUN(V, mk("dir-short", {}), "--target", "directory"); check("directory: short README blocks", r.returncode == 1 and "D002" in r.stdout, r.stdout[-200:])
+    r = RUN(V, mk("dir-short", {"README.md": "# Demo\n\nToo short.\n"}), "--target", "directory"); check("directory: short README blocks", r.returncode == 1 and "D002" in r.stdout, r.stdout[-200:])
     long_readme = "# Demo\n\n" + " ".join(["word"] * 60) + "\n"
     r = RUN(V, mk("dir-ok", {"README.md": long_readme}), "--target", "directory"); check("directory: clean fixture passes", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("dir-npx", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"command":"npx","args":["-y","some-pkg@latest"]}}}'}), "--target", "directory"); check("directory: unpinned npx blocks", r.returncode == 1 and "D007" in r.stdout, r.stdout[-200:])
@@ -91,11 +91,27 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(V, mk("dir-sys", {"README.md": long_readme, ".DS_Store": "x"}), "--target", "directory"); check("directory: system file blocks", r.returncode == 1 and "D004" in r.stdout, r.stdout[-200:])
     r = RUN(V, mk("dir-http", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"type":"http","url":"http://example.com/mcp"}}}'}), "--target", "directory"); check("directory: non-https MCP url blocks", r.returncode == 1 and "D009" in r.stdout, r.stdout[-200:])
 
+    CP = S / "claude-packager/scripts/companion_prompt.py"
+    pf = p / "prompts" / "ab-demo.json"
+    check("scaffold writes companion prompt", pf.exists() and RUN(CP, "--check", pf).returncode == 0, str(list((p / "prompts").glob("*")) if (p / "prompts").exists() else "no prompts/"))
+    def bad_prompt(label, mutate):
+        q = td / ("cp-" + label); shutil.copytree(p, q); f = q / "prompts" / "ab-demo.json"
+        d = json.loads(f.read_text()); mutate(d["prompts"][0]); f.write_text(json.dumps(d))
+        r = RUN(V, q); check(f"catches prompt {label}", r.returncode == 1 and "C002" in r.stdout, r.stdout[-300:])
+    bad_prompt("unused variable", lambda pr: pr["variables"].update({"extra": {"type": "Textarea", "label": "X", "placeholder": "", "context": "", "maxLength": 10, "required": False, "options": ""}}))
+    bad_prompt("missing variable", lambda pr: pr.update({"content": pr["content"] + " {{nope}}"}))
+    bad_prompt("unknown field type", lambda pr: pr["variables"]["task"].update({"type": "Dropdown"}))
+    bad_prompt("radio without options", lambda pr: pr["variables"]["files"].update({"type": "Radio", "options": ""}))
+    q = td / "cp-spec"; shutil.copytree(p, q); (q / "spec.json").write_text(json.dumps({"content": "Run /ab-demo for {{client}}.", "variables": {"client": {"type": "Textarea", "label": "Client", "maxLength": 80, "required": True, "context": "Who it's for"}}}))
+    r = RUN(CP, q, "--spec", q / "spec.json"); d = json.loads((q / "prompts/ab-demo.json").read_text())
+    check("companion prompt from spec keeps id and escapes context", r.returncode == 0 and d["prompts"][0]["id"] == json.loads(pf.read_text())["prompts"][0]["id"] and "&#x27;" in d["prompts"][0]["variables"]["client"]["context"], r.stdout[-300:])
+    check("validator leaves no bytecode in the plugin", not list(S.parent.rglob("__pycache__")), str(list(S.parent.rglob("__pycache__"))))
     for fmt in ("plugin", "zip"):
         r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", fmt, "--out", td / "out")
         ext = ".plugin" if fmt == "plugin" else ".zip"
         f = td / "out" / f"AB Demo v0.0.1{ext}"
         check(f"package {fmt}", r.returncode == 0 and f.exists(), r.stdout + r.stderr)
+        if fmt == "plugin": check("packager copies companion prompt beside the package", (td / "out" / "ab-demo.json").exists())
         if f.exists():
             names = zipfile.ZipFile(f).namelist()
             check(f"{fmt} archive root", (".claude-plugin/plugin.json" in names) if fmt == "plugin" else ("ab-demo/.claude-plugin/plugin.json" in names))

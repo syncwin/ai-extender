@@ -10,7 +10,7 @@ Common first steps: read all files; run the validator for a baseline (`ai-extend
 | **Connector** | edit `.mcp.json`; update assignment table and README data-handling; re-check tool names in `allowed-tools`/agent `tools`/hook matchers | literal secrets; credential env vars in remote URLs; renamed server key changes every tool name |
 | **Agent** | edit frontmatter/body | plugin agents ignore `permissionMode`, `mcpServers`, `hooks`; `name` has no `:` |
 | **Hook** | edit `hooks/hooks.json`/scripts | enforcement needs exit 2; exec form; parallel execution |
-| **Plugin** | add/remove components, keep router = plugin slug, update manifest, README, changelog | `commands`/`agents` keys replace defaults; `version` pins users until bumped; `bin/` blocks Cowork |
+| **Plugin** | add/remove components, keep router = plugin slug, update manifest, README, changelog, and the companion prompt when skills, stages, or inputs change (keep its `id`) | `commands`/`agents` keys replace defaults; `version` pins users until bumped; `bin/` blocks Cowork |
 | **Add-on** | re-verify against the new base version; adjust `dependencies` range | never edit the base |
 | **Cowork plugin with `~~placeholders`** | replace each `~~name` with the user's real value, grouped by theme, from the user's answers and connected sources | never expose `~~` to the user; never rename the plugin/skills; treat `commands/*.md` like skills; for our own plugins use `userConfig` instead |
 

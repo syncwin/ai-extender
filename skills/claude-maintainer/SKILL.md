@@ -7,9 +7,11 @@ description: >
   production", "bump the version", "add a changelog entry", "migrate", or "customize this Cowork plugin".
 license: MIT
 metadata:
-  version: 0.9.0
+  displayName: "AI Extender Maintainer"
+  version: 0.10.0
   author: "@wasimness"
   company: SyncWin
+  plugin: ai-extender
 ---
 
 # AI Extender Maintainer

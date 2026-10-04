@@ -1,8 +1,8 @@
 # AI Extender for Claude
 
-Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install. You don't need to know what a manifest or an MCP server is.
+Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Version** 0.9.0 · **Publisher** SyncWin · **Maintainer** @wasimness · **Contact** support@syncwin.com · **License** MIT
+**Version** 0.10.0 (pre-release) · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -19,7 +19,7 @@ It also updates, audits, versions, and packages extensions you already have.
 1. Install the plugin (below).
 2. Type `/ai-extender`, or just describe what you want: "make a skill that turns my meeting notes into action items."
 3. Answer the few questions only you can answer, usually who will use it and where.
-4. Approve the short plan. AI Extender builds it, checks it, and gives you the file plus install steps.
+4. Approve the short plan. AI Extender builds it, checks it, and gives you the file, install steps, and its companion prompt.
 
 More things to try:
 
@@ -37,7 +37,13 @@ claude plugin marketplace add syncwin/ai-extender
 claude plugin install ai-extender@syncwin
 ```
 
-**Cowork or claude.ai**: download `AI Extender for Claude v0.9.0.plugin` from the [latest release](https://github.com/syncwin/ai-extender/releases/latest) and upload it as a custom plugin. Once the plugin is listed in Anthropic's directory, you can add it from there instead.
+**Cowork or claude.ai**: download the `.plugin` file from the [latest release](https://github.com/syncwin/ai-extender/releases/latest) and upload it as a custom plugin. Once the plugin is listed in Anthropic's directory, you can add it from there instead.
+
+## Companion prompt
+
+Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.eniston.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import the file (Prompt Builder > Settings > Import), fill in the form, and the prompt starts the right skill with everything it needs. The file lives in the extension's `prompts/` folder and is copied next to the package each time you package it.
+
+AI Extender has one too: `prompts/ai-extender-for-claude.json`. Pick a goal, describe what you want, and send.
 
 ## Requirements
 
@@ -47,7 +53,7 @@ Claude Code, Cowork, or claude.ai with skills enabled. The bundled scripts need 
 
 AI Extender is Markdown instructions plus a few Python scripts, all readable in this repository.
 
-- **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). They call only other scripts in this plugin, with fixed arguments and no shell.
+- **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). Packaging also writes the companion prompt into the extension's `prompts/` folder. They call only other scripts in this plugin, with fixed arguments and no shell.
 - **Folder check**: in Cowork, the router runs `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d` to see whether it's inside Cowork. It reads folder names only.
 - **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
 - **GitHub**: only when you ask it to publish or keep a repo in sync, and only through your own connector or `gh` login. It asks for the owner and repo, and confirms before the first push.
@@ -65,7 +71,7 @@ Start with `/ai-extender`. It reads your request and calls the right role, so mo
 | `ai-extender:claude-developer` | Writes skills, connectors, agents, hooks, MCP servers, and tests |
 | `ai-extender:claude-maintainer` | Updates existing extensions, versions, changelogs |
 | `ai-extender:claude-reviewer` | Validates and audits before anything ships |
-| `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files and marketplace entries |
+| `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
 
 Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
 
@@ -79,7 +85,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Validator, 50 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior in Claude Code and Cowork hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
+Pre-release. Version 1.0 follows a final audit in which AI Extender reviews itself from a real install. The validator, 58 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
 
 ## Contributing and credits
 

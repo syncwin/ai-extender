@@ -1,0 +1,66 @@
+{
+  "prompts": [
+    {
+      "id": "cad16a059dc97f4fc58ee808d57be1b5",
+      "title": "AI Extender for Claude",
+      "description": "Describe what you want Claude to do, and AI Extender plans, builds, checks, and packages the skill, plugin, or internal tool for you. Pick a goal, say it in your own words, and approve one plan.",
+      "content": "# AI Extender for Claude\n\nRun /ai-extender and help me with the goal below. Talk to me in plain words. Work out the technical choices yourself and ask only what I alone can answer.\n\n* **Goal:** `{{goal}}`\n* **What I want:** `{{request}}`\n* **Who will use it:** `{{audience}}`\n* **Where they use Claude:** `{{surface}}`\n* **Files:** `{{files}}`\n\nIf something you need is missing, ask for it in one short message, then continue.\n\nPlan gate: before you build or change anything, show a short plan (what it will do, what you'll make, how it gets installed) and wait for my yes. Checks and audits run without it. Never publish, push, or delete anything without asking first.\n\nWhen you finish, give me the file, two or three lines on how to install it, and one prompt to try first.",
+      "variables": {
+        "goal": {
+          "type": "Radio",
+          "label": "Goal",
+          "placeholder": "goal",
+          "context": "Pick the closest one. Build something new covers skills, plugins, connectors, agents, and internal tools for a team. Turn into a skill takes a workflow you already follow, a prompt you keep reusing, or this conversation. Check before sharing runs an audit and changes nothing until you agree. Package or share makes the file to upload or send, or prepares a marketplace.",
+          "maxLength": "",
+          "required": true,
+          "options": "Build Something New\nTurn a Workflow or Prompt Into a Skill\nUpdate or Fix Something I Already Have\nCheck it Before I Share It\nPackage or Share It"
+        },
+        "request": {
+          "type": "Textarea",
+          "label": "What I Want",
+          "placeholder": "Turn my meeting notes into a task list with owners and due dates. Or: check every client proposal against our pricing rules. Or: my onboarding skill skips the contract step, fix it.",
+          "context": "Describe it the way you&#x27;d explain it to a colleague: what goes in, what should come out, and any rules it must follow. Name the tools or apps it should work with, if any. No technical terms needed.",
+          "maxLength": 3000,
+          "required": true,
+          "options": ""
+        },
+        "audience": {
+          "type": "Radio",
+          "label": "Who Will Use It",
+          "placeholder": "audience",
+          "context": "Decides how it reaches people: a file you upload yourself, a file or private marketplace for a team, or an organization-wide rollout by an admin.",
+          "maxLength": "",
+          "required": false,
+          "options": "Just Me\nMy Team\nMy Whole Organization\nNot sure yet"
+        },
+        "surface": {
+          "type": "Checkbox",
+          "label": "Where They Use Claude",
+          "placeholder": "surface",
+          "context": "Not sure is fine. AI Extender then builds something that loads everywhere.",
+          "maxLength": "",
+          "required": false,
+          "options": "Claude Code\nCowork (Claude Desktop App)\nClaude.ai chat\nNot Sure"
+        },
+        "files": {
+          "type": "Checkbox",
+          "label": "Files",
+          "placeholder": "files",
+          "context": "For an update, fix, or check, point to the existing skill or plugin. For a new build, attach any checklist, template, or example output it should follow.",
+          "maxLength": "",
+          "required": false,
+          "options": "Attached in This Message\nIn the Claude Project Files\nCreated Earlier in This Chat\nNone, Start from Scratch"
+        }
+      },
+      "lastModified": "2026-10-04T19:16:53.793Z",
+      "created": "2026-10-04T19:16:53.793Z"
+    }
+  ],
+  "metadata": {
+    "exportDate": "2026-10-04T19:16:53.796Z",
+    "version": "2.0",
+    "format": "prompt-builder-plain",
+    "count": 1,
+    "checksum": "-9vapbe"
+  }
+}
