@@ -12,7 +12,9 @@ from pathlib import Path
 
 PLUGIN_KEYS = {"$schema","name","displayName","version","description","author","homepage","repository","license",
   "keywords","metadata","defaultEnabled","dependencies","settings","userConfig","channels","skills","commands",
-  "agents","hooks","mcpServers","lspServers","outputStyles","workflows","experimental"}
+  "agents","hooks","mcpServers","lspServers","outputStyles","workflows","experimental",
+  "icon","documentationUrl","supportUrl","privacyPolicyUrl","termsOfServiceUrl","types"}
+LISTING_URLS = ("documentationUrl","supportUrl","privacyPolicyUrl","termsOfServiceUrl")
 UPLOAD_KEYS = {"name","description","license","compatibility","metadata","allowed-tools"}
 EVENTS = set("""SessionStart Setup UserPromptSubmit UserPromptExpansion PreToolUse PermissionRequest PermissionDenied
 PostToolUse PostToolUseFailure PostToolBatch Notification MessageDisplay SubagentStart SubagentStop TaskCreated
@@ -288,7 +290,7 @@ def check_directory(root, m, name):
         for cfg in (".npmrc", "bunfig.toml", "uv.toml"):
             if (root / cfg).exists(): add("error", "D008", root / cfg, "package-source config next to a launcher")
 
-def check_prompts(root):
+def check_prompts(root, name=""):
     """Prompt Builder companion prompt (prompts/*.json): created by claude-packager/scripts/companion_prompt.py."""
     pd = root / "prompts"
     files = sorted(pd.glob("*.json")) if pd.is_dir() else []
@@ -306,6 +308,8 @@ def check_prompts(root):
         E, W = cp_check(d)
         for e in E: add("error", "C002", f, e)
         for w in W: add("warn", "C003", f, w)
+        slugs = set(re.findall(r"(?<![\w/])/([a-z0-9][a-z0-9-]*)(?::[a-z0-9-]+)?", " ".join(str(p.get("content", "")) for p in d.get("prompts", []) if isinstance(p, dict)))) if isinstance(d, dict) else set()
+        if name and not (slugs & {name}): add("warn", "C004", f, f"prompt never starts the extension: add `/{name}` (or `/{name}:<skill>`) to its content")
 
 def check_plugin(root, opts):
     pj = root / ".claude-plugin" / "plugin.json"
@@ -316,6 +320,16 @@ def check_plugin(root, opts):
     name = m.get("name", "")
     if not name: add("error", "P002", pj, "missing name")
     elif not SLUG.match(name): add("warn", "P002", pj, "name should be kebab-case")
+    if name:
+        n = re.sub(r"[-_.\s]+", "-", name.lower())
+        if re.match(r"^(claude|anthropic|anthropics|cc-plugin)-", n) or n in ("claude", "anthropic", "anthropics", "claude-code", "claude-mods") \
+                or re.search(r"(^|-)official(-|$)", n) and re.search(r"(^|-)(claude|anthropic)(-|$)", n):
+            add("error", "P016", pj, f"plugin name '{name}' is reserved: it passes as one of Anthropic's own (claude plugin validate errors)")
+        elif re.search(r"(^|-)(claude|anthropic|anthropics)(-|$)", n):
+            add("warn", "P016", pj, f"plugin name '{name}' reads as one of Anthropic's own; put the brand in displayName instead")
+    for k in LISTING_URLS:
+        if k in m and not str(m[k]).startswith("https://"): add("error", "P017", pj, f"{k} must be an https:// URL")
+    if "icon" in m and not (isinstance(m["icon"], str) and m["icon"].startswith("./") and (root / m["icon"]).is_file()): add("error", "P017", pj, "icon must be a ./path to an image file inside the plugin")
     for k in set(m) - PLUGIN_KEYS: add("warn", "P003", pj, f"unrecognized top-level key '{k}' (stripped by Claude Code)")
     if not m.get("displayName"): add("warn", "P004", pj, "no displayName (human-facing name)")
     if not m.get("description"): add("warn", "P004", pj, "no description")
@@ -356,7 +370,7 @@ def check_plugin(root, opts):
     if (root / ".mcp.json").exists(): check_mcp(root / ".mcp.json")
     if isinstance(m.get("mcpServers"), dict): check_mcp(pj, m["mcpServers"])
     check_extras(root, m)
-    check_prompts(root)
+    check_prompts(root, name)
     if opts["target"] == "directory": check_directory(root, m, name)
     if (root / "CLAUDE.md").exists(): add("warn", "P010", root, "root CLAUDE.md is not loaded; put instructions in a skill")
     if (root / "bin").exists(): add("error" if opts["target"] == "cowork" else "warn", "P011", root / "bin", "claude.ai/Cowork do not install plugins containing bin/")
@@ -397,7 +411,7 @@ def main(argv):
     root = Path(args[0]).resolve()
     if not root.is_dir(): print(f"not a directory: {root}"); return 2
     if (root / ".claude-plugin" / "plugin.json").exists(): kind = "plugin"; check_plugin(root, opts)
-    elif (root / "SKILL.md").exists(): kind = "skill"; check_skill(root, opts, [p for p in root.rglob("*.md")]); check_prompts(root)
+    elif (root / "SKILL.md").exists(): kind = "skill"; check_skill(root, opts, [p for p in root.rglob("*.md")]); check_prompts(root, (parse_frontmatter(read(root / "SKILL.md") or "")[0] or {}).get("name", ""))
     else: print(f"not a plugin or skill directory: {root}"); return 2
     F[:] = list(dict.fromkeys(F))
     E = [f for f in F if f[0] == "error"]; W = [f for f in F if f[0] == "warn"]; I = [f for f in F if f[0] == "info"]

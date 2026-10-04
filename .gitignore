@@ -5,3 +5,4 @@
 __pycache__/
 *.pyc
 evals/results/
+dist/

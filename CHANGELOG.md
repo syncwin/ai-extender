@@ -2,6 +2,28 @@
 
 Newest first.
 
+## 0.11.0: Self-audit fixes
+
+Pre-release. Findings from AI Extender's audit of itself, run from an installed copy.
+
+**Fixed**
+- The router named the skill-folder variables literally, so Claude Code replaced them with real paths and the sentence stopped making sense. It now describes the fallback without the variable names.
+- Cowork detection looked only for `mnt/.plugins`, which cloud Cowork sessions don't have. It now also checks `/mnt/user-data/outputs`, and the script-finding fallback searches the plugin folders instead of the whole disk.
+- MCP server scaffold: Node dependencies sat in `servers/<name>/package.json`, where Claude Code never installs them, and the guidance to install into the data folder didn't work for ES modules. Node dependencies now go in the plugin-root `package.json` (installed by Claude Code when a lockfile is committed). Python servers get a `SessionStart` hook that installs `requirements.txt` into the plugin data folder and a `PYTHONPATH` pointing there.
+- `.gitignore` now ignores `dist/`, where the packager writes by default.
+- Audits no longer end with "hand over the file" when nothing was built.
+
+**Added**
+- Work-on-a-copy rule: attached `.plugin`/`.zip` files and installed plugins are unpacked or copied to a working folder; installed copies are read-only.
+- Validator: reserved plugin names (`P016`, matching `claude plugin validate`: `claude-`/`anthropic-` prefixes are errors, `claude` as a word is a warning), directory listing fields (`P017`), and a companion prompt that never names its slash command (`C004`). The listing fields no longer trigger unknown-key warnings.
+- The scaffolder refuses reserved plugin slugs.
+- `plugin.json`: `documentationUrl` and `supportUrl` for the directory listing.
+- Platform facts verified 2026-10-05: listing fields, plugin-name rules, data folder lifecycle, automatic Node installs, rejected outbound symlinks.
+- Seven self-tests (65 in total).
+
+**Changed**
+- Packaging reference lists the real exclusions and the companion prompt step; public-release steps name the listing fields.
+
 ## 0.10.0: Companion prompts, metadata, pre-release hardening
 
 Pre-release. 1.0 waits for the final self-audit from a real install.

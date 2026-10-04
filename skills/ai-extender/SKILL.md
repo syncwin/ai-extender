@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 0.10.0
+  version: 0.11.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -32,9 +32,11 @@ The user should never need to know what a manifest, frontmatter, or MCP is. Talk
 
 ## 1. Environment (detect, never ask)
 
-Cowork if `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d 2>/dev/null` returns anything or a Cowork session is active. Otherwise standard (Claude Code, claude.ai, API).
+Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt/.local-plugins 2>/dev/null` prints anything. Otherwise standard (Claude Code, claude.ai, API).
 
-**Bundled scripts** live in this plugin's `skills/<skill>/scripts/` and need Python 3. Where `${CLAUDE_SKILL_DIR}` or `${CLAUDE_PLUGIN_ROOT}` is not substituted (it stays literal), find the plugin once with `find / -path '*/skills/claude-reviewer/scripts/validate_extension.py' -not -path '*/proc/*' 2>/dev/null | head -1` and use that folder for the rest of the session. No Python or no shell: do the checks by reading the files against the same rules and say the scripts did not run.
+**Bundled scripts** live in this plugin's `skills/<skill>/scripts/` and need Python 3. Run them from the skill folder shown when the skill loads. If a script path in a skill still shows a variable such as `CLAUDE_SKILL_DIR` instead of a real folder, locate the plugin once with `find ~/.claude/plugins /mnt mnt . -path '*/skills/claude-reviewer/scripts/validate_extension.py' 2>/dev/null | head -1` and reuse that folder for the session. No Python or no shell: run the same checks by reading the files and say the scripts did not run.
+
+**Work on a copy.** An installed plugin folder is read-only and is replaced on update. When the user attaches a `.plugin`/`.zip` or points at an installed plugin, unpack or copy it to a working folder, change only the copy, and deliver a new package.
 
 ## 2. Mode (infer; ask one question only if unclear)
 
@@ -71,7 +73,7 @@ Cowork if `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d 2>/dev/null`
 
 ## 5. Finish
 
-Hand over the result first: the file, install steps in two or three lines, the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. Then one scratchpad per `references/scratchpad.md`.
+Hand over the result first. When something was built or changed: the file, install steps in two or three lines, the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the findings by problem type. Then one scratchpad per `references/scratchpad.md`.
 
 ## Absorbed skills
 

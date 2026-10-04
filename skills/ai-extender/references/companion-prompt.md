@@ -48,4 +48,4 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 
 ## 5. Tooling
 
-`python ${CLAUDE_SKILL_DIR}/../claude-packager/scripts/companion_prompt.py <extension-dir> [--spec spec.json] [--out DIR] [--force]` writes a default prompt (task, stage when there are several role skills, files, details) or one from a spec (`{"title"?, "description"?, "content", "variables"}`), checks it, and copies it to `--out`. `--check <file>` checks any Prompt Builder JSON. `package_extension.py` runs it on every package; the validator reports problems as `C002` (error) and `C003` (warning).
+`python ${CLAUDE_SKILL_DIR}/../claude-packager/scripts/companion_prompt.py <extension-dir> [--spec spec.json] [--out DIR] [--force]` writes a default prompt (task, stage when there are several role skills, files, details) or one from a spec (`{"title"?, "description"?, "content", "variables"}`), checks it, and copies it to `--out`. `--check <file>` checks any Prompt Builder JSON. `package_extension.py` runs it on every package; the validator reports problems as `C002` (error) and `C003` (warning), and `C004` when the prompt never names the extension's slash command.

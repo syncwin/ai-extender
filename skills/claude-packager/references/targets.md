@@ -18,7 +18,7 @@ claude.ai and Cowork "Upload plugin" takes a zip of the plugin folder (≤200 MB
 
 `python ${CLAUDE_SKILL_DIR}/scripts/package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-validate]`
 
-It runs the validator (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, excludes `.git`, `.DS_Store`, `__pycache__`, `node_modules`, and prior archives, and prints the output path.
+It runs the validator (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path.
 
 ## Private marketplace entry
 
@@ -33,4 +33,5 @@ It runs the validator (blocks on errors), derives the visible name from `display
 - [ ] Version, changelog, manifest, and filename agree
 - [ ] README accurate for the targets actually produced
 - [ ] `LICENSE` matches declared license; `CREDITS.md` present
+- [ ] Companion prompt delivered next to the package
 - [ ] Scratchpad emitted

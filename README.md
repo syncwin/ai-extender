@@ -2,7 +2,7 @@
 
 Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Version** 0.10.0 (pre-release) · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 0.11.0 (pre-release) · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -54,7 +54,7 @@ Claude Code, Cowork, or claude.ai with skills enabled. The bundled scripts need 
 AI Extender is Markdown instructions plus a few Python scripts, all readable in this repository.
 
 - **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). Packaging also writes the companion prompt into the extension's `prompts/` folder. They call only other scripts in this plugin, with fixed arguments and no shell.
-- **Folder check**: in Cowork, the router runs `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d` to see whether it's inside Cowork. It reads folder names only.
+- **Folder checks**: the router may run `ls -d /mnt/user-data/outputs mnt/.plugins mnt/.local-plugins` to tell whether it's inside Cowork. If a script path isn't filled in, it runs one `find` under `~/.claude/plugins`, `/mnt`, `mnt`, and the current folder to locate its own scripts. Both read folder and file names only.
 - **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
 - **GitHub**: only when you ask it to publish or keep a repo in sync, and only through your own connector or `gh` login. It asks for the owner and repo, and confirms before the first push.
 
@@ -85,7 +85,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Pre-release. Version 1.0 follows a final audit in which AI Extender reviews itself from a real install. The validator, 58 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
+Pre-release. Version 1.0 follows a final audit in which AI Extender reviews itself from a real install. The validator, 65 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
 
 ## Contributing and credits
 

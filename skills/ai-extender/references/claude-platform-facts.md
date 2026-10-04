@@ -73,3 +73,11 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 - Themes (v2.1.118+): `{name, base, overrides}`; selection stored as `custom:<slug>`; plugins ship themes in `themes/`. Official terminal-config page not fetched: secondary sources only.
 - Directory: portal at claude.ai/directory/manage, Plugin bundle, Validate then scan; blocking and held rules in `claude-packager/references/directory-checklist.md`.
 - Component naming: every component is `<plugin>:<name>`; a skill named like its plugin shows as `/<plugin>`.
+
+## Additions 2026-10-05 (plugins-reference, plugins/components, plugins/loading)
+- Directory listing fields in `plugin.json` only (not marketplace entries): `icon` (`./` path to an image in the plugin), `documentationUrl`, `supportUrl`, `privacyPolicyUrl`, `termsOfServiceUrl` (each `https://`). Claude Code ignores them; `validate` accepts them from v2.1.281 (earlier versions warn, so `--strict` fails there). `types`: `.d.ts` for a mod's `$.state`.
+- Plugin `name` rules in `claude plugin validate`: error when it starts `claude-`, `anthropic-`, `anthropics-`, `cc-plugin-`, equals `claude`/`anthropic`/`anthropics`/`claude-code`/`claude-mods`, or pairs `official` with `claude`/`anthropic`; warning when `claude`/`anthropic` is a whole word elsewhere (`mcp-for-claude`). Skill and agent names inside a plugin are not checked this way. Validator code `P016`.
+- `author` documents `name` (required), `email`, `url`. `metadata` is free-form and not read by Claude Code (v2.1.222+).
+- `${CLAUDE_PLUGIN_DATA}` = `~/.claude/plugins/data/<id>/` (non `[A-Za-z0-9_-]` → `-`), created on first reference, kept across updates, deleted on the last uninstall unless `--keep-data`. Exported to hook, MCP stdio, and LSP processes; not to the Bash tool.
+- Node dependencies: when Claude Code copies a plugin into its cache (install, update, first session on a new machine), it installs the root `package.json` dependencies if a supported lockfile sits beside it (npm, Bun, ...). Plugins loaded in place from a local folder get no install. Python has no automatic install.
+- Previous version directories get an `.orphaned_at` marker on update/uninstall and are removed 14 days later. Symlinks that lead outside the plugin are rejected (except between plugins in one marketplace); backslash paths load on Windows only.

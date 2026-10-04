@@ -2,7 +2,7 @@
 
 ## Is Cowork available? (infer, never read billing state)
 
-Run once, when packaging starts: `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d 2>/dev/null`.
+Run once, when packaging starts: `ls -d /mnt/user-data/outputs mnt/.plugins mnt/.local-plugins 2>/dev/null`.
 - Output present, or the outputs directory for delivery is reachable → Cowork path available.
 - Otherwise → say plainly that Cowork packaging isn't available in this session and use `targets.md` formats. Don't guess why.
 

@@ -28,7 +28,10 @@ Build only when no hosted or existing server covers the need. Verify protocol de
 
 ## Bundle and test
 
-1. Lean layout: `servers/<name>/` with the entry file, lockfile, and README section; dependencies installed to `${CLAUDE_PLUGIN_DATA}` if needed (not the plugin root).
+1. Lean layout: `servers/<name>/` with the entry file and a README section. Dependencies (verified 2026-10-05, code.claude.com/docs/en/plugins/loading and /components):
+   - **Node:** list them in a `package.json` at the plugin root and commit its lockfile (`package-lock.json`, `bun.lock`, ...). Claude Code installs root dependencies into each cached version at install and update; the entry file finds them by walking up. A plugin loaded in place from a local folder gets no install: run it yourself. Alternatives: bundle the server into one readable file, or a `SessionStart` hook that installs into `${CLAUDE_PLUGIN_DATA}` with `NODE_PATH` set (works for `require`, not for ES module `import`).
+   - **Python:** no automatic install. Use a `SessionStart` hook that runs `pip install --target "${CLAUDE_PLUGIN_DATA}/python/<name>"` when `requirements.txt` changes, and set `PYTHONPATH` to that folder in the server's `env`. `scripts/scaffold_mcp_server.py` writes both.
+   - Pin exact versions before release. Any install from a registry runs on the user's machine: disclose it in the README. Anthropic's directory holds lockfile installs and hook-run installs for a reviewer (`claude-packager/references/directory-checklist.md` §3).
 2. Register in `.mcp.json` using `${CLAUDE_PLUGIN_ROOT}` (see `connectors.md`).
 3. Exercise with the MCP Inspector (`npx @modelcontextprotocol/inspector`) and then a real Claude session; confirm tool names resolve as `mcp__plugin_<plugin>_<server>__<tool>`.
 4. Tests for each tool: happy path, bad input, upstream failure, oversized result.

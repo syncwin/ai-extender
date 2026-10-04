@@ -106,6 +106,24 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(CP, q, "--spec", q / "spec.json"); d = json.loads((q / "prompts/ab-demo.json").read_text())
     check("companion prompt from spec keeps id and escapes context", r.returncode == 0 and d["prompts"][0]["id"] == json.loads(pf.read_text())["prompts"][0]["id"] and "&#x27;" in d["prompts"][0]["variables"]["client"]["context"], r.stdout[-300:])
     check("validator leaves no bytecode in the plugin", not list(S.parent.rglob("__pycache__")), str(list(S.parent.rglob("__pycache__"))))
+    def man_edit(label, code, change):
+        q = td / ("mf-" + label); shutil.copytree(p, q); f = q / ".claude-plugin/plugin.json"
+        m = json.loads(f.read_text()); change(m); f.write_text(json.dumps(m))
+        r = RUN(V, q, "--strict"); check(f"catches {label}", r.returncode == 1 and code in r.stdout, r.stdout[-300:])
+    man_edit("reserved plugin name", "P016", lambda m: m.update({"name": "claude-tools"}))
+    man_edit("brand word in plugin name", "P016", lambda m: m.update({"name": "tools-for-claude"}))
+    man_edit("non-https listing URL", "P017", lambda m: m.update({"supportUrl": "http://example.com"}))
+    q = td / "cp-noslash"; shutil.copytree(p, q); f = q / "prompts" / "ab-demo.json"
+    d = json.loads(f.read_text()); d["prompts"][0]["content"] = d["prompts"][0]["content"].replace("/ab-demo", "the plugin"); f.write_text(json.dumps(d))
+    r = RUN(V, q); check("warns when companion prompt never starts the extension", "C004" in r.stdout, r.stdout[-300:])
+    r = RUN(S / "claude-developer/scripts/scaffold_extension.py", td / "res", "--slug", "claude-x", "--display", "X"); check("scaffold refuses a reserved plugin slug", r.returncode == 2 and not (td / "res" / "claude-x").exists(), r.stdout[-200:])
+    q = td / "mcp-py"; shutil.copytree(p, q); shutil.rmtree(q / "servers", ignore_errors=True); (q / ".mcp.json").unlink(missing_ok=True)
+    r = RUN(S / "claude-developer/scripts/scaffold_mcp_server.py", q, "--name", "py-srv", "--lang", "python")
+    cfg = json.loads((q / ".mcp.json").read_text())["mcpServers"]["py-srv"]; hk = (q / "hooks/hooks.json").read_text()
+    check("python MCP scaffold wires PYTHONPATH and an install hook", r.returncode == 0 and "PYTHONPATH" in cfg.get("env", {}) and "SessionStart" in hk and RUN(V, q).returncode == 0, r.stdout[-300:])
+    q = td / "mcp-js"; shutil.copytree(p, q)
+    r = RUN(S / "claude-developer/scripts/scaffold_mcp_server.py", q, "--name", "js-srv", "--lang", "node")
+    check("node MCP scaffold puts dependencies in the root package.json", r.returncode == 0 and "@modelcontextprotocol/sdk" in (q / "package.json").read_text() and not (q / "servers/js-srv/package.json").exists(), r.stdout[-300:])
     for fmt in ("plugin", "zip"):
         r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", fmt, "--out", td / "out")
         ext = ".plugin" if fmt == "plugin" else ".zip"

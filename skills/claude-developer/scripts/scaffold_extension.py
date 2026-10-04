@@ -61,6 +61,8 @@ def main(argv):
         else: print(__doc__); return 2
         i += 1
     if not (out and a["slug"] and a["display"]) or not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", a["slug"]): print(__doc__); return 2
+    if re.match(r"^(claude|anthropic|anthropics|cc-plugin)(-|$)", a["slug"]):
+        print(f"slug '{a['slug']}' is reserved for Anthropic's own plugins; pick a name of your own and put the brand in --display"); return 2
     roles = [r for r in (a["roles"].split(",") if a["roles"] else []) if r]
     prefix = a["prefix"] if a["prefix"] not in ("", "none") else ""
     nm = lambda r: f"{prefix}-{r}" if prefix else r
