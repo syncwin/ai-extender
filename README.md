@@ -1,52 +1,86 @@
 # AI Extender for Claude
 
-Builds and maintains Claude extensions end to end: plugins, skills, connectors, agents, hooks, MCP servers, and add-ons. Self-contained: scoping, building, testing, validation, packaging, and updates, with no dependency on other skills or plugins.
+Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install. You don't need to know what a manifest or an MCP server is.
 
-**Version** 0.6.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 0.9.0 · **Publisher** SyncWin · **Maintainer** @wasimness · **Contact** support@syncwin.com · **License** MIT
+
+## What you can build
+
+- **Skills** that teach Claude a task the same way every time: a checklist, a house style, a report format.
+- **Plugins** that bundle several skills with agents, hooks, or connectors.
+- **Connectors** to the services your work already lives in (Notion, Slack, a CRM, your own API).
+- **Agents and hooks** for narrower jobs, such as a reviewer that can only read files or a rule that blocks edits to `.env`.
+- **Internal business tools**: your team's onboarding steps, proposal checks, or client reporting, packaged so everyone gets the same result.
+
+It also updates, audits, versions, and packages extensions you already have.
+
+## Quick start
+
+1. Install the plugin (below).
+2. Type `/ai-extender`, or just describe what you want: "make a skill that turns my meeting notes into action items."
+3. Answer the few questions only you can answer, usually who will use it and where.
+4. Approve the short plan. AI Extender builds it, checks it, and gives you the file plus install steps.
+
+More things to try:
+
+- "My team forgets steps when we onboard a client. Can Claude help with that?"
+- "Add a Notion connector to my plugin."
+- "Audit my plugin before I share it."
+- "Bump the version and package it for Cowork."
 
 ## Install
+
+**Claude Code**
 
 ```
 claude plugin marketplace add syncwin/ai-extender
 claude plugin install ai-extender@syncwin
 ```
 
-Cowork or claude.ai: upload `AI Extender for Claude v0.6.0.plugin` (zip of this repo). Then say what you want, for example: "build me a plugin that turns meeting notes into action items", "add a Notion connector to my plugin", "audit my plugin before I ship it", "bump the version and package it for Cowork".
+**Cowork or claude.ai**: download `AI Extender for Claude v0.9.0.plugin` from the [latest release](https://github.com/syncwin/ai-extender/releases/latest) and upload it as a custom plugin. Once the plugin is listed in Anthropic's directory, you can add it from there instead.
 
-## Skills
+## Requirements
 
-Entry: `/ai-extender` (router; slug = plugin slug). Role skills are bare roles because Claude Code already namespaces them (`/ai-extender:planner`); "Claude" appears only in the display name. Renamed from `ai-extension-architect` in 0.5.0; role skills became bare roles in 0.6.0 (was `ai-extender-<role>`).
+Claude Code, Cowork, or claude.ai with skills enabled. The bundled scripts need Python 3.8 or newer and nothing else; CI tests them on Python 3.9 through 3.13 on Linux. On Windows or macOS, run them with `python` or `python3`, whichever your system has.
 
-| Skill | Role | Scripts |
-|---|---|---|
-| `ai-extender:planner` | Scope and design | none |
-| `ai-extender:developer` | Build skills, connectors, MCP servers/bundles, agents, hooks, LSP, output styles, add-ons; test | `scaffold_extension.py`, `scaffold_mcp_server.py`, `aggregate_results.py`, `eval_report.py` |
-| `ai-extender:maintainer` | Update existing extensions; versioning, changelogs | none |
-| `ai-extender:reviewer` | Validate and audit | `validate_extension.py`, `simulate.py`, `selftest.py` |
-| `ai-extender:packager` | Package and deliver (`.plugin`, `.zip`, private marketplace) | `package_extension.py` |
+## What it runs, reads, and sends
 
-Agents: `ai-extender:grader`, `ai-extender:comparator` (eval grading and blind comparison).
+AI Extender is Markdown instructions plus a few Python scripts, all readable in this repository.
 
-Shared (in the router): `references/standards.md`, `scratchpad.md`, `platform-facts.md` (verified against the official docs, last refresh 2026-10-03), `docs-sync.md`. Scripts need only Python 3.
+- **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). They call only other scripts in this plugin, with fixed arguments and no shell.
+- **Folder check**: in Cowork, the router runs `find mnt/.local-plugins mnt/.plugins -maxdepth 1 -type d` to see whether it's inside Cowork. It reads folder names only.
+- **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
+- **GitHub**: only when you ask it to publish or keep a repo in sync, and only through your own connector or `gh` login. It asks for the owner and repo, and confirms before the first push.
 
-## Coverage (0.6.0)
+Nothing else leaves your machine. The plugin has no connectors, hooks, MCP servers, or executables of its own, and it collects no data. Claude asks before any step that deletes, sends, or publishes. To report a vulnerability, see `SECURITY.md`.
 
-| Area | Status |
+## Skills and agents
+
+Start with `/ai-extender`. It reads your request and calls the right role, so most people never call the others directly.
+
+| Skill | What it does |
 |---|---|
-| Plugins: manifest, `userConfig`, layout, path rules, dependencies, private marketplaces, versioning, renames, tags | Covered, docs-verified 2026-10-02 |
-| Skills (portable and Claude-Code-only), agents, hooks, connectors, commands, add-ons, updates | Covered, docs-verified |
-| LSP, output styles, themes, workflows, monitors, channels, `bin/`, plugin `settings`, mods | Covered, docs-verified 2026-10-02/03 (`developer/references/components-extra.md`, `mods.md`) |
-| Surface support (Chat / Cowork / Claude Code) | Covered, with limits |
-| Custom MCP servers, `.mcpb` bundles | Guidance + Node/Python scaffold |
-| Skills outside plugins: `.claude/skills`, claude.ai upload, API, Agent SDK | Covered |
-| Distribution: no marketplace, own marketplace, Anthropic directory (checklist and submission steps), organization policy keys | Covered, docs-verified 2026-10-03 |
-| Testing: official `claude plugin eval` layout, manual loop, aggregator, HTML report, grader/comparator agents, trigger simulator | Covered; official evals not yet run by a human |
-| Validator: manifest, skills, agents, hooks, mods, MCP, workflows, themes, monitors, LSP, evals, and `--target directory` pre-submission checks; 50-check `selftest.py` | Passing |
-| GitHub | Live: `syncwin/ai-extender`; push, tag, and orphan-cleanup procedure in `packager/references/github.md` |
-| Live behavior in Claude Code / Cowork | Install confirmed by the user; run `claude plugin eval .` to measure |
+| `ai-extender` | Router. Asks what you want, picks the steps |
+| `ai-extender:claude-planner` | Scopes the request and designs the structure |
+| `ai-extender:claude-developer` | Writes skills, connectors, agents, hooks, MCP servers, and tests |
+| `ai-extender:claude-maintainer` | Updates existing extensions, versions, changelogs |
+| `ai-extender:claude-reviewer` | Validates and audits before anything ships |
+| `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files and marketplace entries |
 
-## Connectors
+Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
 
-None required. Generated extensions document theirs.
+**Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads. Install the whole plugin instead.
 
-See `CREDITS.md`.
+## Troubleshooting
+
+- **A skill doesn't trigger.** Say what you want in plain words ("audit my plugin") or call `/ai-extender` directly. To check the descriptions offline: `python skills/claude-reviewer/scripts/simulate.py . triggers`.
+- **Validation fails.** Run `python skills/claude-reviewer/scripts/validate_extension.py <dir> --strict` and fix the listed codes. Each message names the file and the rule.
+- **A skill upload is rejected on claude.ai.** Skill names that contain `claude` can't be uploaded alone. Upload the `.plugin` file instead.
+
+## Status
+
+Validator, 50 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior in Claude Code and Cowork hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
+
+## Contributing and credits
+
+Issues and pull requests are welcome; see `CONTRIBUTING.md`. Credits are in `CREDITS.md`. AI Extender is an independent project and is not affiliated with or endorsed by Anthropic.

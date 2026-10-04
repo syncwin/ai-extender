@@ -8,7 +8,8 @@
       "audit my plugin before I ship it",
       "write a hook that blocks edits to .env",
       "package my extension as a zip for upload",
-      "update my agent so it only reads files"
+      "update my agent so it only reads files",
+      "I want Claude to check every client proposal against our pricing rules"
     ],
     "should_not": [
       "write a poem about plugins",
@@ -28,13 +29,14 @@
       "add a PostToolUse hook to my plugin",
       "ship my plugin to my team through a private marketplace",
       "write an agent definition for a code reviewer",
-      "split my giant skill into smaller ones"
+      "split my giant skill into smaller ones",
+      "build something so my sales team gets the same onboarding checklist every time"
     ],
     "should_not": [
       "recommend a good pasta recipe",
       "debug this Python traceback",
       "translate this paragraph into French",
-      "what's the weather in Kolkata",
+      "what's the weather in Lisbon",
       "write a cover letter for a marketing job",
       "explain compound interest"
     ]

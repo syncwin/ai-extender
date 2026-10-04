@@ -4,12 +4,13 @@
   "description": "SyncWin extensions for Claude.",
   "owner": {
     "name": "SyncWin",
-    "url": "https://syncwin.com"
+    "url": "https://syncwin.com",
+    "email": "support@syncwin.com"
   },
   "plugins": [
     {
       "name": "ai-extender",
-      "description": "Plans, builds, maintains, reviews, and packages Claude extensions: plugins, skills, connectors, agents, hooks, MCP servers, and add-ons, for Claude Code and Cowork. Keeps its GitHub repo in sync.",
+      "description": "Describe what you want Claude to do, and AI Extender plans, builds, checks, and packages it: skills, plugins, connectors, agents, hooks, MCP servers, add-ons, and internal tools for your team. Works in Claude Code and Cowork.",
       "source": "./",
       "category": "developer-tools"
     }

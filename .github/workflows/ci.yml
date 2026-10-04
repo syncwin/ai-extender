@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Self-test the scripts
+        run: python skills/claude-reviewer/scripts/selftest.py
+      - name: Validate for the Claude plugin directory
+        run: python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+      - name: Simulate skill triggers
+        run: python skills/claude-reviewer/scripts/simulate.py . triggers

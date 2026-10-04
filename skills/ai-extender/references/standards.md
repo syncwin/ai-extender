@@ -7,8 +7,8 @@ Apply to this plugin and everything it creates, except items marked *(this plugi
 - **Visible names** (plugin, skills, connectors, agents, build outputs): Title Case, or the user's exact name. Brand spellings stay exact (`WordPress`, never `Wordpress`).
 - **Slugs:** kebab-case, lowercase, letters/numbers/hyphens, ≤64 chars, folder = frontmatter `name`. Never rename an existing slug without explicit confirmation.
 - **Skills, agents: role or designation, not activity:** `developer`, not `development`. Router slug = plugin slug.
-- **Never repeat the plugin name inside a component name** *(this plugin)*. Claude Code namespaces every component as `<plugin>:<name>` (and shows a skill named like its plugin as just `/<plugin>`), so role skills and agents are bare roles: `/ai-extender:planner`, `/ai-extender:developer`, agent `ai-extender:grader`. Repeating the plugin slug gives `/ai-extender:ai-extender-planner`. "Claude" appears only in the display name ("AI Extender for Claude"), never in slugs, so no slug contains the reserved words `claude`/`anthropic` and other platforms can be added by changing the display name and docs.
-- **Acronym prefix** (generated extensions): optional; the user picks it per project (`sw` is only an example) or says none (bare roles, the default); ask once at scoping. A prefix is for names that appear outside their plugin namespace (individually uploaded skills, a shared flat skills folder) or when the user's ecosystem uses one; it is a short acronym, never the plugin slug. When set, apply to skill/agent/connector/command slugs, code identifiers, option and hook keys, generated file names. Never apply to fixed names (`SKILL.md`, `plugin.json`, `.mcp.json`, `agents/`), official field names, third-party brands, or reserved words. If it would break a rule or tool convention, keep the standard and say so.
+- **Platform prefixes** *(this plugin)*: `ai-` marks platform-neutral components and `claude-` marks Claude-specific ones, so ChatGPT, Gemini, or other platform variants can be added later as `chatgpt-*`, `gemini-*` beside the neutral core. Plugin and router slug: `ai-extender` (neutral; shows as `/ai-extender`). Role skills and agents are Claude-specific: `claude-planner`, `claude-developer`, `claude-maintainer`, `claude-reviewer`, `claude-packager`, agents `claude-grader`, `claude-comparator` (invoked as `/ai-extender:claude-planner`). The plugin namespace already supplies `ai-extender:`, so a role slug never repeats the plugin name. Trade-off, accepted by design: skill names containing `claude` are rejected when a skill is uploaded on its own to claude.ai or the API (`--target upload` errors); they load normally inside the plugin (Claude Code, Cowork), and the validator reports the name as info otherwise. Re-check against the directory portal's Validate before any public submission. Layer rules and shared-file naming: `platforms.md`.
+- **Acronym prefix** (generated extensions): optional; the user picks it per project (`sw` is only an example) or says none (bare roles, the default for generated extensions); ask once at scoping. A prefix is for names that appear outside their plugin namespace (individually uploaded skills, a shared flat skills folder) or when the user's ecosystem uses one; it is a short acronym, never the plugin slug. When set, apply to skill/agent/connector/command slugs, code identifiers, option and hook keys, generated file names. Never apply to fixed names (`SKILL.md`, `plugin.json`, `.mcp.json`, `agents/`), official field names, third-party brands, or reserved words. If it would break a rule or tool convention, keep the standard and say so.
 - **Never drop `displayName` or other human-facing metadata** without a confirmed technical reason.
 
 ## 2. Download files
@@ -20,8 +20,8 @@ Apply to this plugin and everything it creates, except items marked *(this plugi
 
 - Ask the user once per new extension (all optional): author, company, contact, license. Set only what's given; omit the rest.
 - Locations: **every skill's** frontmatter `metadata` (`author`, `company`, `version`) plus `license`, and the plugin (`author`, `company`); `plugin.json` `author` object (name, company, email, url) and `keywords`; README; `marketplace.json` `owner.name` for publisher filtering. The company is metadata only: never in names, prefixes, or slugs.
-- *(this plugin and the extensions it ships)* Author `@wasimness` (never "Wasim Akram") and company `SyncWin` on every skill and the plugin; contact `support@syncwin.com`; license MIT.
-- Versions: start at `0.0.1`, semver; rules in `maintainer/references/versioning.md`.
+- *(this plugin)* Author `@wasimness` and company `SyncWin` on every skill and the plugin; contact `support@syncwin.com`; license MIT. Never copy this plugin's author, company, contact, or repository into an extension built for a user: theirs carries only what they supply.
+- Versions: start at `0.0.1`, semver; rules in `claude-maintainer/references/versioning.md`.
 
 ## 4. Third-party material
 
@@ -39,7 +39,7 @@ Broadly useful capabilities are built once, portably, and copied into generated 
 | Scratchpad | `scratchpad.md` | a copy, ending every skill/connector/agent task |
 | Efficiency ladder | router §4 | the same ladder in their router |
 | Lean build | §5b | the same rule in their developer/authoring skill |
-| De-dup and semver | `maintainer/references/versioning.md` | changelog + version discipline |
+| De-dup and semver | `claude-maintainer/references/versioning.md` | changelog + version discipline |
 | Naming, metadata | §1–3 | the same conventions |
 | Security | §5c | the same rules |
 
@@ -47,7 +47,7 @@ Same quality bar, architecture, and standards for this plugin and its output.
 
 ## 5a. Token and execution efficiency
 
-Grounded in the official skills docs (the referenced Medium article was bot-blocked and could not be retrieved; revisit via `docs-sync.md` if the user supplies a copy).
+Grounded in the official skills docs.
 - Skill bodies stay in context for the rest of the session: short bodies, detail in `references/`, scripts instead of regenerated code.
 - Descriptions are always loaded (truncated at 1,536 chars): short, trigger-dense. `disable-model-invocation: true` keeps a rarely used skill's description out of context (Claude Code).
 - Use a subagent (`context: fork` or an agent) for noisy or high-volume work; return a summary.
@@ -67,6 +67,8 @@ Write the least code, text, and files that meet the request. Reuse before creati
 - Confirm before destructive or external-write actions.
 - Validate input; escape output in generated code.
 
-## 6. GitHub (standing rule)
+## 6. GitHub
 
-Repo: `syncwin/ai-extender` (this plugin). Keep GitHub current whenever this plugin or an extension built with it changes and GitHub tools are present: commit, tag on version bumps, and remove orphans. Procedure: `packager/references/github.md`. `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Issues go to `support@syncwin.com`.
+*(this plugin)* Repo: `syncwin/ai-extender`; issues on GitHub, security reports to `support@syncwin.com`.
+
+For any extension: `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Push, tag, and orphan cleanup run only when the user asks for GitHub or the extension already lives in a repo they want kept in sync, and only through tools present in the session, with the owner and repo the user names. Confirm before the first push to a repo. Procedure: `claude-packager/references/github.md`.
