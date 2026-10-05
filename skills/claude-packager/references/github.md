@@ -12,7 +12,7 @@ Runs only when the user asks to publish to GitHub or the extension already lives
 2. Repo root = plugin root (`.claude-plugin/`, `skills/`, ...). Keep `.gitignore`; never commit `*.plugin`/`*.zip` (attach them to releases).
 3. Set `plugin.json` `repository` and `homepage`. Marketplace entry `source` is `./` when the repo is the marketplace, else `{"source": "github", "repo": "<owner>/<repo>"}` (pin `ref` or `sha` for releases).
 4. Commit with the version and one-line what/why from the changelog. Batch files into a few multi-file commits (use a multi-file commit tool when one exists); an empty repo needs one single-file commit first.
-5. Tag `v<version>`, create a release with the changelog entry as notes, attach the versioned download file and the companion prompt JSON. GitHub replaces spaces in asset names with dots (`AI.Extender.v1.0.0.plugin`); set the asset label to the real file name and say so in the notes.
+5. Tag `v<version>`, create a release with the changelog entry as notes, attach the versioned download file and the companion prompt JSON. GitHub replaces spaces in asset names with dots (`AI.Extender.for.Claude.v1.0.0.plugin`); set the asset label to the real file name and say so in the notes.
 6. Verify the install path: `claude plugin marketplace add <owner>/<repo>` then `claude plugin install <name>@<marketplace>`.
 
 ## 2. Keep it maintained (every change)

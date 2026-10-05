@@ -1,16 +1,16 @@
 # Scoping
 
-Extract answers from the conversation and attached files first; ask only genuine gaps, in one message, in plain words. Treat attached learnings/checklists as raw material to generalize: flag project-specific details and ask whether they belong.
+Extract answers from the conversation and attached files first. Decide items 2 to 8 yourself and show them as defaults in the plan; ask at most three questions, only ones the user alone can answer, in the same message as the plan, in plain words. Treat attached learnings/checklists as raw material to generalize: flag project-specific details and ask whether they belong.
 
 ## Ask (skip anything already known)
 
-1. **Who uses it and where** (first, before any design): just me · my team · my whole organization · anyone. Then the surface: Claude Code · Cowork · claude.ai chat · not sure. "Not sure" → portable skill frontmatter and a `.plugin` that loads everywhere. Cowork, chat, or "not sure" → portable frontmatter only (works in claude.ai/API upload); Claude Code only → extended fields allowed, still portable by default unless a feature needs them.
+1. **Who uses it and where** (ask together with the plan, not before it): just me · my team · my whole organization · anyone. Then the surface: Claude Code · Cowork · claude.ai chat · not sure. "Not sure" → portable skill frontmatter and a `.plugin` that loads everywhere. Cowork, chat, or "not sure" → portable frontmatter only (works in claude.ai/API upload); Claude Code only → extended fields allowed, still portable by default unless a feature needs them.
 2. **Purpose:** the one or two things a user opens it for; who triggers it, when, with which phrases; expected output.
 3. **Type and components** (decide yourself, then confirm; only scaffold confirmed ones): skills · connectors · agents · hooks · commands (legacy) · custom MCP server · add-on for an existing extension · update to an existing one.
 4. **Connectors:** service, existing vs custom, auth, which skills use it.
 5. **Install method:** derived from answer 1 (table below). Never offer public release.
 6. **Naming:** exact required style, else Title Case visible name + kebab-case role slugs. **Acronym:** user's choice or none (standards).
-7. **Metadata** (all optional): author, company, contact, license.
+7. **Metadata** (all optional): author, company, contact, license. Show them as empty defaults in the plan; set only what the user supplies.
 8. **Tests:** suggest evals for objectively checkable outputs, skip for subjective ones; user overrides.
 
 ## Business use

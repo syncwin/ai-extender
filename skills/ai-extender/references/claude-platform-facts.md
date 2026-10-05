@@ -1,8 +1,8 @@
-# Platform Facts (verified 2026-10-01)
+# Platform Facts (verified 2026-10-01 to 2026-10-05; dates per section)
 
 Distilled from official docs. Load only the section needed. Facts drift: re-verify via `claude-docs-sync.md` before relying on version-specific details, and cite the page when it matters.
 
-## Plugin manifest (code.claude.com/docs/en/plugins-reference; verified 2026-10-01)
+## Plugin manifest (code.claude.com/docs/en/plugins/manifest-reference; verified 2026-10-01)
 - Manifest `.claude-plugin/plugin.json` is optional; only `name` required (kebab-case; no spaces, @, :, path seps). Components namespaced `plugin:component`.
 - Fields: $schema, name, displayName (UI name; any casing; marketplace entry displayName overrides), version (string, pins version; manifest overrides entry), description, author{name required,email,url}, homepage (must parse as URL), repository, license (SPDX), keywords[], metadata (free-form, v2.1.222+), defaultEnabled, dependencies[], settings{agent,subagentStatusLine only}, userConfig, channels, skills, commands, agents, hooks, mcpServers, lspServers, outputStyles, workflows, experimental{themes,monitors,evals}.
 - Unrecognized top-level key: stripped + warning. Strict objects (userConfig options, channels, lspServers, monitors) reject unknown keys => plugin won't load.
@@ -74,7 +74,7 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 - Directory: portal at claude.ai/directory/manage, Plugin bundle, Validate then scan; blocking and held rules in `claude-packager/references/directory-checklist.md`.
 - Component naming: every component is `<plugin>:<name>`; a skill named like its plugin shows as `/<plugin>`.
 
-## Additions 2026-10-05 (plugins-reference, plugins/components, plugins/loading)
+## Additions 2026-10-05 (plugins/manifest-reference, plugins/components, plugins/loading)
 - Directory listing fields in `plugin.json` only (not marketplace entries): `icon` (`./` path to an image in the plugin), `documentationUrl`, `supportUrl`, `privacyPolicyUrl`, `termsOfServiceUrl` (each `https://`). Claude Code ignores them; `validate` accepts them from v2.1.281 (earlier versions warn, so `--strict` fails there). `types`: `.d.ts` for a mod's `$.state`.
 - Plugin `name` rules in `claude plugin validate`: error when it starts `claude-`, `anthropic-`, `anthropics-`, `cc-plugin-`, equals `claude`/`anthropic`/`anthropics`/`claude-code`/`claude-mods`, or pairs `official` with `claude`/`anthropic`; warning when `claude`/`anthropic` is a whole word elsewhere (`mcp-for-claude`). Skill and agent names inside a plugin are not checked this way. Validator code `P016`.
 - `author` documents `name` (required), `email`, `url`. `metadata` is free-form and not read by Claude Code (v2.1.222+).

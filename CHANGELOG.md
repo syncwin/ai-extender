@@ -7,7 +7,7 @@ Newest first.
 Released after the final self-audit, run from an installed copy, and the first live `claude plugin eval` run.
 
 **Fixed**
-- One-skill plugins: the planner now names the single skill after the plugin and skips the router, instead of either adding an empty router or leaving no entry skill. Two or more skills still get a router, and role skills carry the acronym.
+- One-skill plugins: the planner now names the single skill after the plugin and skips the router, instead of either adding an empty router or leaving no entry skill. Two or more skills still get a router, and role skills carry the user's acronym when one is set.
 - Intake: the router shows a short plan with its defaults first and asks at most three questions, only ones the user alone can answer. The live eval caught it opening with a five-question list.
 - Eval suite: the audit and packaging cases had nothing to work on. Each now ships a sample in `fixture/notes-helper`: a deliberately flawed plugin for the audit, a clean skill for packaging. Neither has its own manifest. The packaging case is now `package-skill-upload` and may run the bundled scripts, and the scaffold case's grader follows the one-skill rule.
 - Companion prompts: `Text` (single-line) fields are confirmed against a real Prompt Builder export and no longer warned about; `maxLength` may be `""` for no limit on `Text` and `Textarea`.
@@ -17,6 +17,12 @@ Released after the final self-audit, run from an installed copy, and the first l
 - Credits: removed the `skill-creator-plus` entry.
 - Docs: shorter plugin description that names claude.ai too; the README status now says exactly what CI runs.
 - The audit test's sample skill no longer tells Claude to email anything, so a security scan has nothing to misread. It still has plenty to fail on: vague descriptions, no manifest or license, and an agent with no tool limits.
+- Final self-audit from the installed 1.0.0 build:
+  - Scoping now matches the router: defaults go in the plan, with at most three questions asked alongside it. Author, company, license, and acronym appear as plan defaults instead of separate questions, and packaging uses the target the plan settled instead of asking again.
+  - The developer skill hands any build without an approved plan to the planner, and the planner no longer claims to run before the router.
+  - Acronym prefixes are optional everywhere (architecture, add-on naming, this changelog), matching the standards.
+  - Fixed contradictions: the contents-list threshold is 100 lines in every file, the manifest reference points to its current docs address, the platform-facts header shows its full date range, and the README describes CI exactly.
+  - The companion prompt guide lists all five validator codes (`C000` to `C004`), the GitHub asset example uses the full display name, and the Ponytail credit links to its repository.
 - Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
 
 ## 0.11.0: Self-audit fixes

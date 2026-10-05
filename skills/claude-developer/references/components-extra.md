@@ -1,6 +1,6 @@
 # Other Plugin Components
 
-Verified 2026-10-02 against code.claude.com/docs (plugins-reference, output-styles). Paths in manifests start `./`, exist, stay inside the root; `claude plugin validate` is authoritative. Strict objects (LSP configs, monitors, channels, `userConfig` options) reject unknown keys and then the plugin does not load.
+Verified 2026-10-02 against code.claude.com/docs (plugins/manifest-reference, output-styles). Paths in manifests start `./`, exist, stay inside the root; `claude plugin validate` is authoritative. Strict objects (LSP configs, monitors, channels, `userConfig` options) reject unknown keys and then the plugin does not load.
 
 ## LSP servers (code intelligence)
 

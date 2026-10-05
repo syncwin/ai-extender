@@ -10,7 +10,7 @@ Extend someone else's plugin/skill/connector without forking or editing it.
 4. **Integrate through documented surfaces only:** the base's hook events, tool names (`mcp__plugin_<base>_<server>__…`), config values, file formats. Never edit or copy base files.
 5. **Compatibility:** state supported base versions in README and `compatibility`; the reviewer checks them on each base update.
 6. **Licensing:** confirm the base license permits add-ons/redistribution of your own code; credit, don't bundle.
-7. Name: `<acronym>-<base>-addon` style role slug per standards; own version starting `0.0.1`.
+7. Name: `[<acronym>-]<base>-addon` style role slug per standards; own version starting `0.0.1`.
 
 ## When a fork is the only way
 

@@ -2,8 +2,8 @@
 name: claude-developer
 description: >
   Builds the components of a Claude extension: skills, connectors (MCP config), agents, hooks, commands, MCP servers,
-  LSP servers, output styles, and add-ons. Use for "make me a skill that formats commit messages", "write a skill",
-  "add a connector for Notion", "make an agent", "write a hook that blocks edits to .env", "build an MCP server",
+  LSP servers, output styles, and add-ons. Use for "make me a skill that formats commit messages", "build the planned skill",
+  "add a connector for Notion to this plugin", "make an agent", "write a hook that blocks edits to .env", "build an MCP server",
   "hook this up to X", "extend this plugin", or "test this skill". Drafts SKILL.md, .mcp.json, agent files, and evals.
 license: MIT
 metadata:
@@ -16,7 +16,7 @@ metadata:
 
 # AI Extender Developer
 
-Build only what the plan confirmed. Load the one reference for the component:
+Build only what the plan confirmed. No approved plan in context: hand to `ai-extender:claude-planner` first. Load the one reference for the component:
 
 | Component | Reference |
 |---|---|

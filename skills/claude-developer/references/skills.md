@@ -16,7 +16,7 @@ Keep to the **portable set** so the skill works in Claude Code, claude.ai upload
 ## Body
 
 - Under 500 lines. The body stays in context after load: every line is a recurring cost. State what to do, not narration.
-- Put detail in `references/`, link each from the body with when to read it. Files >300 lines get a contents list.
+- Put detail in `references/`, link each from the body with when to read it. Files >100 lines get a contents list.
 - Deterministic or repeated work goes in `scripts/` (executed, not loaded). If test runs show the agent re-writing the same helper, bundle it.
 - Explain why behind non-obvious rules; reserve MUST for true hard stops.
 - Reference bundled files with `${CLAUDE_SKILL_DIR}` (skill folder) or `${CLAUDE_PLUGIN_ROOT}` (plugin root). Claude-Code-only features (`!`cmd`` injection, `$ARGUMENTS`, `context: fork`) don't run in claude.ai/API.

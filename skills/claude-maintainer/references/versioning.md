@@ -7,7 +7,7 @@ Run on every create/edit checkpoint and before a version bump. Test for each lin
 1. Read every file of the extension before editing any (redundancy hides file-by-file).
 2. Find real redundancy: a rule stated twice (keep one full statement, other becomes `see §X`); a fact in two files (one canonical home); stale cross-references (grep old names after every rename); orphan headings left by edits; build-log or "compiled from" notes; prose that is a bullet with no loss.
 3. Consolidate, don't just delete: if a rule appears 3 times, one complete statement + two pointers.
-4. Structure for parsing: bullets for discrete rules, bold lead term, grouped by topic, contents list on files >300 lines.
+4. Structure for parsing: bullets for discrete rules, bold lead term, grouped by topic, contents list on files >100 lines.
 5. Verify zero loss: every rule, threshold, number, example still present somewhere. Check reported line reductions against a real diff.
 
 Token efficiency beyond text: prefer scripts over repeated generated code; load references on demand; avoid re-reading files already in context; keep `SKILL.md` under 500 lines.

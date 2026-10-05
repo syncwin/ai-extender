@@ -85,7 +85,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Version 1.0.0, released after AI Extender audited itself from a real install. Every push runs the 67 self-tests and the directory validator on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-05. Found a mismatch? Please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 67 self-tests, the directory validator, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-05. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 

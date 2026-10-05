@@ -1,6 +1,6 @@
 # Targets and Formats
 
-Confirm which target(s); never generate all by default. Run `ai-extender:claude-reviewer` first on the exact files.
+Use the target settled in the plan; ask only if none was settled. Never generate all by default. Run `ai-extender:claude-reviewer` first on the exact files.
 
 | Target | Output | Notes |
 |---|---|---|

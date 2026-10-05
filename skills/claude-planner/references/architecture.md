@@ -21,7 +21,7 @@ Prefer `userConfig` over text placeholders for values users must supply.
 
 ## Router rule
 
-Every plugin has one entry skill named exactly like the plugin. With one skill, that skill is the entry point and does the work: no separate router. With two or more, the entry skill is a router: it detects context, picks a mode, hands off, and holds no task logic, and role skills carry the acronym prefix (`mt-extractor`). Capability skills stay usable on their own when named directly.
+Every plugin has one entry skill named exactly like the plugin. With one skill, that skill is the entry point and does the work: no separate router. With two or more, the entry skill is a router: it detects context, picks a mode, hands off, and holds no task logic, and role skills use the user's acronym prefix if one was chosen (`mt-extractor`), else bare roles (`extractor`). Capability skills stay usable on their own when named directly.
 
 ## How many skills
 
