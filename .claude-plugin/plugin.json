@@ -2,7 +2,7 @@
   "name": "ai-extender",
   "displayName": "AI Extender for Claude",
   "version": "1.0.0",
-  "description": "Describe what you want Claude to do, and AI Extender plans, builds, checks, and packages it: skills, plugins, connectors, agents, hooks, MCP servers, add-ons, and internal tools for your team, each with a ready-to-import Prompt Builder companion prompt. Works in Claude Code and Cowork.",
+  "description": "Describe what you want Claude to do, in your own words. AI Extender plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
   "author": {
     "name": "@wasimness",
     "company": "SyncWin",

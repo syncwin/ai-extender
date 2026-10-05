@@ -2,11 +2,11 @@
 
 ## Scope
 
-AI Extender for Claude is Markdown instructions plus local Python scripts. It makes no network requests of its own and collects no data. The scripts write only to folders you point them at, and they call other scripts in this plugin through `subprocess` with fixed argument lists, never a shell. The README lists the few things Claude may do on your behalf (a folder check in Cowork, fetching Anthropic's docs when you ask, GitHub when you ask).
+AI Extender for Claude is Markdown instructions plus local Python scripts. It makes no network requests of its own and collects no data. The scripts write only to folders you point them at, and they call other scripts in this plugin through `subprocess` with fixed argument lists. No shell is involved. The README lists the few things Claude may do on your behalf (a folder check in Cowork, fetching Anthropic's docs when you ask, GitHub when you ask).
 
 ## Reporting a vulnerability
 
-Email support@syncwin.com with what you found and the steps to reproduce it. You can also use GitHub's private vulnerability reporting on this repository if it's enabled. Please don't open a public issue for a vulnerability. We aim to reply within five working days; fixes ship as a patch release with a changelog entry.
+Email support@syncwin.com with what you found and the steps to reproduce it. GitHub's private reporting also works when enabled. Please don't open a public issue for a vulnerability: we aim to reply within five working days, and fixes ship as a patch release with a changelog entry.
 
 ## What counts
 

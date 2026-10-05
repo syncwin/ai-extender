@@ -9,12 +9,14 @@ Released after the final self-audit, run from an installed copy, and the first l
 **Fixed**
 - One-skill plugins: the planner now names the single skill after the plugin and skips the router, instead of either adding an empty router or leaving no entry skill. Two or more skills still get a router, and role skills carry the acronym.
 - Intake: the router shows a short plan with its defaults first and asks at most three questions, only ones the user alone can answer. The live eval caught it opening with a five-question list.
-- Eval suite: the audit and packaging cases had nothing to work on. The audit case now ships a small, deliberately flawed plugin and the packaging case a clean skill (both in `fixture/notes-helper`, with no nested manifest), and the packaging case, now `package-skill-upload`, may run the bundled scripts. The scaffold case's grader matches the one-skill rule.
+- Eval suite: the audit and packaging cases had nothing to work on. Each now ships a sample in `fixture/notes-helper`: a deliberately flawed plugin for the audit, a clean skill for packaging. Neither has its own manifest. The packaging case is now `package-skill-upload` and may run the bundled scripts, and the scaffold case's grader follows the one-skill rule.
 - Companion prompts: `Text` (single-line) fields are confirmed against a real Prompt Builder export and no longer warned about; `maxLength` may be `""` for no limit on `Text` and `Textarea`.
 - Script reports and the scratchpad template no longer use dashes in headings; number ranges in references read "2 to 4".
 
 **Changed**
 - Credits: removed the `skill-creator-plus` entry.
+- Docs: shorter plugin description that names claude.ai too; the README status now says exactly what CI runs.
+- The audit test's sample skill no longer tells Claude to email anything, so a security scan has nothing to misread. It still has plenty to fail on: vague descriptions, no manifest or license, and an agent with no tool limits.
 - Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
 
 ## 0.11.0: Self-audit fixes

@@ -1,6 +1,6 @@
 # AI Extender for Claude
 
-Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
+Tell Claude what you want. Use your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
 **Version** 1.0.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
@@ -41,13 +41,13 @@ claude plugin install ai-extender@syncwin
 
 ## Companion prompt
 
-Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.eniston.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import the file (Prompt Builder > Settings > Import), fill in the form, and the prompt starts the right skill with everything it needs. The file lives in the extension's `prompts/` folder and is copied next to the package each time you package it.
+Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.eniston.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import it under Settings > Import. Fill in the form, and the prompt starts the right skill with everything it needs. The file lives in the extension's `prompts/` folder and is copied next to the package each time you package it.
 
 AI Extender has one too: `prompts/ai-extender-for-claude.json`. Pick a goal, describe what you want, and send.
 
 ## Requirements
 
-Claude Code, Cowork, or claude.ai with skills enabled. The bundled scripts need Python 3.8 or newer and nothing else; CI tests them on Python 3.9 through 3.13 on Linux. On Windows or macOS, run them with `python` or `python3`, whichever your system has.
+Use Claude Code, Cowork, or claude.ai. Skills must be turned on. The bundled scripts need Python 3.8 or newer and nothing else; CI tests them on Python 3.9 through 3.13 on Linux. On Windows or macOS, run them with `python` or `python3`, whichever your system has.
 
 ## What it runs, reads, and sends
 
@@ -58,7 +58,7 @@ AI Extender is Markdown instructions plus a few Python scripts, all readable in 
 - **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
 - **GitHub**: only when you ask it to publish or keep a repo in sync, and only through your own connector or `gh` login. It asks for the owner and repo, and confirms before the first push.
 
-Nothing else leaves your machine. The plugin has no connectors, hooks, MCP servers, or executables of its own, and it collects no data. Claude asks before any step that deletes, sends, or publishes. To report a vulnerability, see `SECURITY.md`.
+Nothing else leaves your machine. The plugin has no connectors, hooks, MCP servers, or executables of its own, and it collects no data. Claude asks before any step that deletes, sends, or publishes, and you can report a vulnerability privately by following the steps in `SECURITY.md`.
 
 ## Skills and agents
 
@@ -75,7 +75,7 @@ Start with `/ai-extender`. It reads your request and calls the right role, so mo
 
 Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
 
-**Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads. Install the whole plugin instead.
+**Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads, so install the whole plugin instead.
 
 ## Troubleshooting
 
@@ -85,8 +85,8 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Version 1.0.0, released after AI Extender audited itself from a real install. The validator, 67 self-tests, and `claude plugin validate --strict` all pass on every push. The `evals/` folder holds five live cases for `claude plugin eval`; run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-05. If something doesn't match what you see, please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. Every push runs the 67 self-tests and the directory validator on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-05. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 
-Issues and pull requests are welcome; see `CONTRIBUTING.md`. Credits are in `CREDITS.md`. AI Extender is an independent project and is not affiliated with or endorsed by Anthropic.
+Issues and pull requests are welcome; see `CONTRIBUTING.md`. Credits are in `CREDITS.md`. AI Extender is an independent project by SyncWin, and it is not affiliated with or endorsed by Anthropic in any way.
