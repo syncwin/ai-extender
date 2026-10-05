@@ -74,7 +74,7 @@ def triggers(root, evals, min_hit):
     neg = [(p, (s, n if s > th else None)) for p, (s, n) in negs]
     rate, fprate = rates(th)
     sep = min((s for _, (s, _) in pos), default=0) - max((s for _, (s, _) in negs), default=0)
-    print(f"### Scratchpad — Trigger Simulation (lexical proxy)\n**Scope:** {len(skills)} skills, {len(hits)} should / {len(neg)} should-not prompts\n")
+    print(f"### Scratchpad: Trigger Simulation (lexical proxy)\n**Scope:** {len(skills)} skills, {len(hits)} should / {len(neg)} should-not prompts\n")
     print(f"| Metric | Value |\n|---|---|\n| Calibrated threshold | {th:.2f} |\n| Should-trigger hit rate | {rate:.0%} |\n| Should-not false-positive rate | {fprate:.0%} |\n| Score separation (min positive − max negative) | {sep:+.2f} |")
     flags = []
     for p, (s, n) in hits:
@@ -108,7 +108,7 @@ def install(root, out):
         mcp = []
         if (inst / ".mcp.json").exists(): mcp = list(json.loads((inst / ".mcp.json").read_text()).get("mcpServers", {}))
         hooks = list(json.loads((inst / "hooks/hooks.json").read_text()).get("hooks", {})) if (inst / "hooks/hooks.json").exists() else []
-        print(f"### Scratchpad — Install Simulation\n**Scope:** `{f.name}` extracted to a clean directory\n")
+        print(f"### Scratchpad: Install Simulation\n**Scope:** `{f.name}` extracted to a clean directory\n")
         print(f"| Check | Result |\n|---|---|\n| Archive root is plugin root | {'yes' if (inst/'.claude-plugin'/'plugin.json').exists() else 'NO'} |\n| Validator on extracted copy (--strict) | {'pass' if vr.returncode == 0 else 'FAIL'} |\n| Router skill = plugin name | {'yes' if name in skills else 'NO'} |")
         print("\n**Components a user would see**")
         for n in skills: print(f"- skill `/{name}:{n}`" if n != name else f"- skill `/{name}:{n}` (router)")

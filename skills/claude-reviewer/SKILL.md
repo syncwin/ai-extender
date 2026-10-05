@@ -8,7 +8,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Reviewer"
-  version: 0.11.0
+  version: 1.0.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -20,7 +20,7 @@ metadata:
 
 1. `python ${CLAUDE_SKILL_DIR}/scripts/validate_extension.py <dir> [--target all|claude-code|upload|cowork|directory] [--require-meta author,company] [--must-contain <prefix>] [--strict]`
    Deterministic checks: manifest, paths, router = plugin slug, skill/agent frontmatter, portable keys, descriptions, size limits, references, hooks, `.mcp.json`, secrets, placeholders, license, changelog, marketplace entry, plugin-name reservations (`P016`), directory listing fields (`P017`), companion prompt (`C000`-`C004`).
-2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (65 checks).
+2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (67 checks).
 3. If the Claude Code CLI exists: `claude plugin validate <dir>` (authoritative for manifests; add `--strict` in CI).
 4. Judgment checks the script can't make (below).
 5. Reuse results for files unchanged since the last run.

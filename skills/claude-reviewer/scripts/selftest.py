@@ -102,6 +102,10 @@ with tempfile.TemporaryDirectory() as td:
     bad_prompt("missing variable", lambda pr: pr.update({"content": pr["content"] + " {{nope}}"}))
     bad_prompt("unknown field type", lambda pr: pr["variables"]["task"].update({"type": "Dropdown"}))
     bad_prompt("radio without options", lambda pr: pr["variables"]["files"].update({"type": "Radio", "options": ""}))
+    bad_prompt("zero maxLength", lambda pr: pr["variables"]["task"].update({"maxLength": 0}))
+    q = td / "cp-text"; shutil.copytree(p, q); f = q / "prompts" / "ab-demo.json"
+    d = json.loads(f.read_text()); d["prompts"][0]["variables"]["task"].update({"type": "Text", "maxLength": ""}); f.write_text(json.dumps(d))
+    r = RUN(CP, "--check", f); check("Text field with no length limit passes", r.returncode == 0 and "| 0 | 0 |" in r.stdout, r.stdout[-300:])
     q = td / "cp-spec"; shutil.copytree(p, q); (q / "spec.json").write_text(json.dumps({"content": "Run /ab-demo for {{client}}.", "variables": {"client": {"type": "Textarea", "label": "Client", "maxLength": 80, "required": True, "context": "Who it's for"}}}))
     r = RUN(CP, q, "--spec", q / "spec.json"); d = json.loads((q / "prompts/ab-demo.json").read_text())
     check("companion prompt from spec keeps id and escapes context", r.returncode == 0 and d["prompts"][0]["id"] == json.loads(pf.read_text())["prompts"][0]["id"] and "&#x27;" in d["prompts"][0]["variables"]["client"]["context"], r.stdout[-300:])

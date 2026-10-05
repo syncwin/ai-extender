@@ -6,7 +6,7 @@ color: blue
 tools: ["Read", "Grep", "Glob"]
 metadata:
   displayName: "AI Extender Comparator"
-  version: 0.11.0
+  version: 1.0.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender

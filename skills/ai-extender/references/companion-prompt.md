@@ -31,11 +31,11 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 | Field | Rule |
 |---|---|
 | Variable name | letters, digits, underscores; used in `content` as `{{name}}`; every `{{name}}` has a variable and every variable is used |
-| `type` | `Textarea` (multi-line), `Radio` (pick one), `Checkbox` (pick several). `Text` (single line) exists in the app, but its JSON value is not confirmed against an export: prefer `Textarea` with a small `maxLength` |
+| `type` | `Text` (one line: a name, a keyword, a URL), `Textarea` (several lines), `Radio` (pick one), `Checkbox` (pick several) |
 | `label` | short, Title Case, shown above the field |
 | `placeholder` | example input for text fields; for Radio/Checkbox exports repeat the variable name |
 | `context` | the tooltip. Stored HTML-escaped (an apostrophe becomes `&#x27;`); the script escapes it for you |
-| `maxLength` | positive whole number for `Textarea`/`Text`; `""` for Radio/Checkbox |
+| `maxLength` | `Text`/`Textarea`: a positive whole number, or `""` for no limit; `""` for Radio/Checkbox |
 | `required` | `true` only for what the extension cannot run without (usually one field) |
 | `options` | Radio/Checkbox only: at least two, one per line, no duplicates; `""` otherwise |
 
@@ -43,7 +43,7 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 
 - **Title** = the extension's display name. **Description** = one or two sentences on what it does and how to use the form.
 - **Content:** `# <Title>`, then `Run /<slug>` (or `/<plugin>:<skill>` for one stage) and the task in one line, then one bullet per field (`* **Label:** \`{{name}}\``), then the rules the extension already enforces that a user should see: ask once for missing inputs, show a plan and wait for a yes before anything that creates, changes, sends, publishes, or deletes.
-- **Fields:** 3 to 6. The free-text request first and required; a Radio for the stage when users run stages separately; a Checkbox for where the files are; an optional Textarea for everything else. Options in plain words the user would say, not skill slugs; put the mapping in `context`.
+- **Fields:** 3 to 6. The free-text request first and required; `Text` for one-line answers; a Radio for the stage when users run stages separately; a Checkbox for where the files are; an optional Textarea for everything else. Options in plain words the user would say, not skill slugs; put the mapping in `context`.
 - Keep the form short enough to fill in under a minute. No secrets, client names, or internal URLs in the file: users share it.
 
 ## 5. Tooling

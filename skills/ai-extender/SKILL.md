@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 0.11.0
+  version: 1.0.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -27,7 +27,7 @@ The user should never need to know what a manifest, frontmatter, or MCP is. Talk
 - **Invoked with no request, or the request is vague:** ask one short question and stop:
   > What would you like Claude to do for you? Describe it the way you'd explain it to a colleague. For example: "turn my meeting notes into action items", "check every blog draft against our style guide", "pull this week's numbers from our CRM into a summary", or "fix the skill I already have".
 - **Request is clear:** don't ask; restate it in one plain sentence and continue.
-- Work out the technical choices yourself (component types, names, structure) and show them as a short plan in plain words. Ask the user only what they alone can answer: who will use it, where they use Claude, and any names or rules it must follow.
+- Work out the technical choices yourself (component types, names, structure, output format, which tools it touches) and show them as a short plan in plain words, with your defaults filled in. Ask the user only what they alone can answer: who will use it, where they use Claude, and the content only they have (their checklist, rules, or names). At most three questions, in the same message as the plan; never a questionnaire before the plan.
 - Default to the smallest thing that works. A single skill beats a plugin when one skill covers it.
 
 ## 1. Environment (detect, never ask)

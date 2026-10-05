@@ -417,7 +417,7 @@ def main(argv):
     E = [f for f in F if f[0] == "error"]; W = [f for f in F if f[0] == "warn"]; I = [f for f in F if f[0] == "info"]
     if opts["json"]: print(json.dumps([dict(zip(("severity","code","where","message"), f)) for f in F], indent=2))
     else:
-        print(f"### Scratchpad — Extension Validation\n**Scope:** {kind} `{root.name}`, target={opts['target']}\n")
+        print(f"### Scratchpad: Extension Validation\n**Scope:** {kind} `{root.name}`, target={opts['target']}\n")
         print(f"| Errors | Warnings | Info |\n|---|---|---|\n| {len(E)} | {len(W)} | {len(I)} |\n")
         for sev, items in (("Errors", E), ("Warnings", W), ("Info", I)):
             if items:

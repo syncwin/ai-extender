@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: package-skill-upload
+context:
+  add_dirs:
+    - fixture/notes-helper

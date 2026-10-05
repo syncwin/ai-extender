@@ -16,7 +16,7 @@ Token efficiency beyond text: prefer scripts over repeated generated code; load 
 
 Propose a change when a reusable gap appears (missing, wrong, ambiguous, or contradictory rule), the user reports a real failure, or a structural request arrives. Pure rephrasing is Part 1, not a version reason.
 
-- **Ask before changing:** state the gap in 1–2 sentences and the file it goes in; proceed on an explicit yes. A yes to a broad task does not authorize unrelated edits. If the user pre-authorized a scoped piece of work ("do whatever's best for X"), proceed inside that scope and narrate afterwards.
+- **Ask before changing:** state the gap in 1 or 2 sentences and the file it goes in; proceed on an explicit yes. A yes to a broad task does not authorize unrelated edits. If the user pre-authorized a scoped piece of work ("do whatever's best for X"), proceed inside that scope and narrate afterwards.
 - **Diagnose failures concretely:** diff before/after. *Execution gap* (rule right, not followed → fix sequencing) vs *specification gap* (rule missing/wrong → fix the rule). Fix it in the file that owns it.
 - **Scope:** a request to fix X is not permission to restructure Y. Follow the extension's existing organization. Mirror a new rule where it is already represented, as pointers.
 

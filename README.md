@@ -2,7 +2,7 @@
 
 Tell Claude what you want it to do, in your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Version** 0.11.0 (pre-release) · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.0.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -85,7 +85,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Pre-release. Version 1.0 follows a final audit in which AI Extender reviews itself from a real install. The validator, 65 self-tests, and `claude plugin validate --strict` all pass. Platform facts were checked against Anthropic's documentation on 2026-10-03; the directory checklist was re-checked on 2026-10-05. Live behavior hasn't yet been measured with `claude plugin eval`. If something doesn't match what you see, please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. The validator, 67 self-tests, and `claude plugin validate --strict` all pass on every push. The `evals/` folder holds five live cases for `claude plugin eval`; run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-05. If something doesn't match what you see, please open an issue.
 
 ## Contributing and credits
 

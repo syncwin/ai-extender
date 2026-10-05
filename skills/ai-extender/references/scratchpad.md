@@ -13,7 +13,7 @@ Canonical format. Every skill, connector, and plugin emits one after completing 
 ## Template
 
 ```
-### Scratchpad — <Visible Name> v<version>
+### Scratchpad: <Visible Name> v<version>
 **Scope:** <what was run>
 
 | Area | Result |
@@ -21,6 +21,6 @@ Canonical format. Every skill, connector, and plugin emits one after completing 
 | <thing checked/built/changed> | <done / pass / fail + one clause> |
 
 **Changed:** <files or components created/edited, one line each>
-**Flags:** <failures, assumptions, unresolved items — omit if none>
-**Next:** <single next action — omit if none>
+**Flags:** <failures, assumptions, unresolved items (omit if none)>
+**Next:** <single next action (omit if none)>
 ```

@@ -86,7 +86,7 @@ def main(argv):
     cfg = json.loads(mcp.read_text()) if mcp.exists() else {}
     cfg.setdefault("mcpServers", {})[a["name"]] = entry
     mcp.write_text(json.dumps(cfg, indent=2) + "\n")
-    print(f"### Scratchpad — MCP Scaffold\n**Scope:** {a['name']} ({a['lang']})\n\n| Item | Result |\n|---|---|\n| Server | `{d}` |\n| Registered | `.mcp.json` → `{a['name']}` |\n| Tool | `{a['tool']}` |\n\n**Next:** {nxt}; disclose the package install in the README; replace the sample tool; test with the MCP Inspector.")
+    print(f"### Scratchpad: MCP Scaffold\n**Scope:** {a['name']} ({a['lang']})\n\n| Item | Result |\n|---|---|\n| Server | `{d}` |\n| Registered | `.mcp.json` → `{a['name']}` |\n| Tool | `{a['tool']}` |\n\n**Next:** {nxt}; disclose the package install in the README; replace the sample tool; test with the MCP Inspector.")
     return 0
 
 if __name__ == "__main__":

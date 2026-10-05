@@ -8,6 +8,5 @@ Studied, then rewritten:
 - Anthropic's `/create-cowork-plugin` and `/cowork-plugin-customizer`: the Cowork build and customization flow in `claude-packager/references/cowork.md` and `claude-maintainer/references/updating.md`.
 - Anthropic's `plugin-dev` and `mcp-server-dev` plugins: their scope only (what plugin, hook, and MCP authoring should cover).
 - Ponytail: the lean-implementation principle.
-- `skill-creator-plus`, an earlier SyncWin skill: the de-duplication and versioning discipline.
 
 Not affiliated with or endorsed by Anthropic.

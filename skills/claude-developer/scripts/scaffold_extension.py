@@ -20,7 +20,7 @@ SCRATCH = """# Scratchpad Format
 Every skill, connector, and agent ends its task with one. Standalone: emit at the end. Chained: each stage adds rows to one running scratchpad, emitted once at the end.
 
 ```
-### Scratchpad — <Visible Name> v<version>
+### Scratchpad: <Visible Name> v<version>
 **Scope:** <what was run>
 
 | Area | Result |
@@ -107,7 +107,7 @@ def main(argv):
     if cp.exists():
         r = subprocess.run([sys.executable, str(cp), str(root)], capture_output=True, text=True)
         prompt = "prompts/ (default; edit the form fields to match the skills)" if r.returncode == 0 else "FAILED: " + r.stdout[-300:]
-    print(f"### Scratchpad — Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
+    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
     return 0
 
 if __name__ == "__main__":

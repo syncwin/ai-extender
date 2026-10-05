@@ -25,7 +25,6 @@ FORMAT, FORMAT_VERSION = "prompt-builder-plain", "2.0"
 # Copied from Prompt Builder 2.0 exports; every export inspected carries this value regardless of content.
 CHECKSUM = "-9vapbe"
 TYPES = {"Text", "Textarea", "Radio", "Checkbox"}
-VERIFIED_TYPES = {"Textarea", "Radio", "Checkbox"}  # seen in real exports; "Text" is documented but its JSON value is unverified
 VAR = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
 FILE_OPTIONS = "Attached in This Message\nIn the Claude Project Files\nCreated Earlier in This Chat\nNone, Start from Scratch"
@@ -147,7 +146,6 @@ def check(d):
             if not isinstance(v, dict): E.append(f"{vat} must be an object"); continue
             ty = v.get("type")
             if ty not in TYPES: E.append(f"{vat}.type {ty!r} must be one of {sorted(TYPES)}"); continue
-            if ty not in VERIFIED_TYPES: W.append(f"{vat}.type \"Text\": JSON value not confirmed against an export; Textarea is safe")
             if not str(v.get("label", "")).strip(): E.append(f"{vat}.label is empty")
             for f in ("placeholder", "context", "options"):
                 if not isinstance(v.get(f, ""), str): E.append(f"{vat}.{f} must be text")
@@ -160,12 +158,12 @@ def check(d):
                 if ml not in ("", None): W.append(f"{vat}.maxLength is ignored for {ty}")
             else:
                 if opts: W.append(f"{vat}.options is ignored for {ty}")
-                if not (isinstance(ml, int) and not isinstance(ml, bool) and ml > 0): E.append(f"{vat}.maxLength must be a positive whole number for {ty}")
+                if ml not in ("", None) and not (isinstance(ml, int) and not isinstance(ml, bool) and ml > 0): E.append(f"{vat}.maxLength must be a positive whole number, or \"\" for no limit, for {ty}")
         if re.search(r"<script|javascript:", json.dumps(p), re.I): E.append(f"{at}: contains script content")
     return E, W
 
 def report(path, E, W):
-    print(f"### Scratchpad — Companion Prompt\n**Scope:** `{path}`\n\n| Errors | Warnings |\n|---|---|\n| {len(E)} | {len(W)} |")
+    print(f"### Scratchpad: Companion Prompt\n**Scope:** `{path}`\n\n| Errors | Warnings |\n|---|---|\n| {len(E)} | {len(W)} |")
     for label, items in (("Errors", E), ("Warnings", W)):
         if items:
             print(f"\n**{label}**"); [print(f"- {x}") for x in items]

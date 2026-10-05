@@ -76,7 +76,7 @@ def main(argv):
         shutil.copyfile(tmp, dest)
     with zipfile.ZipFile(dest) as z:
         n = len(z.namelist())
-    print(f"### Scratchpad — Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|\n| File | `{dest}` |\n| Entries | {n} |\n| Version | {version} |\n| Companion prompt | `prompts/` checked and copied into `{out}` |")
+    print(f"### Scratchpad: Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|\n| File | `{dest}` |\n| Entries | {n} |\n| Version | {version} |\n| Companion prompt | `prompts/` checked and copied into `{out}` |")
     return 0
 
 if __name__ == "__main__":

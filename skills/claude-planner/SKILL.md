@@ -9,7 +9,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Planner"
-  version: 0.11.0
+  version: 1.0.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender

@@ -41,7 +41,7 @@ Broadly useful capabilities are built once, portably, and copied into generated 
 | Efficiency ladder | router §4 | the same ladder in their router |
 | Lean build | §5b | the same rule in their developer/authoring skill |
 | De-dup and semver | `claude-maintainer/references/versioning.md` | changelog + version discipline |
-| Naming, metadata | §1–3 | the same conventions |
+| Naming, metadata | §1 to 3 | the same conventions |
 | Security | §5c | the same rules |
 | Companion prompt | `companion-prompt.md` | a Prompt Builder JSON that starts the extension |
 

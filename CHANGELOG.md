@@ -2,6 +2,21 @@
 
 Newest first.
 
+## 1.0.0: First public release
+
+Released after the final self-audit, run from an installed copy, and the first live `claude plugin eval` run.
+
+**Fixed**
+- One-skill plugins: the planner now names the single skill after the plugin and skips the router, instead of either adding an empty router or leaving no entry skill. Two or more skills still get a router, and role skills carry the acronym.
+- Intake: the router shows a short plan with its defaults first and asks at most three questions, only ones the user alone can answer. The live eval caught it opening with a five-question list.
+- Eval suite: the audit and packaging cases had nothing to work on. The audit case now ships a small, deliberately flawed plugin and the packaging case a clean skill (both in `fixture/notes-helper`, with no nested manifest), and the packaging case, now `package-skill-upload`, may run the bundled scripts. The scaffold case's grader matches the one-skill rule.
+- Companion prompts: `Text` (single-line) fields are confirmed against a real Prompt Builder export and no longer warned about; `maxLength` may be `""` for no limit on `Text` and `Textarea`.
+- Script reports and the scratchpad template no longer use dashes in headings; number ranges in references read "2 to 4".
+
+**Changed**
+- Credits: removed the `skill-creator-plus` entry.
+- Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
+
 ## 0.11.0: Self-audit fixes
 
 Pre-release. Findings from AI Extender's audit of itself, run from an installed copy.

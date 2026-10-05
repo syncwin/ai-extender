@@ -7,7 +7,7 @@ Location: `agents/<name>.md`. In `plugin.json`, `agents` takes `.md` file paths 
 | Field | Notes |
 |---|---|
 | `name` (req) | unique, role slug; no `:` and no leading `-` or the file is skipped |
-| `description` (req) | when Claude should delegate; add 1–2 concrete trigger examples |
+| `description` (req) | when Claude should delegate; add 1 or 2 concrete trigger examples |
 | `tools` / `disallowedTools` | least privilege; omit = inherits everything |
 | `model` | `sonnet`, `opus`, `haiku`, `fable`, full id, or `inherit` |
 | `maxTurns`, `effort`, `color`, `background`, `isolation: worktree`, `memory`, `skills` (preload), `omitClaudeMd` | optional |

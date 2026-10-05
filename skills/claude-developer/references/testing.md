@@ -38,7 +38,7 @@ evals/mocks/<server>/<tool>.md # optional MCP mocks ({{input.x}}, expect:, error
 
 ## 3. Manual loop (any surface)
 
-1. Test set: 2–4 realistic prompts (one vague/casual) + a trigger set (~8 should / ~8 should-not, negatives as near-misses). Keep the trigger sets in `evals/evals.json` (`trigger`, `trigger_heldout`).
+1. Test set: 2 to 4 realistic prompts (one vague/casual) + a trigger set (~8 should / ~8 should-not, negatives as near-misses). Keep the trigger sets in `evals/evals.json` (`trigger`, `trigger_heldout`).
 2. Per prompt, in parallel, in fresh contexts: **with** the extension and **baseline** (none for new; previous version for edits). Save to `<name>-workspace/iteration-N/<eval-id>/{with,baseline}/` and write `timing.json` (`total_tokens`, `duration_ms`) when each run finishes.
 3. Grade with the `ai-extender:claude-grader` agent (writes `grading.json`: `{"expectations":[{"text","passed","evidence"}]}`); compare outputs blind with `ai-extender:claude-comparator`.
 4. `python ${CLAUDE_SKILL_DIR}/scripts/aggregate_results.py <iteration-dir>` → pass rate, tokens, seconds, delta, flags (non-discriminating or failing assertions, high variance). `eval_report.py <iteration-dir>` → `report.html`.
