@@ -9,4 +9,10 @@ Studied, then rewritten:
 - Anthropic's `plugin-dev` and `mcp-server-dev` plugins: their scope only (what plugin, hook, and MCP authoring should cover).
 - [Ponytail](https://github.com/DietrichGebert/ponytail), an open-source Claude skill: the lean-implementation principle.
 
+Training data for the injection screen (`claude-reviewer/scripts/injection_model.json`, weights learned here; no data or model files are redistributed):
+
+- [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections), Apache-2.0.
+- [jackhhao/jailbreak-classification](https://huggingface.co/datasets/jackhhao/jailbreak-classification), Apache-2.0.
+- Benchmarks consulted, not used as training data: Red Hat's "Benchmarking AI decision models against traditional guardrails" (2026-10-02), covering `protectai/deberta-v3-base-prompt-injection-v2` and Laya.
+
 Not affiliated with or endorsed by Anthropic.

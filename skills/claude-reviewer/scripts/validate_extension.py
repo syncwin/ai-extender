@@ -16,6 +16,10 @@ Complements (does not replace) `claude plugin validate`.
 import hashlib, json, os, re, sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # never leave __pycache__ inside the plugin being checked
+try: from screen_text import flagged as screen, excerpt  # local injection screen (screen_text.py beside this file)
+except Exception: screen = None
+
 PLUGIN_KEYS = {"$schema","name","displayName","version","description","author","homepage","repository","license",
   "keywords","metadata","defaultEnabled","dependencies","settings","userConfig","channels","skills","commands",
   "agents","hooks","mcpServers","lspServers","outputStyles","workflows","experimental",
@@ -147,6 +151,7 @@ def check_skill(sdir, opts, plugin_files):
             if f.suffix == ".md" and re.search(r"\]\([\w./-]*\\[\w./\\-]*\)", c): add("warn", "S014", f, "backslash path in a link: use forward slashes")
             if f.suffix == ".md" and f.parent.name == "references" and len(c.splitlines()) > 100 and not re.search(r"contents", c[:1500], re.I):
                 add("warn", "S011", f, ">100 lines without a contents list (Anthropic guidance)")
+            if f.suffix == ".md" and screen: screen_md(f, c)
             if f.suffix == ".md" and f != sm and (len(c.splitlines()) > 300 or len(c) > 40_000):
                 add("warn", "S016", f, f"{len(c.splitlines())} lines, {len(c) // 1000} KB: split into topic files that load on demand")
     refs = sdir / "references"
@@ -158,7 +163,12 @@ def check_skill(sdir, opts, plugin_files):
             if not (sdir.parent / tok).exists() and not (sdir.parent.parent / tok).exists():
                 add("error", "S013", p, f"broken reference `{tok}`")
 
+def screen_md(f, text):
+    for s, c in screen(text):
+        add("warn", "X005", f, f"reads like an instruction aimed at the model (injection score {s}): \"{excerpt(c, 70)}\". Remove it, or quote a real example in a code block")
+
 def check_agent(f):
+    if screen: screen_md(f, read(f) or "")
     fm, _ = parse_frontmatter(read(f) or "")
     if not fm: add("warn", "A001", f, "no frontmatter: treated as documentation"); return
     n = fm.get("name", "")

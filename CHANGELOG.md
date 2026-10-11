@@ -46,7 +46,8 @@ Released after the final self-audit, run from an installed copy, and the first l
 - Platform facts verified 2026-10-11: plugin installs and removal on every surface, the Connectors tab, connector de-duplication, and Composio Connect.
 - Request ledger: every scratchpad, in AI Extender and in the extensions it builds, opens with one row per request the user made (Request, Status, Context), so finished and open work are both accounted for. The validator warns when a scratchpad format has no ledger (`S020`).
 - Python routing evaluated and not adopted: on 60 labeled requests, lexical and trained stand-ins for Laya and DeBERTa picked the right skill 42% to 58% of the time, below what Claude does from the descriptions. Numbers and the revisit condition are in `claude-developer/references/local-models.md`.
-- 28 self-tests (95 in total) for the new checks and scripts.
+- Injection screen: `claude-reviewer/scripts/screen_text.py` with a 67 KB model learned from two small Apache-2.0 datasets (deepset/prompt-injections, jackhhao/jailbreak-classification). Pure Python, no downloads. Held out: precision 0.96 to 0.97, recall 0.96 on jailbreaks and 0.63 on subtler injections, no false alarms on skill docs. The validator screens skill and agent text (`X005`), docs refreshes screen fetched pages, and the scaffolder adds it as a `PostToolUse` guardrail hook to generated plugins with connectors (`--no-guardrail`). DeBERTa (568 to 739 MB) and Laya (808 MB) were not bundled: too large for a plugin.
+- 35 self-tests (102 in total) for the new checks and scripts.
 
 ## 0.11.0: Self-audit fixes
 

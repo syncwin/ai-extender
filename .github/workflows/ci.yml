@@ -26,5 +26,7 @@ jobs:
         run: python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
         run: python skills/claude-reviewer/scripts/scan_secrets.py .
+      - name: Screen docs for prompt injection
+        run: python skills/claude-reviewer/scripts/screen_text.py .
       - name: Simulate skill triggers
         run: python skills/claude-reviewer/scripts/simulate.py . triggers

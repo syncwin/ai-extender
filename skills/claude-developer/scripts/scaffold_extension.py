@@ -4,7 +4,7 @@
 Usage: scaffold_extension.py <out-dir> --slug my-thing --display "My Thing"
          [--description "..."] [--author "@name"] [--company "Co"] [--email a@b.c] [--url https://..]
          [--license MIT] [--roles planner,developer] [--prefix acronym|none] [--agents] [--hooks] [--connectors]
-         [--no-composio]
+         [--no-composio] [--no-guardrail]
 Creates <out-dir>/<slug>/ with: plugin.json (version 0.0.1), router skill named <slug>, one stub skill per
 --roles entry (<prefix>-<role>, or bare <role> without --prefix), scratchpad reference, README, CHANGELOG, LICENSE (MIT), .gitignore,
 and the Prompt Builder companion prompt (prompts/<title-slug>.json, via claude-packager/scripts/companion_prompt.py).
@@ -12,6 +12,9 @@ Metadata on the manifest and every skill: displayName, version, and author/compa
 Optional empty-but-valid: agents/ (--agents), hooks/hooks.json (--hooks), .mcp.json (--connectors).
 Composio is declared by default (.mcp.json "composio" at the shared https://connect.composio.dev/mcp; each user signs
 in with their own account, so nothing personal ships). --no-composio leaves it out.
+With any connector, the injection guardrail is added too: scripts/guardrail/ (screen_text.py and its 67 KB model, copied
+from claude-reviewer/scripts) and a PostToolUse hook that screens web and connector output in Claude Code and Cowork.
+--no-guardrail leaves it out.
 Stubs contain real structure and a scratchpad step: fill the bodies, then run the validator.
 """
 import json, re, subprocess, sys
@@ -62,12 +65,13 @@ def frontmatter(name, desc, a, display):
 
 def main(argv):
     a = {"slug": None, "display": None, "description": "", "author": "", "company": "", "email": "", "url": "", "license": "MIT",
-         "roles": [], "prefix": "", "agents": False, "hooks": False, "connectors": False, "composio": True}
+         "roles": [], "prefix": "", "agents": False, "hooks": False, "connectors": False, "composio": True, "guardrail": True}
     out, i = None, 0
     while i < len(argv):
         x = argv[i]
         if x in ("--agents", "--hooks", "--connectors"): a[x[2:]] = True
         elif x == "--no-composio": a["composio"] = False
+        elif x == "--no-guardrail": a["guardrail"] = False
         elif x.startswith("--") and x[2:] in a: a[x[2:]] = argv[i+1]; i += 1
         elif not x.startswith("-") and out is None: out = Path(x)
         else: print(__doc__); return 2
@@ -101,12 +105,25 @@ def main(argv):
     (root / "skills" / a["slug"] / "references").mkdir(exist_ok=True)
     (root / "skills" / a["slug"] / "references" / "scratchpad.md").write_text(SCRATCH)
     if a["agents"]: (root / "agents").mkdir(); (root / "agents" / ".gitkeep").write_text("")
-    if a["hooks"]: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text('{\n  "hooks": {}\n}\n')
+    a["guardrail"] = a["guardrail"] and (a["composio"] or a["connectors"])
+    src = Path(__file__).resolve().parents[2] / "claude-reviewer" / "scripts"
+    if a["guardrail"] and not (src / "injection_model.json").exists(): a["guardrail"] = False
+    hooks = {}
+    if a["guardrail"]:
+        g = root / "scripts" / "guardrail"; g.mkdir(parents=True)
+        for fn in ("screen_text.py", "injection_model.json"): (g / fn).write_bytes((src / fn).read_bytes())
+        hooks["PostToolUse"] = [{"matcher": "WebFetch|WebSearch|mcp__.*", "hooks": [{"type": "command", "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py", "--hook"], "timeout": 15}]}]
+    if a["hooks"] or hooks: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text(json.dumps({"hooks": hooks}, indent=2) + "\n")
     servers = {"composio": {"type": "http", "url": COMPOSIO_URL}} if a["composio"] else {}
     if a["connectors"] or servers: (root / ".mcp.json").write_text(json.dumps({"mcpServers": servers}, indent=2) + "\n")
     ctable = ("\n## Connectors\n\n| Connector | Used by | Purpose | Auth | Data sent |\n|---|---|---|---|---|\n"
               f"| Composio | all skills, when a task needs an outside app | one connection to 1,000+ apps (Gmail, Notion, Slack, CRMs) | each user's own Composio sign-in (OAuth) | only what a task sends to the app it uses |\n\n"
               "In Chat or Cowork, open the plugin's Connectors tab and select Connect. Claude Code reuses a Composio connector you already have at this exact address instead of loading a second copy.\n") if a["composio"] else ""
+    ctable += ("\n## Injection guardrail\n\nIn Claude Code and Cowork, a hook screens what web pages and connectors return with a small local model "
+               "(`scripts/guardrail/`, 67 KB, no downloads) and warns Claude when it finds instructions aimed at the model. It never blocks your work: "
+               "Claude treats flagged content as data and asks you before acting on it. Chat on claude.ai doesn't run hooks. "
+               "To turn it off, remove the `PostToolUse` entry from `hooks/hooks.json`.\n") if a["guardrail"] else ""
     contact = f" · **Contact** {a['email']}" if a["email"] else ""
     who = " · ".join(x for x in (f"**Author** {a['author']}" if a["author"] else "", f"**Company** {a['company']}" if a["company"] else "") if x)
     slug_t = re.sub(r"[^a-z0-9]+", "-", a["display"].lower()).strip("-")
@@ -123,7 +140,7 @@ def main(argv):
     if cp.exists():
         r = subprocess.run([sys.executable, str(cp), str(root)], capture_output=True, text=True)
         prompt = "prompts/ (default; edit the form fields to match the skills)" if r.returncode == 0 else "FAILED: " + r.stdout[-300:]
-    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors','composio') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
+    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors','composio','guardrail') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
     return 0
 
 if __name__ == "__main__":

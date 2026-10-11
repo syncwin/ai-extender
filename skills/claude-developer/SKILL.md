@@ -36,7 +36,7 @@ Build only what the plan confirmed. No approved plan in context: hand to `ai-ext
 | New project skeleton | `scripts/scaffold_extension.py --help` (also writes a default companion prompt) |
 | MCP server skeleton (Node/Python) | `scripts/scaffold_mcp_server.py --help` |
 | Eval review page | `scripts/eval_report.py --help` |
-| Small local models, guardrails, Docker | `references/local-models.md` |
+| Injection guardrail, small local models, Docker | `references/local-models.md`; scaffolder adds the guardrail by default with connectors (`--no-guardrail`) |
 
 ## Rules
 

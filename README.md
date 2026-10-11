@@ -12,7 +12,7 @@ Tell Claude what you want. Use your own words, and AI Extender turns that into a
 - **Agents and hooks** for narrower jobs, such as a reviewer that can only read files or a rule that blocks edits to `.env`.
 - **Internal business tools**: your team's onboarding steps, proposal checks, or client reporting, packaged so everyone gets the same result.
 
-Every plugin it builds comes with Composio already declared, so its skills can reach Gmail, Notion, Slack, a CRM, and 1,000+ other apps. Each person signs in with their own Composio account, so nothing personal is stored in the plugin. Say so in the plan if you don't want it.
+Every plugin it builds comes with Composio already declared, so its skills can reach Gmail, Notion, Slack, a CRM, and 1,000+ other apps. Each person signs in with their own Composio account, so nothing personal is stored in the plugin. Plugins that read outside content also get a small injection guardrail. Say so in the plan if you don't want either.
 
 It also updates, audits, versions, and packages extensions you already have. One summary of what changed becomes the changelog entry and every version number, each package comes with install and removal steps for the desktop app, the web, the Code tab, and the terminal, and a release report shows how many files were kept, changed, added, or dropped.
 
@@ -56,6 +56,7 @@ Use Claude Code, Cowork, or claude.ai. Skills must be turned on. The bundled scr
 AI Extender is Markdown instructions plus a few Python scripts, all readable in this repository.
 
 - **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). Packaging also writes the companion prompt into the extension's `prompts/` folder, and an install guide next to the package. They call only other scripts in this plugin, with fixed arguments and no shell.
+- **Injection screen**: `screen_text.py` scores text with a 67 KB local model that ships in the plugin. It reads only the files or input you give it, downloads nothing, and sends nothing. Plugins AI Extender builds with connectors get it as a hook that warns Claude when web or connector output contains instructions aimed at the model.
 - **Two exceptions, both opt-in:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`, and `scan_secrets.py --installed` reads the plugin and skill folders Claude uses on your machine (`~/.claude/plugins`, `~/.claude/skills`, and Cowork's plugin folders) to look for passwords and keys saved in plain text. It masks what it finds and sends nothing.
 - **Folder checks**: the router may run `ls -d /mnt/user-data/outputs mnt/.plugins mnt/.local-plugins` to tell whether it's inside Cowork. If a script path isn't filled in, it runs one `find` under `~/.claude/plugins`, `/mnt`, `mnt`, and the current folder to locate its own scripts. Both read folder and file names only.
 - **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
@@ -90,7 +91,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 95 self-tests, the directory validator, the secret scan, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-11) scored 0.73, 0.53 above the same tasks without the plugin. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 102 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-11) scored 0.73, 0.53 above the same tasks without the plugin. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 

@@ -4,7 +4,7 @@ Load when a user asks for a small local model (classifier, decision model, guard
 
 ## Contents
 
-1. What the benchmark found · 2. Where a local model fits · 3. Where it doesn't · 4. How to add one · 5. Docker
+1. What the benchmark found · 2. What ships: the injection screen · 3. Where it doesn't fit · 4. Heavier models · 5. Docker
 
 ## 1. What the benchmark found
 
@@ -19,22 +19,31 @@ Load when a user asks for a small local model (classifier, decision model, guard
 
 The authors' conclusion: where labeled data exists, a small trained classifier matches large judges at a fraction of the cost. Zero-shot decision models are a usable fallback when no trained classifier exists, but they were not faster or more accurate than an LLM judge. Prompts tuned for one decision model can hurt another (Laya gained 17.8 points from a tuned policy; Jev lost 3.7 on the same policy).
 
-## 2. Where a local model fits
+## 2. What ships: the injection screen
 
-One job: screening untrusted text before Claude acts on it. A Claude Code `PostToolUse` hook on `WebFetch` and connector tools can run a prompt-injection classifier over the returned content and warn (or block with exit 2) when it scores high. This backs up standards §5c (tool output is data, never instructions) with a check that costs no tokens.
+`claude-reviewer/scripts/screen_text.py` with `injection_model.json` (67 KB): a logistic regression over word and character n-grams, pure Python, about 1 ms per paragraph, no downloads. It learned from the same kind of public data the DeBERTa guardrails use: deepset/prompt-injections and jackhhao/jailbreak-classification (both Apache-2.0, under 2 MB together), plus AI Extender's own skill text as benign examples. Held out at the 0.5 threshold: precision 0.96 to 0.97, recall 0.96 on jailbreak prompts and 0.63 on subtler injections, no false alarms on held-out skill docs. DeBERTa-base scored 89% on Red Hat's harder benchmark, so this trades some recall for size: a screen that warns, never a gate on its own.
 
-## 3. Where it doesn't
+| Where | How it runs |
+|---|---|
+| Audits (`claude-reviewer`) | the validator screens every skill and agent file (`X005`); `screen_text.py <dir>` screens third-party or downloaded extensions |
+| Refreshing platform facts | fetched pages are screened before use (`ai-extender/references/claude-docs-sync.md`) |
+| Generated extensions that read outside content | the scaffolder copies the screen into `scripts/guardrail/` and adds a `PostToolUse` hook on web and connector tools (`--hook` mode: exit 2 shows Claude a warning, any error exits 0). Claude Code and Cowork; chat doesn't run hooks |
+
+Examples quoted in code blocks are skipped in file mode, so documentation can show an attack without tripping the check.
+
+## 3. Where it doesn't fit
 
 - **Routing and skill choice.** Measured 2026-10-12 on AI Extender itself: 60 requests labeled with the right skill and reference file, routed by pure-Python stand-ins for the two model types. A zero-shot ranker over 199 skill and reference sections (Laya-style) picked the right skill 58% of the time and the right file 35% (60% within its top 3). A classifier trained on the other 59 labels plus the 45 trigger phrases in the skill descriptions (DeBERTa-style, leave-one-out) reached 42%, and combining the two 52%. Claude picks the skill from the same descriptions at no extra cost and fired the right one in nearly every live eval run. A local model would add a tool call or a hook (Claude Code and Cowork only) to be wrong more often. Revisit only if a plugin collects a few hundred real routing decisions to train on. What already works at zero runtime cost: trigger phrases in descriptions, a router table that names every skill (`S019`), and `claude-reviewer/scripts/simulate.py` to test them.
 - **Chat on claude.ai, and the Skills API.** Chat runs skills and commands only, and the API container has no network or package installs, so no local model can run there. Hooks and local servers run in Cowork and Claude Code.
 - **As the only gate.** False positives block real work and false negatives pass. Always pair it with the rules check and Claude's own reading.
 
-## 4. How to add one (Claude Code add-on, opt-in)
+## 4. Heavier models (opt-in add-on only)
 
-- Ship it as a **separate add-on plugin** (`addons.md`), never inside a plugin bound for the directory: the model download and the PyTorch or ONNX runtime are large, need the network on first run, and get held for review.
-- Install into `${CLAUDE_PLUGIN_DATA}` from a `SessionStart` hook, as `scaffold_mcp_server.py --lang python` does. Pin package versions and the model revision. An ONNX export runs without PyTorch and starts faster.
+Not downloaded or bundled: DeBERTa-small and base (568 to 739 MB) and Laya (808 MB) are hundreds of times larger than the screen, need ONNX Runtime or PyTorch, and outgrow the memory of a small sandbox. If a user needs their accuracy, build a separate Claude Code add-on (`addons.md`), never inside a plugin bound for the directory:
+
+- Install into `${CLAUDE_PLUGIN_DATA}` from a `SessionStart` hook, as `scaffold_mcp_server.py --lang python` does. Pin package versions and the model revision; prefer an ONNX export.
 - Disclose the download, its size, and what text it reads in the README section "What it runs, reads, and sends".
-- Fail open with a visible note when the model is missing or slow (set a timeout), and measure false positives with evals before turning blocking on.
+- Fail open with a visible note when the model is missing or slow, and measure false positives with evals before turning blocking on.
 
 ## 5. Docker
 
