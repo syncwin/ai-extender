@@ -20,7 +20,7 @@ metadata:
 1. **Scope:** `references/scoping.md`. Reuse context; ask only real gaps.
 2. **Design:** `references/architecture.md`. Include only confirmed components.
 3. **Lean check:** for every planned file or component ask "does the request need this?" Cut the rest; report `skipped: X, add when Y`.
-4. **One approval:** show the plan in plain words (what it does, what gets built, how it's installed, the companion prompt's form fields, anything skipped) and wait for a yes. This is the only approval gate before building.
+4. **One approval:** show the plan in plain words and wait for a yes. This is the only approval gate before building. The plan always states: what it does; the plugin name and every skill name (one skill → named exactly like the plugin); version `0.0.1`; connectors, with Composio listed as the default and which ones the account already has; how it's installed; the companion prompt's form fields; anything skipped.
 5. **Hand off** to `ai-extender:claude-developer`. Names, acronym, metadata, licensing: `ai-extender/references/standards.md`.
 
 Finish with the scratchpad (`ai-extender/references/scratchpad.md`).

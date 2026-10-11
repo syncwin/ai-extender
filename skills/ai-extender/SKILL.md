@@ -5,7 +5,7 @@ description: >
   or package a Claude plugin, skill, connector, agent, hook, MCP server, or add-on, including internal tools for a
   team or business. Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn
   this workflow into a Claude plugin or skill", "automate our process for my team", "make Claude check every
-  document against our rules", "update my plugin", "audit my extension", "bump the version", "package this for
+  document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this skill", "bump the version", "package this for
   Cowork", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:
@@ -58,6 +58,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 | Audit | `ai-extender:claude-reviewer` → owning skill for each fix |
 | Convert | `ai-extender:claude-planner` (extract intent) → as New |
 
+- Load each stage's skill with the Skill tool before doing its work; never do a stage from memory of what it says.
 - Skip stages the request doesn't need; never chain by default.
 - One plan approval: show the plan once, then build, check, and package without asking again unless something changes scope.
 - User explicitly says the extension may be **publicly released on a marketplace or directory** → `claude-packager/references/release.md`. Never raise it yourself.
@@ -68,12 +69,12 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 
 1. In context already? Reuse; don't re-ask, re-read, or re-derive.
 2. One skill enough? Don't chain.
-3. File unchanged since last validation? Reuse the result.
+3. File unchanged since last validation? Reuse the result (`validate_extension.py --cache`; the packager keeps unchanged packages).
 4. Only then the full workflow. No speculative re-checks or polish loops.
 
 ## 5. Finish
 
-Hand over the result first. When something was built or changed: the file, install steps in two or three lines, the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the findings by problem type. Then one scratchpad per `references/scratchpad.md`.
+Hand over the result first. When something was built or changed: the file, its install guide (install steps in two or three lines in the reply), the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the reviewer's report (problem type, Original, Corrected for every finding). Then one scratchpad per `references/scratchpad.md`, opening with the request ledger: every request the user made, its status, and the context they need.
 
 ## Absorbed skills
 

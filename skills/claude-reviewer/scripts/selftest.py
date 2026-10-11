@@ -145,6 +145,68 @@ with tempfile.TemporaryDirectory() as td:
             (d / "timing.json").write_text('{"total_tokens": 100, "duration_ms": 1000}')
     r = RUN(S / "claude-developer/scripts/aggregate_results.py", it); check("aggregate", r.returncode == 0 and "+100%" in r.stdout, r.stdout)
     r = RUN(S / "claude-developer/scripts/eval_report.py", it); check("eval report", r.returncode == 0 and (it / "report.html").exists(), r.stdout)
+    # connectors, user settings, secrets, overlap, routing, shared files, cache (added in 1.0.0)
+    def mcp(label, cfg, manifest_extra=None, args=()):
+        q = td / ("c-" + label); shutil.copytree(p, q); (q / ".mcp.json").write_text(json.dumps({"mcpServers": cfg}))
+        if manifest_extra:
+            f = q / ".claude-plugin/plugin.json"; f.write_text(json.dumps({**json.loads(f.read_text()), **manifest_extra}))
+        return RUN(V, q, *args)
+    r = mcp("empty-url", {"x": {"type": "http", "url": ""}}); check("connector with an empty url passes, as claude plugin validate does", r.returncode == 0 and "M002" not in r.stdout and "M009" in r.stdout, r.stdout[-300:])
+    r = mcp("no-url", {"x": {"type": "http"}}); check("remote connector without a url is an error", r.returncode == 1 and "M002" in r.stdout, r.stdout[-300:])
+    r = mcp("uc-undeclared", {"x": {"type": "http", "url": "${user_config.svc_url}"}}); check("undeclared user_config reference is an error", r.returncode == 1 and "M007" in r.stdout, r.stdout[-300:])
+    uc = {"userConfig": {"svc_url": {"type": "string", "title": "Service URL", "description": "Your link", "sensitive": True}}}
+    r = mcp("uc-declared", {"x": {"type": "http", "url": "${user_config.svc_url}"}}, uc); check("declared user_config reference passes", r.returncode == 0, r.stdout[-300:])
+    r = mcp("uc-bad", {}, {"userConfig": {"svc-url": {"type": "text", "title": "T", "description": "D", "hint": "x"}}}); check("bad userConfig option is an error", r.returncode == 1 and r.stdout.count("P018") >= 3, r.stdout[-400:])
+    cz = {"composio": {"type": "http", "url": "https://connect.composio.dev/mcp"}}
+    r = mcp("dup-known", {"composio": {"type": "http", "url": "https://backend.composio.dev/v3/mcp/abc"}}, None, ("--known-connectors", "Composio=https://connect.composio.dev/mcp", "--strict"))
+    check("connector already in the account at another address is flagged", r.returncode == 1 and "M008" in r.stdout and "second copy" in r.stdout, r.stdout[-300:])
+    r = mcp("same-known", cz, None, ("--known-connectors", "Composio=https://connect.composio.dev/mcp/", "--strict")); check("exact match with an account connector passes", r.returncode == 0 and "nothing loads twice" in r.stdout, r.stdout[-300:])
+    r = mcp("dup-inside", {"a": {"type": "http", "url": "https://x.example/mcp"}, "b": {"type": "http", "url": "https://x.example/mcp/"}}, None, ("--strict",)); check("two connectors at one address are flagged", r.returncode == 1 and "M008" in r.stdout, r.stdout[-300:])
+    key = "a8F3kL9q" + "Pz2XcV7bN1mR4tY6"
+    broken("key-like value in server code", "X003", lambda q: (q / "servers/fub.js").write_text(f'const FUB_API_KEY = "{key}";\n'), ("--strict",))
+    broken("committed .env file", "X004", lambda q: (q / ".env").write_text("A=1\n"))
+    rule = "Always confirm the target folder with the user before writing any file into it."
+    broken("rule repeated in two skills", "S017", lambda q: [s.write_text(s.read_text() + "\n" + rule + "\n") for s in (q / "skills").glob("*/SKILL.md")], ("--strict",))
+    q = td / "rules"; shutil.copytree(p, q); sk(q).write_text(sk(q).read_text() + "\n" + rule + "\n"); (td / "CLAUDE.md").write_text(rule + "\n")
+    r = RUN(V, q, "--rules", td / "CLAUDE.md"); check("rule that repeats project instructions is flagged", "S018" in r.stdout, r.stdout[-300:])
+    broken("skill the router never names", "S019", lambda q: (q / "skills/ab-extra").mkdir() or (q / "skills/ab-extra/SKILL.md").write_text("---\nname: ab-extra\ndescription: Use when testing.\n---\n\nscratchpad\n"), ("--strict",))
+    broken("oversized reference file", "S016", lambda q: (q / "skills/ab-demo/references/big.md").write_text("## Contents\n" + "line\n" * 320 + "\nbig.md\n"), ("--strict",))
+    q = td / "cache"; shutil.copytree(p, q); env = {**os.environ, "XDG_CACHE_HOME": str(td / "xdg")}
+    run_c = lambda: subprocess.run([sys.executable, str(V), str(q), "--cache"], capture_output=True, text=True, env=env)
+    r1 = run_c(); r2 = run_c(); sk(q).write_text(sk(q).read_text() + "\nOne more rule.\n"); r3 = run_c()
+    check("--cache reuses an unchanged passing result and rechecks after a change", r1.returncode == 0 and "Reused" in r2.stdout and "Reused" not in r3.stdout, r2.stdout[-200:])
+    SY = S / "claude-maintainer/scripts/sync_shared.py"
+    q = td / "shared"; shutil.copytree(p, q); (q / "shared").mkdir(); (q / "shared/scratchpad.md").write_text("# Scratchpad\n\nnew\n")
+    (q / ".claude-plugin/shared-files.json").write_text(json.dumps({"files": {"shared/scratchpad.md": ["skills/*/references/scratchpad.md"]}}))
+    r = RUN(V, q); check("validator reports drifted shared copies", "F001" in r.stdout, r.stdout[-300:])
+    r1 = RUN(SY, q, "--check"); r2 = RUN(SY, q); r3 = RUN(SY, q, "--check")
+    check("sync_shared copies the source into every skill", r1.returncode == 1 and r2.returncode == 0 and r3.returncode == 0 and (q / "skills/ab-developer/references/scratchpad.md").read_text() == "# Scratchpad\n\nnew\n", r1.stdout + r3.stdout)
+    RD = S / "claude-maintainer/scripts/release_diff.py"
+    q = td / "rd"; shutil.copytree(p, q); (q / "README.md").write_text("changed\n"); (q / "NEW.md").write_text("x\n"); (q / "LICENSE").unlink()
+    d = json.loads(RUN(RD, p, q, "--json").stdout); check("release diff counts changed, added, dropped", len(d["changed"]) == 1 and d["added"] == ["NEW.md"] and d["dropped"] == ["LICENSE"], str({k: d[k] for k in ("changed", "added", "dropped")}))
+    BV = S / "claude-maintainer/scripts/bump_version.py"
+    q = td / "bv"; shutil.copytree(p, q)
+    r = RUN(BV, q, "--summary", "Added: a new check\nFixed: a typo", "--title", "Checks")
+    m = json.loads((q / ".claude-plugin/plugin.json").read_text())
+    check("bump_version moves every version field and writes the entry", r.returncode == 0 and m["version"] == "0.1.0" and m["metadata"]["version"] == "0.1.0" and "version: 0.1.0" in sk(q).read_text() and "## 0.1.0: Checks" in (q / "CHANGELOG.md").read_text(), r.stdout[-300:])
+    r = RUN(BV, q, "--level", "keep", "--summary", "Fixed: one more"); cl = (q / "CHANGELOG.md").read_text()
+    check("bump_version keep adds to the current entry without a bump", r.returncode == 0 and json.loads((q / ".claude-plugin/plugin.json").read_text())["version"] == "0.1.0" and cl.index("- one more") < cl.index("## 0.0.1"), cl[:300])
+    SS = S / "claude-reviewer/scripts/scan_secrets.py"
+    q = td / "ss"; q.mkdir(); (q / "cfg.json").write_text(json.dumps({"apiKey": key}))
+    with zipfile.ZipFile(td / "ss.plugin", "w") as z: z.writestr("servers/x.py", f"TOKEN = '{key}'\n")
+    r = RUN(SS, q, td / "ss.plugin"); check("scan_secrets finds keys in folders and packages, masked", r.returncode == 1 and r.stdout.count("key-like") == 2 and key not in r.stdout, r.stdout[-400:])
+    r = RUN(SS, p); check("scan_secrets passes a clean plugin", r.returncode == 0, r.stdout[-300:])
+    r = RUN(S / "claude-packager/scripts/install_guide.py", p, "--repo", "o/r"); check("install guide covers every app and how to undo", r.returncode == 0 and all(x in r.stdout for x in ("Customize", "Code tab", "claude plugin install", "Undo", "Connect")), r.stdout[-300:])
+    PK = S / "claude-packager/scripts/package_extension.py"
+    r1 = RUN(PK, p, "--format", "plugin", "--out", td / "o4"); r2 = RUN(PK, p, "--format", "plugin", "--out", td / "o4")
+    check("packager reuses an unchanged package and writes the install guide", r1.returncode == 0 and "reused" in r2.stdout and (td / "o4" / "AB Demo v0.0.1 install.md").exists(), r2.stdout[-300:])
+    r = RUN(PK, p, "--format", "plugin", "--out", td / "o5", "--require-evals"); check("--require-evals blocks a build with no behavior tests", r.returncode == 1 and "Behavior tests" in r.stdout, r.stdout[-200:])
+    r = RUN(S / "claude-developer/scripts/scaffold_extension.py", td / "nc", "--slug", "nc-demo", "--display", "NC", "--no-composio")
+    check("Composio is a default connector unless --no-composio", "connect.composio.dev" in (p / ".mcp.json").read_text() and not (td / "nc/nc-demo/.mcp.json").exists(), r.stdout[-200:])
+
+    broken("scratchpad without a request ledger", "S020", lambda q: (q / "skills/ab-demo/references/scratchpad.md").write_text("# Scratchpad\n\n| Area | Result |\n|---|---|\n"), ("--strict",))
+    q = td / "nomanifest"; shutil.copytree(p, q); shutil.rmtree(q / ".claude-plugin")
+    r = RUN(V, q); r2 = RUN(V, q, "--target", "directory"); check("a plugin folder with no manifest is still audited", r.returncode == 0 and "P001" in r.stdout and "P005" not in r.stdout and r2.returncode == 1, r.stdout[-300:])
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
 

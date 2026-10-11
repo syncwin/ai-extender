@@ -12,6 +12,10 @@ Released after the final self-audit, run from an installed copy, and the first l
 - Eval suite: the audit and packaging cases had nothing to work on. Each now ships a sample in `fixture/notes-helper`: a deliberately flawed plugin for the audit, a clean skill for packaging. Neither has its own manifest. The packaging case is now `package-skill-upload` and may run the bundled scripts, and the scaffold case's grader follows the one-skill rule.
 - Companion prompts: `Text` (single-line) fields are confirmed against a real Prompt Builder export and no longer warned about; `maxLength` may be `""` for no limit on `Text` and `Textarea`.
 - Script reports and the scratchpad template no longer use dashes in headings; number ranges in references read "2 to 4".
+- Connector check now agrees with `claude plugin validate`: a remote connector with an empty `url` passes (it reports it as info, `M009`), a remote connector with no `url` at all is an error, and a `${user_config.KEY}` that `userConfig` doesn't declare is an error (`M007`). Before, the empty address was wrongly an error and the undeclared setting slipped through.
+- The secret check covered only the skills folder. It now scans the whole plugin, including server code, catches key-like values such as `FUB_API_KEY = "..."` (`X003`), and flags a committed `.env` file (`X004`).
+- The packaging reference repeated the packager's target rule word for word; the new overlap check found it, and it now points to the skill instead.
+- Live eval findings (2 of 5 cases passed on the first run after these changes). The validator refused a plugin folder with no manifest, so audits fell back to reading files; it now audits it and reports the missing manifest (`P001`, an error for the directory and Cowork). Audit reports give every finding, including a missing file, an exact Original and Corrected version instead of advice such as "add one". The packager's report and hand-over now state the validation result. The planner's plan always states version 0.0.1, every skill name (one skill is named like the plugin), and the connectors, with Composio as the default. The scaffold case's grader accepts Composio as a listed default. The router's description now also matches "audit this plugin folder" and "what's wrong with this skill": the audit runs that failed never loaded the plugin. Full suite on 2026-10-11 after the fixes: overall score 0.73 (from 0.40), 0.53 above the same runs without the plugin; the audit case then passed 3 of 3 on its own.
 
 **Changed**
 - Credits: removed the `skill-creator-plus` entry.
@@ -24,6 +28,25 @@ Released after the final self-audit, run from an installed copy, and the first l
   - Fixed contradictions: the contents-list threshold is 100 lines in every file, the manifest reference points to its current docs address, the platform-facts header shows its full date range, and the README describes CI exactly.
   - The companion prompt guide lists all five validator codes (`C000` to `C004`), the GitHub asset example uses the full display name, and the Ponytail credit links to its repository.
 - Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
+
+**Added**
+- Composio is declared by default in every plugin the scaffolder makes, at Composio's shared address `https://connect.composio.dev/mcp`. Each user signs in with their own account, so no personal link ships. `--no-composio` leaves it out, and the plan shows it as a default the user can drop.
+- Connector guidance: shared addresses versus personal links (personal links go through `userConfig`), and how to avoid loading a connector twice. Claude Code skips a plugin connector only when its address matches one the user already has, so the validator compares against `--known-connectors` (names, URLs, or a `claude mcp list` dump) and flags a different address for the same service (`M008`).
+- `userConfig` checks (`P018`): option keys, required fields, types, and unknown keys that would stop the plugin loading.
+- Quality checks: repeated rules across skills (`S017`) or copied from project instructions with `--rules CLAUDE.md` (`S018`), oversized skill and reference files (`S016`), skills the router never names and agents no skill uses (`S019`, `A006`), drifted shared files (`F001`), and missing behavior tests (`E004`).
+- `--cache` on the validator reuses the last passing result when no file and no option changed. The packager records a content hash in each package and keeps an unchanged one instead of re-checking and rebuilding it (`--force` rebuilds).
+- `claude-maintainer/scripts/bump_version.py`: one summary becomes the changelog entry and moves every version field (manifest, its metadata, marketplace entry, every skill and agent, README). `--level keep` adds to the current entry without a bump.
+- `claude-maintainer/scripts/release_diff.py`: files kept, changed, added, and dropped between two versions, from folders or packages. The packager prints it against the previous package.
+- `claude-maintainer/scripts/sync_shared.py`: shared files live once and are copied into each skill from `.claude-plugin/shared-files.json`, so plugins no longer need their own copy scripts.
+- `claude-reviewer/scripts/scan_secrets.py`: scans one extension, packages, or with `--installed` every plugin and skill folder on the machine for keys stored in plain text. Values are masked, nothing is sent, and CI runs it on this repository.
+- `claude-packager/scripts/install_guide.py`: install and removal steps for the desktop app, the web, the Code tab, and the terminal, written next to every package.
+- Behavior tests are a release step: every callable skill runs against its test prompts and is graded by a separate grader before packaging. The packager reports missing or stale results, and `--require-evals` blocks the build.
+- Standards: enforcement and accountability (§5d: routed and gated stages, declared dependencies, scripts as gates), plan-first efficiency, and the lean-but-complete quality bar.
+- `claude-developer/references/local-models.md`: when a small local model such as a DeBERTa prompt-injection classifier helps (an opt-in Claude Code guardrail add-on) and when it doesn't, based on Red Hat's October 2026 benchmark, plus where Docker Agent, MCP Gateway, and Model Runner fit.
+- Platform facts verified 2026-10-11: plugin installs and removal on every surface, the Connectors tab, connector de-duplication, and Composio Connect.
+- Request ledger: every scratchpad, in AI Extender and in the extensions it builds, opens with one row per request the user made (Request, Status, Context), so finished and open work are both accounted for. The validator warns when a scratchpad format has no ledger (`S020`).
+- Python routing evaluated and not adopted: on 60 labeled requests, lexical and trained stand-ins for Laya and DeBERTa picked the right skill 42% to 58% of the time, below what Claude does from the descriptions. Numbers and the revisit condition are in `claude-developer/references/local-models.md`.
+- 28 self-tests (95 in total) for the new checks and scripts.
 
 ## 0.11.0: Self-audit fixes
 

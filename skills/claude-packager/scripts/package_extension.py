@@ -2,13 +2,18 @@
 """Package a Claude extension: validate, name, zip.
 
 Usage: package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-validate] [--target T]
+                            [--previous FILE|DIR] [--repo owner/repo] [--force] [--require-evals]
   plugin: zip with the plugin root as archive root, extension .plugin (Cowork)
   zip:    zip with the extension folder as the top-level entry (skill upload, manual install)
 Filename: "<Visible Name> v<version>.<ext>" (displayName / skill title + metadata.version).
 Always creates or checks the Prompt Builder companion prompt (prompts/<title-slug>.json, via companion_prompt.py)
 and copies it next to the package. Builds in a temp dir, then copies to --out (default ./dist).
+Also writes "<Visible Name> v<version> install.md" next to the package (desktop app, web, Code tab, terminal, undo).
+Reuse: an existing package whose recorded content hash matches is kept as it is (no re-check, no rebuild) unless --force.
+Release diff: against --previous, or the newest other version of the same package in --out (release_diff.py).
+Behavior tests: reports whether evals/ results exist and are newer than the last skill change; --require-evals blocks if not.
 """
-import json, re, shutil, subprocess, sys, tempfile, zipfile
+import hashlib, json, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist"}
@@ -40,43 +45,101 @@ def files(root):
         if p.name in EXCLUDE_NAMES or p.suffix in EXCLUDE_SUFFIX: continue
         yield p, rel
 
+def content_hash(root, fmt):
+    h = hashlib.sha256(fmt.encode())
+    for p, rel in files(root): h.update(rel.as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
+    return h.hexdigest()
+
+def eval_status(root):
+    """(ok, note): evals present, run, passing, and newer than the newest skill/agent/hook change."""
+    ev = root / "evals"
+    if not ev.is_dir(): return False, "no evals/: behavior untested"
+    res = sorted((ev / "results").glob("*/aggregate-result.json"), key=lambda p: p.stat().st_mtime) if (ev / "results").is_dir() else []
+    if not res: return False, "evals/ never run here (`claude plugin eval .`, or the manual loop in testing.md)"
+    newest = max((p.stat().st_mtime for d in ("skills", "agents", "hooks") if (root / d).is_dir() for p in (root / d).rglob("*") if p.is_file()), default=0)
+    last = res[-1]
+    try: score = json.loads(last.read_text()).get("aggregates", {}).get("overallScore")
+    except (OSError, ValueError): score = None
+    if last.stat().st_mtime < newest: return False, f"last eval run ({last.parent.name}) is older than the last skill change"
+    return True, f"last run {last.parent.name}, score {score}"
+
+def previous_package(out, visible, version, ext):
+    pat = re.compile(re.escape(visible) + r" v(\d+\.\d+\.\d+[^ ]*)" + re.escape(ext) + "$")
+    found = [(p.stat().st_mtime, p) for p in out.glob("*" + ext) if (m := pat.match(p.name)) and m.group(1) != version] if out.is_dir() else []
+    return max(found)[1] if found else None
+
 def main(argv):
     if not argv or argv[0].startswith("-"): print(__doc__); return 2
-    root, fmt, out, skip, target = Path(argv[0]).resolve(), None, Path("dist"), False, "all"
+    root, fmt, out, skip, target, prev, repo, force, need_evals = Path(argv[0]).resolve(), None, Path("dist"), False, "all", None, "", False, False
     i = 1
     while i < len(argv):
         a = argv[i]
+        if a in ("--format", "--out", "--target", "--previous", "--repo") and i + 1 >= len(argv): print(__doc__); return 2
         if a == "--format": fmt = argv[i+1]; i += 1
         elif a == "--out": out = Path(argv[i+1]); i += 1
         elif a == "--target": target = argv[i+1]; i += 1
+        elif a == "--previous": prev = Path(argv[i+1]); i += 1
+        elif a == "--repo": repo = argv[i+1]; i += 1
         elif a == "--skip-validate": skip = True
+        elif a == "--force": force = True
+        elif a == "--require-evals": need_evals = True
         else: print(__doc__); return 2
         i += 1
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
     kind, visible, version = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
-    cp = Path(__file__).resolve().parent / "companion_prompt.py"
+    here = Path(__file__).resolve().parent
+    cp = here / "companion_prompt.py"
     if cp.exists():
         r = subprocess.run([sys.executable, str(cp), str(root), "--out", str(out)], capture_output=True, text=True)
         if r.returncode != 0: print(r.stdout + r.stderr); print("Companion prompt failed: fix it, then package again."); return 1
-    if not skip:
-        v = Path(__file__).resolve().parents[2] / "claude-reviewer" / "scripts" / "validate_extension.py"
-        if v.exists():
-            r = subprocess.run([sys.executable, str(v), str(root), "--target", "cowork" if fmt == "plugin" and target == "all" else target], capture_output=True, text=True)
-            if r.returncode != 0: print(r.stdout); print("Validation failed: fix errors or pass --skip-validate."); return 1
+    ev_ok, ev_note = eval_status(root)
+    if need_evals and not ev_ok: print(f"Behavior tests: {ev_note}. Run them, or package without --require-evals."); return 1
     ext = ".plugin" if fmt == "plugin" else ".zip"
     fname = re.sub(r'[\\/:*?"<>|]', "", f"{visible} v{version}{ext}")
-    with tempfile.TemporaryDirectory() as td:
-        tmp = Path(td) / fname
-        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-            for p, rel in files(root):
-                z.write(p, (rel if fmt == "plugin" else Path(root.name) / rel).as_posix())
-        out.mkdir(parents=True, exist_ok=True)
-        dest = out / fname
-        shutil.copyfile(tmp, dest)
+    dest = out / fname
+    digest = content_hash(root, fmt)
+    reused, validated = False, "skipped (--skip-validate)" if skip else "not run (validator not found)"
+    if dest.exists() and not force:
+        try:
+            with zipfile.ZipFile(dest) as z: reused = z.comment.decode("utf-8", "replace") == f"ai-extender:sha256={digest}"
+        except (OSError, zipfile.BadZipFile): reused = False
+    if not reused:
+        if not skip:
+            v = here.parents[1] / "claude-reviewer" / "scripts" / "validate_extension.py"
+            if v.exists():
+                vt = "cowork" if fmt == "plugin" and target == "all" else target
+                r = subprocess.run([sys.executable, str(v), str(root), "--cache", "--target", vt], capture_output=True, text=True)
+                if r.returncode != 0: print(r.stdout); print("Validation failed: fix errors or pass --skip-validate."); return 1
+                counts = re.search(r"\| (\d+) \| (\d+) \| (\d+) \|", r.stdout)
+                warns = re.findall(r"^- `(\w+)` ([^\n]+)$", r.stdout.split("**Warnings**")[1].split("**Info**")[0], re.M) if "**Warnings**" in r.stdout else []
+                validated = f"passed, target {vt}" + (f" ({counts.group(1)} errors, {counts.group(2)} warnings)" if counts else "") + "".join(f"<br>warning `{c}` {m}" for c, m in warns)
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td) / fname
+            with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+                for p, rel in files(root):
+                    z.write(p, (rel if fmt == "plugin" else Path(root.name) / rel).as_posix())
+                if not skip: z.comment = f"ai-extender:sha256={digest}".encode()
+            out.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(tmp, dest)
     with zipfile.ZipFile(dest) as z:
         n = len(z.namelist())
-    print(f"### Scratchpad: Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|\n| File | `{dest}` |\n| Entries | {n} |\n| Version | {version} |\n| Companion prompt | `prompts/` checked and copied into `{out}` |")
+    ig = here / "install_guide.py"
+    guide = out / f"{fname[:-len(ext)]} install.md"
+    if ig.exists():
+        args = [sys.executable, str(ig), str(root), "--file", fname, "--out", str(guide)] + (["--repo", repo] if repo else [])
+        if subprocess.run(args, capture_output=True, text=True).returncode != 0: guide = None
+    rows = [("File", f"`{dest}`" + (" (unchanged since the last build: reused, not re-checked)" if reused else "")), ("Entries", n), ("Version", version), ("Validation", "passed when this package was built" if reused else validated),
+            ("Companion prompt", f"`prompts/` checked and copied into `{out}`"), ("Install guide", f"`{guide}`" if guide else "not written"),
+            ("Behavior tests", ("ok: " if ev_ok else "flag: ") + ev_note)]
+    prev = prev or previous_package(out, visible, version, ext)
+    rd = here.parents[1] / "claude-maintainer" / "scripts" / "release_diff.py"
+    if prev and prev.exists() and rd.exists():
+        sys.dont_write_bytecode = True; sys.path.insert(0, str(rd.parent))
+        from release_diff import diff, summary
+        rows.append(("Since " + prev.name, summary(diff(prev, dest))))
+    print(f"### Scratchpad: Extension Packager\n**Scope:** {kind} `{root.name}` → {fmt}\n\n| Item | Result |\n|---|---|")
+    for k, v in rows: print(f"| {k} | {v} |")
     return 0
 
 if __name__ == "__main__":

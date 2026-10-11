@@ -53,4 +53,8 @@ Read transcripts, not just outputs; cut instructions that cause wasted work; gen
 
 ## 6. Gate
 
-Before release: `ai-extender:claude-reviewer` (`validate_extension.py`, `selftest.py` if scripts changed), `claude plugin validate --strict`, evals at the agreed threshold.
+Before packaging, every skill a user can call has been run against its test prompts and graded by someone other than the author of the run:
+
+- `claude plugin eval` (its judge model grades), or the manual loop with the `ai-extender:claude-grader` agent in a fresh context. The session that wrote the skill never grades its own output.
+- Results newer than the last skill change: the packager reports stale or missing results, and `--require-evals` blocks the build.
+- Then `ai-extender:claude-reviewer` (`validate_extension.py`, `selftest.py` if scripts changed) and `claude plugin validate --strict`.

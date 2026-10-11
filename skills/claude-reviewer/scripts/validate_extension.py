@@ -3,11 +3,17 @@
 
 Usage: validate_extension.py <dir> [--target all|claude-code|upload|cowork|directory]
                              [--require-meta author,company] [--must-contain <prefix>]
-                             [--strict] [--json]
+                             [--known-connectors <list|file>] [--rules <file>[,<file>]]
+                             [--cache] [--strict] [--json]
+  --known-connectors  connectors the account already has (names, URLs, name=URL, a `claude mcp list`
+                      dump, or a JSON file with mcpServers): flags plugin connectors that would load twice
+  --rules             project instruction files (CLAUDE.md, AGENTS.md, pasted project instructions):
+                      flags skill text that repeats them
+  --cache             reuse the last passing result when no file and no option changed
 Exit: 0 pass, 1 errors (or warnings with --strict), 2 usage.
 Complements (does not replace) `claude plugin validate`.
 """
-import json, re, sys
+import hashlib, json, os, re, sys
 from pathlib import Path
 
 PLUGIN_KEYS = {"$schema","name","displayName","version","description","author","homepage","repository","license",
@@ -25,12 +31,31 @@ HOOK_TYPES = {"command","http","mcp_tool","prompt","agent"}
 COLORS = {"red","blue","green","yellow","purple","orange","pink","cyan"}
 PLUGIN_IGNORED_AGENT_KEYS = {"permissionMode","mcpServers","hooks","initialPrompt"}
 SECRET = re.compile(r"(Bearer\s+[A-Za-z0-9._\-]{20,}|sk-[A-Za-z0-9_\-]{20,}|ghp_[A-Za-z0-9]{20,}|xox[bp]-[A-Za-z0-9\-]{10,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)")
+GENERIC_SECRET = re.compile(r"""(?i)([\w-]*?(?:api[_-]?key|apikey|secret|token|passw(?:or)?d|access[_-]?key|private[_-]?key))["']?\s*[:=]\s*["']?([A-Za-z0-9_\-./+=]{20,})|Authorization["']?\s*:\s*["']Basic\s+([A-Za-z0-9+/=]{16,})""")
+NOT_A_SECRET = re.compile(r"(?i)(env|config|process|getenv|example|your|placeholder|xxxx|changeme|dummy|redacted|sample|user_config|plugin_root)")
+
+def find_secrets(text):
+    """[(line_no, kind, masked)]: X001 known token formats, X003 key-like assignments of token-like values."""
+    out = []
+    for no, line in enumerate(text.splitlines(), 1):
+        m = SECRET.search(line)
+        if m: out.append((no, "X001", m.group(0)[:6] + "...")); continue
+        for g in GENERIC_SECRET.finditer(line):
+            v = g.group(2) or g.group(3) or ""
+            if v and not NOT_A_SECRET.search(v) and re.search(r"\d", v) and re.search(r"[A-Za-z]", v) and len(set(v)) > 8:
+                out.append((no, "X003", (g.group(1) or "Authorization") + "=" + v[:4] + "...")); break
+    return out
 PLACEHOLDER = re.compile(r"\b(TODO|FIXME|TBD)\b|<!--\s*FILL|(?i:lorem ipsum)")
 SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SEMVER = re.compile(r"^\d+\.\d+\.\d+([-+][0-9A-Za-z.\-]+)?$")
 
 F = []  # findings
 def add(sev, code, where, msg): F.append((sev, code, str(where), msg))
+
+def report_secrets(f, text):
+    for no, code, masked in find_secrets(text):
+        if code == "X001": add("error", "X001", f, f"line {no}: looks like a literal secret ({masked}); move it to userConfig with sensitive: true")
+        else: add("warn", "X003", f, f"line {no}: key-like value {masked}; if real, move it to userConfig with sensitive: true and rotate it")
 
 def parse_frontmatter(text):
     """Minimal YAML subset: scalars, folded/literal blocks, one-level maps, inline lists."""
@@ -105,18 +130,25 @@ def check_skill(sdir, opts, plugin_files):
     meta = fm.get("metadata") if isinstance(fm.get("metadata"), dict) else {}
     for k in opts["meta"]:
         if not (meta.get(k) or fm.get(k)): add("error", "S007", sm, f"metadata.{k} required")
-    if len(body.splitlines()) > 500: add("warn", "S008", sm, f"body {len(body.splitlines())} lines (>500): move detail to references/")
+    n_body = len(body.splitlines())
+    if n_body > 500: add("warn", "S008", sm, f"body {n_body} lines (>500): move detail to references/")
+    elif n_body > 300: add("warn", "S016", sm, f"body {n_body} lines (>300): it loads on every use; move detail to references/ and keep the steps")
     if "scratchpad" not in (t.lower() + "".join((read(p) or "").lower() for p in (sdir/"references").glob("*.md") if (sdir/"references").exists())):
         add("warn", "S009", sm, "no scratchpad step (extension standard)")
+    sp = sdir / "references" / "scratchpad.md"
+    if sp.exists() and not re.search(r"\|\s*Request\s*\|\s*Status\s*\|", read(sp) or ""):
+        add("warn", "S020", sp, "scratchpad format has no request ledger (| # | Request | Status | Context |): every request the user made should end with its status")
     for f in sdir.rglob("*"):
         if f.is_symlink(): add("warn", "X002", f, "symlink skipped (not packaged or scanned)"); continue
-        if f.is_file() and f.suffix in {".md",".py",".json",".sh",".js",".txt"}:
+        if f.is_file() and f.suffix in TEXT_SUFFIX:
             c = read(f) or ""
             if PLACEHOLDER.search(c) and f.name != "validate_extension.py": add("error", "S010", f, "placeholder text (TODO/FIXME/TBD/FILL)")
-            if SECRET.search(c): add("error", "X001", f, "looks like a literal secret")
+            if f.name != "validate_extension.py": report_secrets(f, c)
             if f.suffix == ".md" and re.search(r"\]\([\w./-]*\\[\w./\\-]*\)", c): add("warn", "S014", f, "backslash path in a link: use forward slashes")
             if f.suffix == ".md" and f.parent.name == "references" and len(c.splitlines()) > 100 and not re.search(r"contents", c[:1500], re.I):
                 add("warn", "S011", f, ">100 lines without a contents list (Anthropic guidance)")
+            if f.suffix == ".md" and f != sm and (len(c.splitlines()) > 300 or len(c) > 40_000):
+                add("warn", "S016", f, f"{len(c.splitlines())} lines, {len(c) // 1000} KB: split into topic files that load on demand")
     refs = sdir / "references"
     if refs.exists():
         for f in refs.glob("*.md"):
@@ -169,12 +201,83 @@ def check_mcp(f, servers=None):
     d = d.get("mcpServers", d) if isinstance(d, dict) else {}
     if not isinstance(d, dict): add("error", "M001", f, "mcpServers must be an object"); return
     for n, s in d.items():
-        if not isinstance(s, dict) or not (s.get("command") or s.get("url")): add("error", "M002", f, f"server '{n}' needs command or url"); continue
+        if not isinstance(s, dict): add("error", "M002", f, f"server '{n}' must be an object"); continue
+        remote = s.get("type") in ("http", "sse", "ws") or "url" in s
+        if remote and not isinstance(s.get("url"), str): add("error", "M002", f, f"remote server '{n}' needs a url string (an empty string or ${{user_config.KEY}} is allowed); the loader drops it otherwise"); continue
+        if not remote and not s.get("command"): add("error", "M002", f, f"server '{n}' needs command (local) or url (remote)"); continue
+        if remote and s["url"] == "": add("info", "M009", f, f"server '{n}': empty url, so it does nothing until the user fills it in; prefer the service's shared URL or ${{user_config.KEY}}")
+        SERVERS.append((n, s, f))
         blob = json.dumps(s)
         if SECRET.search(blob): add("error", "M003", f, f"server '{n}': literal credential; use ${{VAR}} or ${{user_config.KEY}}")
         if re.search(r"\"(/home/|/Users/|[A-Z]:\\\\)", blob): add("warn", "M004", f, f"server '{n}': absolute path; use ${{CLAUDE_PLUGIN_ROOT}}")
         if s.get("url") and re.search(r"\$\{(ANTHROPIC_[A-Z_]+|AWS_[A-Z_]+|NPM_TOKEN|HTTPS_PROXY)", blob): add("warn", "M005", f, f"server '{n}': credential env var reads empty in remote url/headers")
         if str(s.get("url","")).startswith("http://") and "localhost" not in s["url"] and "127.0.0.1" not in s["url"]: add("warn", "M006", f, f"server '{n}': plain http")
+
+SERVERS = []  # (name, config, file) of every declared MCP server
+UC_FIELDS = {"type", "title", "description", "required", "default", "options", "multiple", "sensitive", "min", "max"}
+UC_TYPES = {"string", "number", "boolean", "directory", "file"}
+
+def check_user_config(root, m, pj):
+    """userConfig option shape (strict object: unknown keys stop the plugin loading) and undeclared ${user_config.KEY} references."""
+    uc = m.get("userConfig")
+    declared = set()
+    if uc is not None and not isinstance(uc, dict): add("error", "P018", pj, "userConfig must be an object")
+    for k, v in (uc.items() if isinstance(uc, dict) else []):
+        declared.add(k)
+        if not re.match(r"^[A-Za-z0-9_]+$", k): add("error", "P018", pj, f"userConfig key '{k}': letters, digits, and _ only")
+        if not isinstance(v, dict): add("error", "P018", pj, f"userConfig '{k}' must be an object"); continue
+        miss = [x for x in ("type", "title", "description") if not v.get(x)]
+        if miss: add("error", "P018", pj, f"userConfig '{k}' needs {', '.join(miss)}")
+        if v.get("type") and v["type"] not in UC_TYPES: add("error", "P018", pj, f"userConfig '{k}': type must be one of {sorted(UC_TYPES)}")
+        extra = set(v) - UC_FIELDS
+        if extra: add("error", "P018", pj, f"userConfig '{k}': unknown keys {sorted(extra)} stop the plugin from loading")
+    for ch in m.get("channels", []) if isinstance(m.get("channels"), list) else []:
+        if isinstance(ch, dict) and isinstance(ch.get("userConfig"), dict): declared |= set(ch["userConfig"])
+    blobs = [(p, read(p) or "") for p in (root / ".mcp.json", root / "hooks" / "hooks.json", root / ".lsp.json") if p.exists()]
+    blobs += [(pj, json.dumps(m.get(k))) for k in ("mcpServers", "lspServers", "hooks") if isinstance(m.get(k), (dict, list))]
+    for p, t in blobs:
+        for k in sorted(set(re.findall(r"\$\{user_config\.([A-Za-z0-9_]+)\}", t)) - declared):
+            add("error", "M007", p, f"${{user_config.{k}}} is not declared in plugin.json userConfig: on a fresh install it can't resolve and the loader drops the server or passes the text through")
+
+def norm_url(u): return re.sub(r"^(https?|wss?)://", "", str(u).strip().lower()).split("#")[0].rstrip("/")
+def norm_name(n): return re.sub(r"[^a-z0-9]", "", str(n).lower())
+
+def parse_known(spec):
+    """--known-connectors: comma list or file. Entries: name, URL, name=URL, `claude mcp list` lines, or a JSON file with mcpServers."""
+    lines, p = [], Path(spec)
+    if p.is_file():
+        t = read(p) or ""
+        try:
+            d = json.loads(t); d = d.get("mcpServers", d) if isinstance(d, dict) else {}
+            return [(k, (v or {}).get("url") or " ".join([str((v or {}).get("command", ""))] + [str(a) for a in (v or {}).get("args", [])]).strip()) for k, v in d.items()] if isinstance(d, dict) else []
+        except ValueError: lines = t.splitlines()
+    else: lines = spec.split(",")
+    out = []
+    for x in (l.strip() for l in lines):
+        if not x or x.startswith("#"): continue
+        mm = re.match(r"^([^=]+)=(.+)$", x) or re.match(r"^([\w .()-]+?):\s+(\S+)", x)
+        if mm: out.append((mm.group(1).strip(), mm.group(2).strip()))
+        elif "://" in x: out.append(("", x))
+        else: out.append((x, ""))
+    return out
+
+def check_connectors(known):
+    """Duplicates inside the plugin, and against connectors the account already has (Claude Code skips only exact URL/command matches)."""
+    seen = {}
+    for n, s, f in SERVERS:
+        sig = norm_url(s["url"]) if isinstance(s.get("url"), str) and s["url"] else " ".join([str(s.get("command", ""))] + [str(a) for a in s.get("args", []) or []])
+        if sig and sig in seen: add("warn", "M008", f, f"servers '{seen[sig]}' and '{n}' point at the same place: keep one")
+        seen.setdefault(sig, n)
+        if not known: continue
+        url = norm_url(s.get("url", "")) if s.get("url") else ""
+        for kn, kv in known:
+            same_place = kv and (norm_url(kv) == url if url else kv == sig)
+            a, b = norm_name(n), norm_name(kn)
+            same_name = a and b and (a == b or (min(len(a), len(b)) >= 4 and (a in b or b in a)))
+            if same_place:
+                add("info", "M008", f, f"server '{n}' matches your connected '{kn or kv}' exactly: Claude Code skips the plugin copy, so nothing loads twice"); break
+            if same_name:
+                add("warn", "M008", f, f"server '{n}' looks like your connected '{kn}' but {'at a different address' if kv else 'its address is unknown'}: a second copy loads. Use the existing connector's exact URL, or drop this server and let the skills use the account connector"); break
 
 def check_extras(root, m):
     """Workflows, themes, monitors, LSP, output styles, plugin settings, official eval suite."""
@@ -311,9 +414,69 @@ def check_prompts(root, name=""):
         slugs = set(re.findall(r"(?<![\w/])/([a-z0-9][a-z0-9-]*)(?::[a-z0-9-]+)?", " ".join(str(p.get("content", "")) for p in d.get("prompts", []) if isinstance(p, dict)))) if isinstance(d, dict) else set()
         if name and not (slugs & {name}): add("warn", "C004", f, f"prompt never starts the extension: add `/{name}` (or `/{name}:<skill>`) to its content")
 
+TEXT_SUFFIX = {".md", ".py", ".json", ".sh", ".js", ".mjs", ".cjs", ".ts", ".txt", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".env", ".ps1", ".bat"}
+SKIP_DIRS = {".git", "node_modules", "__pycache__", "dist", ".venv", "results"}
+
+def scan_outside_skills(root):
+    """Secrets anywhere in the plugin (skills/ is covered by check_skill), plus committed .env files."""
+    for f in sorted(root.rglob("*")):
+        rel = f.relative_to(root)
+        if any(x in SKIP_DIRS for x in rel.parts) or rel.parts[0] == "skills" or f.is_symlink() or not f.is_file(): continue
+        if f.name == ".env" or f.name.startswith(".env.") and not f.name.endswith((".example", ".sample")): add("error", "X004", rel, "committed .env file: remove it and list the variables in the README")
+        if f.suffix in TEXT_SUFFIX or f.name.startswith(".env"): report_secrets(rel, read(f) or "")
+
+def sentences(text):
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)
+    for raw in re.split(r"(?<=[.!?])\s+|\n+", text):
+        s = re.sub(r"\s+", " ", re.sub(r"[`*_>#|\[\]()]", "", raw)).strip(" -:").lower()
+        if len(s.split()) >= 12: yield s
+
+def check_overlap(files, rules):
+    """S017: the same rule in two skill/agent files. S018: a rule that repeats project instructions (--rules)."""
+    where = {}
+    for f in files:
+        for s in set(sentences(read(f) or "")): where.setdefault(s, []).append(f)
+    for s, fs in where.items():
+        if len(fs) > 1: add("warn", "S017", fs[1], f"repeats a rule from {fs[0].parent.name}/{fs[0].name} (\"{s[:60]}...\"): keep one home and point to it")
+    for rf in rules:
+        rs = set(sentences(read(Path(rf)) or ""))
+        for s, fs in where.items():
+            if s in rs: add("warn", "S018", fs[0], f"repeats a project instruction from {Path(rf).name} (\"{s[:60]}...\"): keep it in one place")
+
+def check_routing(root, name, sdirs, md):
+    """S019: skills the router never names. A006: agents no skill mentions. Unrouted parts run only by luck."""
+    router = root / "skills" / name
+    if len(sdirs) < 2 or not (router / "SKILL.md").exists(): return
+    rtext = " ".join(read(p) or "" for p in [router / "SKILL.md", *sorted((router / "references").glob("*.md"))])
+    for d in sdirs:
+        if d != router and not re.search(rf"(?<![\w-]){re.escape(d.name)}(?![\w-])", rtext): add("warn", "S019", d / "SKILL.md", f"the router never names '{d.name}': it runs only when its own description happens to match; add it to the routing table")
+    if (root / "agents").is_dir():
+        alltext = " ".join(read(p) or "" for p in md if p.relative_to(root).parts[0] == "skills")
+        for a in sorted((root / "agents").glob("*.md")):
+            n = (parse_frontmatter(read(a) or "")[0] or {}).get("name") or a.stem
+            if not re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", alltext): add("warn", "A006", a, f"no skill names agent '{n}': say which step uses it")
+
+def check_shared(root):
+    """F001: copies of shared files that drifted from their source (.claude-plugin/shared-files.json)."""
+    cfg = root / ".claude-plugin" / "shared-files.json"
+    if not cfg.exists(): return
+    try:
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "claude-maintainer" / "scripts"))
+        from sync_shared import plan
+    except ImportError:
+        add("info", "F001", cfg, "sync_shared.py not found; shared copies not checked"); return
+    for src, dst, state in plan(root):
+        if state == "missing-source": add("error", "F001", cfg, f"shared source {src} does not exist")
+        elif state != "same": add("warn", "F001", dst, f"{state} copy of {src}: run claude-maintainer/scripts/sync_shared.py")
+
 def check_plugin(root, opts):
     pj = root / ".claude-plugin" / "plugin.json"
-    m = load_json(pj, "P001")
+    if not pj.exists():
+        add("error" if opts["target"] in ("directory", "cowork") else "warn", "P001", root, "no .claude-plugin/plugin.json: Claude Code loads the folder under its own name with no version, so updates never reach users; add a manifest")
+        m = {"name": root.name}
+    else: m = load_json(pj, "P001")
     if not isinstance(m, dict):
         if m is not None: add("error", "P001", pj, "plugin.json must be a JSON object")
         return
@@ -331,11 +494,11 @@ def check_plugin(root, opts):
         if k in m and not str(m[k]).startswith("https://"): add("error", "P017", pj, f"{k} must be an https:// URL")
     if "icon" in m and not (isinstance(m["icon"], str) and m["icon"].startswith("./") and (root / m["icon"]).is_file()): add("error", "P017", pj, "icon must be a ./path to an image file inside the plugin")
     for k in set(m) - PLUGIN_KEYS: add("warn", "P003", pj, f"unrecognized top-level key '{k}' (stripped by Claude Code)")
-    if not m.get("displayName"): add("warn", "P004", pj, "no displayName (human-facing name)")
-    if not m.get("description"): add("warn", "P004", pj, "no description")
-    if not isinstance(m.get("author"), dict) or not m["author"].get("name"): add("warn", "P004", pj, "author.name missing")
+    if pj.exists() and (not m.get("displayName")): add("warn", "P004", pj, "no displayName (human-facing name)")
+    if pj.exists() and (not m.get("description")): add("warn", "P004", pj, "no description")
+    if pj.exists() and (not isinstance(m.get("author"), dict) or not m["author"].get("name")): add("warn", "P004", pj, "author.name missing")
     v = m.get("version", "")
-    if not SEMVER.match(v): add("warn", "P005", pj, f"version '{v}' is not semver")
+    if pj.exists() and (not SEMVER.match(v)): add("warn", "P005", pj, f"version '{v}' is not semver")
     for k in opts["meta"]:
         au = m.get("author", {}) if isinstance(m.get("author"), dict) else {}
         have = (m.get("metadata", {}) or {}).get(k) or au.get(k) or (au.get("name") if k == "author" else None)
@@ -369,6 +532,14 @@ def check_plugin(root, opts):
     if (root / "hooks" / "hooks.json").exists(): check_hooks(root / "hooks" / "hooks.json")
     if (root / ".mcp.json").exists(): check_mcp(root / ".mcp.json")
     if isinstance(m.get("mcpServers"), dict): check_mcp(pj, m["mcpServers"])
+    check_user_config(root, m, pj)
+    scan_outside_skills(root)
+    skill_md = [p for p in md_files if p.relative_to(root).parts[0] in ("skills", "agents")]
+    check_overlap(skill_md, opts["rules"])
+    check_routing(root, name, sdirs, skill_md)
+    check_shared(root)
+    if sdirs and not ((root / "evals").is_dir() and any(p.is_dir() or p.name == "evals.json" for p in (root / "evals").iterdir())):
+        add("info", "E004", root, "no behavior tests in evals/: run each skill against test prompts and grade them before release (claude-developer/references/testing.md)")
     check_extras(root, m)
     check_prompts(root, name)
     if opts["target"] == "directory": check_directory(root, m, name)
@@ -394,37 +565,72 @@ def check_plugin(root, opts):
                 src = e.get("source")
                 if isinstance(src, str) and (".." in src or not (root / src).exists()): add("error", "K004", mk, f"bad relative source '{src}'")
 
+def tree_key(root, opts):
+    """Hash of every file the checks read, this script, and the options: unchanged key = unchanged result."""
+    h = hashlib.sha256(Path(__file__).read_bytes() + json.dumps(opts, sort_keys=True).encode())
+    for extra in [opts["known"], *opts["rules"]]:
+        if extra and Path(extra).is_file(): h.update(Path(extra).read_bytes())
+    for f in sorted(root.rglob("*")):
+        rel = f.relative_to(root)
+        if any(x in SKIP_DIRS for x in rel.parts) or not f.is_file() or f.is_symlink(): continue
+        h.update(rel.as_posix().encode() + b"\0" + f.read_bytes() + b"\0")
+    return h.hexdigest()
+
+def cache_file(root):
+    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "ai-extender"
+    return base / ("validate-" + hashlib.sha1(str(root).encode()).hexdigest()[:16] + ".json")
+
 def main(argv):
-    opts = {"target": "all", "meta": [], "must": "", "strict": False, "json": False}
+    opts = {"target": "all", "meta": [], "must": "", "strict": False, "json": False, "known": "", "rules": [], "cache": False}
     args, i = [], 0
     while i < len(argv):
         a = argv[i]
+        if a in ("--target", "--require-meta", "--must-contain", "--known-connectors", "--rules") and i + 1 >= len(argv): print(__doc__); return 2
         if a == "--target": opts["target"] = argv[i+1]; i += 1
         elif a == "--require-meta": opts["meta"] = [x for x in argv[i+1].split(",") if x]; i += 1
         elif a == "--must-contain": opts["must"] = argv[i+1]; i += 1
+        elif a == "--known-connectors": opts["known"] = argv[i+1]; i += 1
+        elif a == "--rules": opts["rules"] = [x for x in argv[i+1].split(",") if x]; i += 1
         elif a == "--strict": opts["strict"] = True
         elif a == "--json": opts["json"] = True
+        elif a == "--cache": opts["cache"] = True
         elif a.startswith("-"): print(__doc__); return 2
         else: args.append(a)
         i += 1
     if len(args) != 1 or opts["target"] not in ("all","claude-code","upload","cowork","directory"): print(__doc__); return 2
     root = Path(args[0]).resolve()
     if not root.is_dir(): print(f"not a directory: {root}"); return 2
+    key = cf = None
+    if opts["cache"]:
+        key, cf = tree_key(root, opts), cache_file(root)
+        try: prev = json.loads(cf.read_text())
+        except (OSError, ValueError): prev = {}
+        if prev.get("key") == key and prev.get("exit") == 0:
+            print(prev["report"] + "\n_Reused: no file or option changed since this check last passed._"); return 0
     if (root / ".claude-plugin" / "plugin.json").exists(): kind = "plugin"; check_plugin(root, opts)
+    elif (root / "skills").is_dir() and not (root / "SKILL.md").exists(): kind = "plugin"; check_plugin(root, opts)
     elif (root / "SKILL.md").exists(): kind = "skill"; check_skill(root, opts, [p for p in root.rglob("*.md")]); check_prompts(root, (parse_frontmatter(read(root / "SKILL.md") or "")[0] or {}).get("name", ""))
     else: print(f"not a plugin or skill directory: {root}"); return 2
+    if opts["known"]: check_connectors(parse_known(opts["known"]))
+    else: check_connectors([])
     F[:] = list(dict.fromkeys(F))
     E = [f for f in F if f[0] == "error"]; W = [f for f in F if f[0] == "warn"]; I = [f for f in F if f[0] == "info"]
-    if opts["json"]: print(json.dumps([dict(zip(("severity","code","where","message"), f)) for f in F], indent=2))
+    if opts["json"]: out = json.dumps([dict(zip(("severity","code","where","message"), f)) for f in F], indent=2)
     else:
-        print(f"### Scratchpad: Extension Validation\n**Scope:** {kind} `{root.name}`, target={opts['target']}\n")
-        print(f"| Errors | Warnings | Info |\n|---|---|---|\n| {len(E)} | {len(W)} | {len(I)} |\n")
+        lines = [f"### Scratchpad: Extension Validation\n**Scope:** {kind} `{root.name}`, target={opts['target']}\n",
+                 f"| Errors | Warnings | Info |\n|---|---|---|\n| {len(E)} | {len(W)} | {len(I)} |\n"]
         for sev, items in (("Errors", E), ("Warnings", W), ("Info", I)):
             if items:
-                print(f"**{sev}**")
-                for _, c, w, m in items: print(f"- `{c}` {Path(w).relative_to(root) if Path(w).is_absolute() and root in Path(w).parents else w}: {m}")
-        if not F: print("All checks passed.")
-    return 1 if E or (opts["strict"] and W) else 0
+                lines.append(f"**{sev}**")
+                for _, c, w, m in items: lines.append(f"- `{c}` {'.' if Path(w) == root else Path(w).relative_to(root) if Path(w).is_absolute() and root in Path(w).parents else w}: {m}")
+        if not F: lines.append("All checks passed.")
+        out = "\n".join(lines)
+    print(out)
+    code = 1 if E or (opts["strict"] and W) else 0
+    if cf and not opts["json"]:
+        try: cf.parent.mkdir(parents=True, exist_ok=True); cf.write_text(json.dumps({"key": key, "exit": code, "report": out}))
+        except OSError: pass
+    return code
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

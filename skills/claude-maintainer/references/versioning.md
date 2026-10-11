@@ -27,7 +27,8 @@ Propose a change when a reusable gap appears (missing, wrong, ambiguous, or cont
 - `CHANGELOG.md`: newest first; per version, Added / Changed / Fixed / Removed; each line says what and why. Never delete history. A deliberate backward or skipped number gets a note.
 - Plugin version and each skill's `metadata.version` move together when a skill changes (plugin version pins users, so a changed plugin with an unchanged `version` is never delivered to existing installs).
 - Repo-backed extensions the user keeps in sync: push the update, tag a version bump, and clean orphans (`claude-packager/references/github.md`).
-- Every update ships: edited files, changelog, the new version stated, a short what/why, revalidated and repackaged output (filename carries the version), scratchpad.
+- Every update ships: edited files, changelog, the new version stated, a short what/why, revalidated and repackaged output (filename carries the version), the release diff (files kept, changed, added, dropped), scratchpad.
+- Scripts: `bump_version.py` writes the entry and moves every version field (manifest, its metadata, marketplace entry, every skill and agent, README) from one summary; `release_diff.py` counts the file changes. Both live in `claude-maintainer/scripts/`.
 
 ## Part 4: Third-party extensions
 

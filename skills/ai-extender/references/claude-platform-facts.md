@@ -1,4 +1,4 @@
-# Platform Facts (verified 2026-10-01 to 2026-10-05; dates per section)
+# Platform Facts (verified 2026-10-01 to 2026-10-11; dates per section)
 
 Distilled from official docs. Load only the section needed. Facts drift: re-verify via `claude-docs-sync.md` before relying on version-specific details, and cite the page when it matters.
 
@@ -81,3 +81,11 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 - `${CLAUDE_PLUGIN_DATA}` = `~/.claude/plugins/data/<id>/` (non `[A-Za-z0-9_-]` → `-`), created on first reference, kept across updates, deleted on the last uninstall unless `--keep-data`. Exported to hook, MCP stdio, and LSP processes; not to the Bash tool.
 - Node dependencies: when Claude Code copies a plugin into its cache (install, update, first session on a new machine), it installs the root `package.json` dependencies if a supported lockfile sits beside it (npm, Bun, ...). Plugins loaded in place from a local folder get no install. Python has no automatic install.
 - Previous version directories get an `.orphaned_at` marker on update/uninstall and are removed 14 days later. Symlinks that lead outside the plugin are rejected (except between plugins in one marketplace); backslash paths load on Windows only.
+
+## Connectors and installs (support.claude.com 13837440 and 12512180, code.claude.com/docs/en/plugins/install, docs.composio.dev; verified 2026-10-11)
+- Chat (web, desktop Chat tab) and Cowork: Customize > Plugins > Discover, Add; upload a custom plugin file there; Add > Add marketplace takes owner/repo. Skills: Customize > Skills, + > Create skill > Upload a skill (zip). Plugins added there are saved to the account and sync one way to Claude Code (v2.1.273+, `<name>@synced`; remove by turning it off on claude.ai). Hooks and sub-agents run in Cowork and Claude Code, not chat; local MCP servers too.
+- A plugin's page in Customize lists its connectors with Connected / Not added and a Connect button: each user connects with their own account.
+- Desktop Code tab (local/SSH): + > Plugins > Add plugin (needs a marketplace), Manage plugins to disable or uninstall; no plugin browser in cloud sessions. Terminal: `claude plugin install <p> --marketplace <owner/repo>` (v2.1.292+), `disable`, `enable`, `uninstall`, `marketplace remove` (also uninstalls its plugins). `/plugin` > Installed > Configure options (userConfig) and Configure (bundled MCP server).
+- Claude Code skips a plugin MCP server that duplicates a manually configured one with the same command or URL; any other difference loads a second copy.
+- Composio Connect: shared `https://connect.composio.dev/mcp`, OAuth per user, 7 meta-tools (`COMPOSIO_SEARCH_TOOLS`, `COMPOSIO_GET_TOOL_SCHEMAS`, `COMPOSIO_MULTI_EXECUTE_TOOL`, `COMPOSIO_MANAGE_CONNECTIONS`, `COMPOSIO_WAIT_FOR_CONNECTIONS`, `COMPOSIO_REMOTE_WORKBENCH`, `COMPOSIO_REMOTE_BASH_TOOL`).
+- `claude plugin validate`: an http server with `"url": ""` passes; a missing url or an undeclared `${user_config.KEY}` fails (checked with Claude Code 2.1.296).

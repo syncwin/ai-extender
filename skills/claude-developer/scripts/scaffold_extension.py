@@ -4,24 +4,35 @@
 Usage: scaffold_extension.py <out-dir> --slug my-thing --display "My Thing"
          [--description "..."] [--author "@name"] [--company "Co"] [--email a@b.c] [--url https://..]
          [--license MIT] [--roles planner,developer] [--prefix acronym|none] [--agents] [--hooks] [--connectors]
+         [--no-composio]
 Creates <out-dir>/<slug>/ with: plugin.json (version 0.0.1), router skill named <slug>, one stub skill per
 --roles entry (<prefix>-<role>, or bare <role> without --prefix), scratchpad reference, README, CHANGELOG, LICENSE (MIT), .gitignore,
 and the Prompt Builder companion prompt (prompts/<title-slug>.json, via claude-packager/scripts/companion_prompt.py).
 Metadata on the manifest and every skill: displayName, version, and author/company when given.
 Optional empty-but-valid: agents/ (--agents), hooks/hooks.json (--hooks), .mcp.json (--connectors).
+Composio is declared by default (.mcp.json "composio" at the shared https://connect.composio.dev/mcp; each user signs
+in with their own account, so nothing personal ships). --no-composio leaves it out.
 Stubs contain real structure and a scratchpad step: fill the bodies, then run the validator.
 """
 import json, re, subprocess, sys
 from datetime import date
 from pathlib import Path
 
+COMPOSIO_URL = "https://connect.composio.dev/mcp"  # shared Composio Connect endpoint; OAuth per user
+
 SCRATCH = """# Scratchpad Format
 
 Every skill, connector, and agent ends its task with one. Standalone: emit at the end. Chained: each stage adds rows to one running scratchpad, emitted once at the end.
 
+It opens with the request ledger: one row per individual request the user made during the task (split compound asks; include requests added mid-task, questions, and anything declined or deferred), so nothing goes unaccounted for. Status is one of done, partly done, in progress, failed, not started, needs you. Context is one clause: the result, the blocker, or what is left.
+
 ```
 ### Scratchpad: <Visible Name> v<version>
 **Scope:** <what was run>
+
+| # | Request | Status | Context |
+|---|---|---|---|
+| 1 | <one request, in the user's words> | <status> | <result, blocker, or what's left> |
 
 | Area | Result |
 |---|---|
@@ -51,11 +62,12 @@ def frontmatter(name, desc, a, display):
 
 def main(argv):
     a = {"slug": None, "display": None, "description": "", "author": "", "company": "", "email": "", "url": "", "license": "MIT",
-         "roles": [], "prefix": "", "agents": False, "hooks": False, "connectors": False}
+         "roles": [], "prefix": "", "agents": False, "hooks": False, "connectors": False, "composio": True}
     out, i = None, 0
     while i < len(argv):
         x = argv[i]
         if x in ("--agents", "--hooks", "--connectors"): a[x[2:]] = True
+        elif x == "--no-composio": a["composio"] = False
         elif x.startswith("--") and x[2:] in a: a[x[2:]] = argv[i+1]; i += 1
         elif not x.startswith("-") and out is None: out = Path(x)
         else: print(__doc__); return 2
@@ -90,14 +102,18 @@ def main(argv):
     (root / "skills" / a["slug"] / "references" / "scratchpad.md").write_text(SCRATCH)
     if a["agents"]: (root / "agents").mkdir(); (root / "agents" / ".gitkeep").write_text("")
     if a["hooks"]: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text('{\n  "hooks": {}\n}\n')
-    if a["connectors"]: (root / ".mcp.json").write_text('{\n  "mcpServers": {}\n}\n')
+    servers = {"composio": {"type": "http", "url": COMPOSIO_URL}} if a["composio"] else {}
+    if a["connectors"] or servers: (root / ".mcp.json").write_text(json.dumps({"mcpServers": servers}, indent=2) + "\n")
+    ctable = ("\n## Connectors\n\n| Connector | Used by | Purpose | Auth | Data sent |\n|---|---|---|---|---|\n"
+              f"| Composio | all skills, when a task needs an outside app | one connection to 1,000+ apps (Gmail, Notion, Slack, CRMs) | each user's own Composio sign-in (OAuth) | only what a task sends to the app it uses |\n\n"
+              "In Chat or Cowork, open the plugin's Connectors tab and select Connect. Claude Code reuses a Composio connector you already have at this exact address instead of loading a second copy.\n") if a["composio"] else ""
     contact = f" · **Contact** {a['email']}" if a["email"] else ""
     who = " · ".join(x for x in (f"**Author** {a['author']}" if a["author"] else "", f"**Company** {a['company']}" if a["company"] else "") if x)
     slug_t = re.sub(r"[^a-z0-9]+", "-", a["display"].lower()).strip("-")
     (root / "README.md").write_text(f"# {a['display']}\n\n{desc}\n\n**Version** 0.0.1 · {who}{contact} · **License** {a['license']}\n\n"
         f"## Skills\n\n| Skill | Role |\n|---|---|\n| `{a['slug']}` | Router |\n{rtable}\n\n"
-        f"## Install\n\nCowork or claude.ai: upload the `.plugin` file as a custom plugin. Claude Code: add the marketplace or folder that holds this plugin, then install `{a['slug']}`. Start it with `/{a['slug']}` and describe what you need.\n\n"
-        f"## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
+        f"## Install\n\nCowork or claude.ai: upload the `.plugin` file as a custom plugin. Claude Code: add the marketplace or folder that holds this plugin, then install `{a['slug']}`. Start it with `/{a['slug']}` and describe what you need. Full steps for every app, and how to undo them, come in the install guide the packager writes next to the package.\n\n"
+        f"{ctable}\n## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
         f"## What it runs, reads, and sends\n\nList every script, connector, and outside service here before you share this plugin.\n")
     (root / "CHANGELOG.md").write_text(f"# Changelog\n\nNewest first.\n\n## 0.0.1: {date.today().isoformat()}\n\n**Added**\n- Initial structure.\n")
     (root / "LICENSE").write_text(MIT.format(year=date.today().year, holder=a["author"] or a["company"] or a["display"]) if a["license"] == "MIT" else f"License: {a['license']}\n")
@@ -107,7 +123,7 @@ def main(argv):
     if cp.exists():
         r = subprocess.run([sys.executable, str(cp), str(root)], capture_output=True, text=True)
         prompt = "prompts/ (default; edit the form fields to match the skills)" if r.returncode == 0 else "FAILED: " + r.stdout[-300:]
-    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
+    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors','composio') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
     return 0
 
 if __name__ == "__main__":

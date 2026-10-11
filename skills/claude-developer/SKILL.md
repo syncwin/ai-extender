@@ -36,6 +36,7 @@ Build only what the plan confirmed. No approved plan in context: hand to `ai-ext
 | New project skeleton | `scripts/scaffold_extension.py --help` (also writes a default companion prompt) |
 | MCP server skeleton (Node/Python) | `scripts/scaffold_mcp_server.py --help` |
 | Eval review page | `scripts/eval_report.py --help` |
+| Small local models, guardrails, Docker | `references/local-models.md` |
 
 ## Rules
 
@@ -46,5 +47,7 @@ Build only what the plan confirmed. No approved plan in context: hand to `ai-ext
 - Every skill, agent, and connector you write ends with a scratchpad step.
 - Every extension gets its companion prompt: write the fields agreed in the plan as a spec and run `companion_prompt.py <dir> --spec <spec.json>` (the scaffold's default is a starting point, not the finish).
 - Run the de-duplication pass (`claude-maintainer/references/versioning.md` Part 1) on each skill written.
+- Write the behavior tests with the skills, not after: at least 3 cases per skill a user can call, in `evals/` (`references/testing.md`).
+- Enforcement and quality bar: `ai-extender/references/standards.md` §5b and §5d.
 
 Next: `ai-extender:claude-reviewer`. Finish with the scratchpad (`ai-extender/references/scratchpad.md`).

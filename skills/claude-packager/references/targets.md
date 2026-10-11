@@ -1,6 +1,6 @@
 # Targets and Formats
 
-Use the target settled in the plan; ask only if none was settled. Never generate all by default. Run `ai-extender:claude-reviewer` first on the exact files.
+Target choice and the review step come first (packager SKILL.md steps 1 and 2).
 
 | Target | Output | Notes |
 |---|---|---|
@@ -18,7 +18,7 @@ claude.ai and Cowork "Upload plugin" takes a zip of the plugin folder (≤200 MB
 
 `python ${CLAUDE_SKILL_DIR}/scripts/package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-validate]`
 
-It runs the validator (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path.
+It runs the validator with `--cache` (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path. The archive records a hash of its contents; the next build with identical files reuses it without re-checking. The install guide and release diff come with every build.
 
 ## Private marketplace entry
 
@@ -33,5 +33,6 @@ It runs the validator (blocks on errors), derives the visible name from `display
 - [ ] Version, changelog, manifest, and filename agree
 - [ ] README accurate for the targets actually produced
 - [ ] `LICENSE` matches declared license; `CREDITS.md` present
-- [ ] Companion prompt delivered next to the package
+- [ ] Companion prompt and install guide delivered next to the package
+- [ ] Behavior tests ran after the last skill change (packager row "Behavior tests")
 - [ ] Scratchpad emitted

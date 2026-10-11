@@ -24,5 +24,7 @@ jobs:
         run: python skills/claude-reviewer/scripts/selftest.py
       - name: Validate for the Claude plugin directory
         run: python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+      - name: Scan for plain-text secrets
+        run: python skills/claude-reviewer/scripts/scan_secrets.py .
       - name: Simulate skill triggers
         run: python skills/claude-reviewer/scripts/simulate.py . triggers
