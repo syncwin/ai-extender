@@ -60,7 +60,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 """
 
 def frontmatter(name, desc, a, display):
-    meta = ["  version: 0.0.1", f'  displayName: "{display}"'] + ([f'  author: "{a["author"]}"'] if a["author"] else []) + ([f'  company: {a["company"]}'] if a["company"] else [])
+    meta = ["  version: 0.0.1", f"  displayName: {json.dumps(display)}"] + ([f"  author: {json.dumps(a['author'])}"] if a["author"] else []) + ([f"  company: {json.dumps(a['company'])}"] if a["company"] else [])
     return f"---\nname: {name}\ndescription: >\n  {desc}\nlicense: {a['license']}\nmetadata:\n" + "\n".join(meta) + "\n---\n\n"
 
 def main(argv):
@@ -81,6 +81,12 @@ def main(argv):
         print(f"slug '{a['slug']}' is reserved for Anthropic's own plugins; pick a name of your own and put the brand in --display"); return 2
     roles = [r for r in (a["roles"].split(",") if a["roles"] else []) if r]
     prefix = a["prefix"] if a["prefix"] not in ("", "none") else ""
+    slugish = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+    bad = [r for r in roles if not slugish.match(r)] + ([prefix] if prefix and not slugish.match(prefix) else [])
+    if bad: print(f"role and prefix names must be lowercase letters, digits, and hyphens: {', '.join(bad)}"); return 2
+    if any(re.search(r"[\x00-\x1f\x7f]", str(a[k])) for k in ("display", "description", "author", "company", "email", "url")):
+        print("display, description, author, company, email, and url must be single-line text"); return 2
+    if a["url"] and not a["url"].startswith("https://"): print("--url must start with https://"); return 2
     nm = lambda r: f"{prefix}-{r}" if prefix else r
     root = out / a["slug"]
     if root.exists(): print(f"exists: {root}"); return 1
@@ -112,8 +118,10 @@ def main(argv):
     if a["guardrail"]:
         g = root / "scripts" / "guardrail"; g.mkdir(parents=True)
         for fn in ("screen_text.py", "injection_model.json"): (g / fn).write_bytes((src / fn).read_bytes())
-        hooks["PostToolUse"] = [{"matcher": "WebFetch|WebSearch|mcp__.*", "hooks": [{"type": "command", "command": "python3",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py", "--hook"], "timeout": 15}]}]
+        names = ["composio"] if a["composio"] else []
+        scope = "|".join(f"mcp__.*[{n[0].upper()}{n[0]}]{re.escape(n[1:])}.*" for n in names) or "mcp__.*"  # no named connector yet: every MCP tool, until one is added
+        hooks["PostToolUse"] = [{"matcher": f"WebFetch|WebSearch|{scope}", "hooks": [{"type": "command", "timeout": 15, "command":
+            'p="${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py"; for py in python3 python; do command -v "$py" >/dev/null 2>&1 && exec "$py" "$p" --hook; done; exit 0'}]}]
     if a["hooks"] or hooks: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text(json.dumps({"hooks": hooks}, indent=2) + "\n")
     servers = {"composio": {"type": "http", "url": COMPOSIO_URL}} if a["composio"] else {}
     if a["connectors"] or servers: (root / ".mcp.json").write_text(json.dumps({"mcpServers": servers}, indent=2) + "\n")
@@ -123,6 +131,7 @@ def main(argv):
     ctable += ("\n## Injection guardrail\n\nIn Claude Code and Cowork, a hook screens what web pages and connectors return with a small local model "
                "(`scripts/guardrail/`, 67 KB, no downloads) and warns Claude when it finds instructions aimed at the model. It never blocks your work: "
                "Claude treats flagged content as data and asks you before acting on it. Chat on claude.ai doesn't run hooks. "
+               "It runs only after web tools and this plugin's own connectors; when you add a connector, add its name to the hook's `matcher` (the validator flags one it misses, `X007`). "
                "To turn it off, remove the `PostToolUse` entry from `hooks/hooks.json`.\n") if a["guardrail"] else ""
     contact = f" · **Contact** {a['email']}" if a["email"] else ""
     who = " · ".join(x for x in (f"**Author** {a['author']}" if a["author"] else "", f"**Company** {a['company']}" if a["company"] else "") if x)

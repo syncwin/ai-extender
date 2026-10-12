@@ -14,6 +14,8 @@ def keep(rel):
     parts = rel.split("/")
     return not (set(parts) & SKIP or parts[-1] == ".DS_Store" or rel.endswith((".pyc", ".plugin", ".zip")))
 
+MAX_MEMBER = 50_000_000  # larger members are compared by size and CRC instead of being read (zip-bomb guard)
+
 def digest(b): return hashlib.sha256(b).hexdigest()
 
 def load(path):
@@ -28,7 +30,9 @@ def load(path):
         out = {}
         for n in names:
             rel = n.split("/", 1)[1] if strip else n
-            if keep(rel): out[rel] = digest(z.read(n))
+            if not keep(rel): continue
+            info = z.getinfo(n)
+            out[rel] = digest(z.read(n)) if info.file_size <= MAX_MEMBER else f"oversize:{info.file_size}:{info.CRC:08x}"
         return out
 
 def diff(old, new):

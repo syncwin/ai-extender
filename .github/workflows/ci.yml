@@ -8,16 +8,24 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
+    name: Checks (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
@@ -30,3 +38,6 @@ jobs:
         run: python skills/claude-reviewer/scripts/screen_text.py .
       - name: Simulate skill triggers
         run: python skills/claude-reviewer/scripts/simulate.py . triggers
+      - name: Self-test as a non-root user
+        if: matrix.python == '3.13'
+        run: test "$(id -u)" != 0 && python skills/claude-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"

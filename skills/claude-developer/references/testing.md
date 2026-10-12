@@ -30,7 +30,7 @@ evals/mocks/<server>/<tool>.md # optional MCP mocks ({{input.x}}, expect:, error
 - **Grader types** (no custom code): `regex` (JS regex over `target`), `tool_used` (`tool`, `input_match`, `min`, `max`; `min:0 max:0` = never called), `tool_order`, `file_exists`, `llm` (rubric of concrete PASS/FAIL, 2 of 3 votes), `baseline` (at least as good as a reference transcript).
 - Each case runs 3× with the plugin and 3× without; `Δ` = with − without. `tool_used: Skill` graders are indicators only (excluded from scoring) unless `arm: both`.
 - Runs are isolated: only the plugin loads; read-only tools by default; grant `Write`, `Edit`, `Bash(...)` with `--allow-tools` (Bash runs sandboxed; Windows needs WSL2). MCP tools are mocked unless `--allow-real-servers` / `--mocks off`. `--scaffold` is required to run `scaffold_script`.
-- Run: `claude plugin eval .` · one case cheaply: `--case <name> --runs 1 --ablation none` · CI: `--trust-plugin --json results.json --threshold 0.8 --model <pin> --judge-model <pin> --no-publish --max-cost-usd N`. Exit 0 pass, 1 below threshold/invalid, 2 partial (cost ceiling or auth).
+- Run: `claude plugin eval . --judge-model sonnet` · one case cheaply: `--case <name> --runs 1 --ablation none` · CI: `--trust-plugin --json results.json --threshold 0.8 --model <pin> --judge-model <pin> --no-publish --max-cost-usd N`. Exit 0 pass, 1 below threshold/invalid, 2 partial (cost ceiling or auth).
 - Stable graders: `regex` over file contents for long output; one result grader + one process grader (`tool_used`/`tool_order`) per case; tighten rubrics so formatting doesn't decide the verdict; re-check with `--judge-model sonnet` when `Δ` is negative but the skill fired.
 - Every run and judge is a real model call on the user's account: say so before running; add `evals/results/` to `.gitignore`.
 - Reading results: `evals/results/<timestamp>/report.html` and `aggregate-result.json` (`aggregates.overallScore`, `casesPassed`, `meanDelta`, `cases[].arms.with[].error`). A usage-limit error mid-suite looks like a regression: check `NOTES` first.
@@ -55,6 +55,6 @@ Read transcripts, not just outputs; cut instructions that cause wasted work; gen
 
 Before packaging, every skill a user can call has been run against its test prompts and graded by someone other than the author of the run:
 
-- `claude plugin eval` (its judge model grades), or the manual loop with the `ai-extender:claude-grader` agent in a fresh context. The session that wrote the skill never grades its own output.
+- `claude plugin eval` (its judge model grades; the default small judge misreads long, table-heavy replies, so pass `--judge-model sonnet` or stronger for rubric graders), or the manual loop with the `ai-extender:claude-grader` agent in a fresh context. The session that wrote the skill never grades its own output.
 - Results newer than the last skill change: the packager reports stale or missing results, and `--require-evals` blocks the build.
 - Then `ai-extender:claude-reviewer` (`validate_extension.py`, `selftest.py` if scripts changed) and `claude plugin validate --strict`.

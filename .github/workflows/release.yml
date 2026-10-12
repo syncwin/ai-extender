@@ -1,0 +1,75 @@
+name: Release package
+
+# Builds the .plugin from the tagged commit on GitHub's runners, signs build provenance, and attaches the package,
+# the Prompt Builder prompt, and SHA256SUMS to the GitHub release for that tag. Verify a download with:
+#   gh attestation verify "AI.Extender.for.Claude.v1.0.0.plugin" --repo syncwin/ai-extender
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to rebuild, for example v1.0.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build, attest, attach
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # attach files to the release
+      id-token: write # sign the build provenance
+      attestations: write # store the provenance attestation
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Check the tag matches the plugin version
+        run: |
+          v=$(python -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          test "$TAG" = "v$v" || { echo "tag $TAG does not match plugin version $v"; exit 1; }
+      - name: Run every check
+        run: |
+          python skills/claude-reviewer/scripts/selftest.py
+          python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+          python skills/claude-reviewer/scripts/scan_secrets.py .
+          python skills/claude-reviewer/scripts/screen_text.py .
+      - name: Build the package
+        id: build
+        run: |
+          python skills/claude-packager/scripts/package_extension.py . --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
+          cd dist
+          orig=$(ls -- *.plugin | head -1)
+          asset="${orig// /.}"
+          mv -- "$orig" "$asset"
+          sha256sum -- "$asset" ai-extender-for-claude.json > SHA256SUMS
+          cat SHA256SUMS
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          echo "label=$orig" >> "$GITHUB_OUTPUT"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/${{ steps.build.outputs.asset }}
+            dist/ai-extender-for-claude.json
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET: ${{ steps.build.outputs.asset }}
+          LABEL: ${{ steps.build.outputs.label }}
+        run: |
+          cd dist
+          gh release upload "$TAG" "$ASSET#$LABEL" ai-extender-for-claude.json SHA256SUMS --clobber --repo "$GITHUB_REPOSITORY"

@@ -239,7 +239,24 @@ with tempfile.TemporaryDirectory() as td:
     import re as _re
     own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
     hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_ai-extender_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
-    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "claude-reviewer/scripts/screen_text.py").exists() and "screen_text.py" in own["hooks"][0]["args"][0], str(hits))
+    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "claude-reviewer/scripts/screen_text.py").exists() and "screen_text.py" in own["hooks"][0]["command"] and "exit 0" in own["hooks"][0]["command"], str(hits))
+    q = td / "sync-escape"; shutil.copytree(p, q); (q / ".claude-plugin/shared-files.json").write_text(json.dumps({"files": {"../../outside.md": ["skills/*/references/x.md"], "README.md": ["../escaped.md"]}}))
+    r = RUN(S / "claude-maintainer/scripts/sync_shared.py", q); check("sync_shared refuses paths outside the plugin", r.returncode == 1 and r.stdout.count("outside-plugin") >= 2 and not (td / "escaped.md").exists(), r.stdout[-300:])
+    r = RUN(S / "claude-developer/scripts/scaffold_extension.py", td / "bad", "--slug", "ok-slug", "--display", "OK", "--roles", "../evil"); check("scaffold rejects role names that leave the folder", r.returncode == 2 and not (td / "evil").exists(), r.stdout[-200:])
+    r = RUN(S / "claude-developer/scripts/scaffold_extension.py", td / "bad2", "--slug", "ok-two", "--display", "OK\nname: hijack"); check("scaffold rejects multi-line display names", r.returncode == 2, r.stdout[-200:])
+    q = td / "pins"; shutil.copytree(p, q); (q / "servers/ab-srv/requirements.txt").write_text("mcp>=1,<2\n"); m2 = json.loads((q / ".mcp.json").read_text()); m2["mcpServers"]["npx-srv"] = {"command": "npx", "args": ["-y", "some-mcp-server"]}; (q / ".mcp.json").write_text(json.dumps(m2))
+    r = RUN(V, q, "--target", "cowork"); check("validator flags unpinned dependencies and runners (X006) and an unscreened connector (X007)", r.stdout.count("X006") >= 2 and "X007" in r.stdout and "npx-srv" in r.stdout, r.stdout[-400:])
+    o8 = td / "o8"; r1 = RUN(PK, p, "--format", "plugin", "--out", o8); pkf = next(o8.glob("*.plugin"))
+    with zipfile.ZipFile(pkf) as z0: items = [(i, z0.read(i.filename)) for i in z0.infolist()]; cmt = z0.comment
+    with zipfile.ZipFile(pkf, "w") as z1:
+        for i, b in items: z1.writestr(i, b + (b"\n# tampered\n" if i.filename.endswith("SKILL.md") else b""))
+        z1.comment = cmt
+    r2 = RUN(PK, p, "--format", "plugin", "--out", o8); check("packager rebuilds a package whose contents were changed after the build", r1.returncode == 0 and "reused" not in r2.stdout and b"tampered" not in zipfile.ZipFile(pkf).read(next(n for n in zipfile.ZipFile(pkf).namelist() if n.endswith("SKILL.md"))), r2.stdout[-300:])
+    CR = S / "claude-reviewer/scripts/check_report.py"
+    (td / "bad-report.md").write_text("| # | Original | Corrected |\n|---|---|---|\n| 1 | `# notes` | Add install steps and an example. |\n| 2 | (missing) | see above |\n")
+    (td / "good-report.md").write_text("| # | Original | Corrected |\n|---|---|---|\n| 1 | `description: Helps.` | `description: Summarises notes. Use when the user says summarise my notes.` |\n| 2 | (missing) | `plugin.json`: `{\"name\": \"notes-helper\"}` |\n")
+    r1 = RUN(CR, td / "bad-report.md"); r2 = RUN(CR, td / "good-report.md")
+    check("report check flags advice in Corrected cells and passes exact text", r1.returncode == 1 and r1.stdout.count("| 3 |") + r1.stdout.count("| 4 |") == 2 and r2.returncode == 0, r1.stdout[-300:] + r2.stdout[-200:])
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
 

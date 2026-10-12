@@ -87,6 +87,17 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 **Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads, so install the whole plugin instead.
 
+## Security and verification
+
+Each release `.plugin` is built from its tagged commit on GitHub's runners and signed with a build-provenance attestation, and the release lists its SHA-256 checksums. To check a download before you install it:
+
+```
+gh attestation verify "AI.Extender.for.Claude.v1.0.0.plugin" --repo syncwin/ai-extender
+sha256sum -c SHA256SUMS
+```
+
+Every change also runs CodeQL, a secret scan, the injection screen, and the full self-test suite, with GitHub Actions pinned to exact commits. Report a vulnerability privately as described in `SECURITY.md`. The plugin collects no data (`PRIVACY.md`).
+
 ## Troubleshooting
 
 - **A skill doesn't trigger.** Say what you want in plain words ("audit my plugin") or call `/ai-extender` directly. To check the descriptions offline: `python skills/claude-reviewer/scripts/simulate.py . triggers`.
@@ -97,7 +108,7 @@ Agents: `ai-extender:claude-grader` grades test runs against their assertions, a
 
 ## Status
 
-Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 105 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12) scored 0.93, 0.67 above the same tasks without the plugin. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit` (the shell cases need the sandbox tools bubblewrap and socat on Linux). The audit case is the least steady: over six repeat runs it scored 0.75, because the judge is strict about every Corrected cell being exact text. Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 111 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, 0.92 on plain-language intake, and 0.92 on scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 

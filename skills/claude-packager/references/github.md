@@ -24,7 +24,7 @@ After any edit to a repo-backed extension: update `CHANGELOG.md` and versions, r
 Orphans are remote files or paths that no longer exist locally (renamed or removed skills, superseded scripts, stale build output), plus repos, branches, tags, and releases left behind by a rename.
 1. List the remote tree and diff it against the local file list. Delete remote-only files in the same commit as the change that orphaned them.
 2. Rename means move: delete the old paths, add the new ones, record old to new in the changelog.
-3. Deleting a whole repo, branch, tag, or release is irreversible: name exactly what will go, get the user's confirmation, then delete. Archive instead when unsure.
+3. Deleting a whole repo, branch, tag, or release, moving a tag, or force-pushing is irreversible: name exactly what will change, get the user's yes, then do it. Archive or mark as pre-release instead when unsure.
 4. Report what was removed in the scratchpad.
 
 ## 4. Rules

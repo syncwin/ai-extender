@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/skills/claude-reviewer/scripts/screen_text.py", "--hook"],
+            "command": "p=\"${CLAUDE_PLUGIN_ROOT}/skills/claude-reviewer/scripts/screen_text.py\"; for py in python3 python; do command -v \"$py\" >/dev/null 2>&1 && exec \"$py\" \"$p\" --hook; done; exit 0",
             "timeout": 15
           }
         ]

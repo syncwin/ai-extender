@@ -5,10 +5,16 @@ Usage: sync_shared.py <plugin-dir> [--check]
 Config: <plugin-dir>/.claude-plugin/shared-files.json
   {"files": {"shared/scratchpad.md": ["skills/*/references/scratchpad.md"]}}
   Keys are source files; values are target paths. `*` in a folder part matches every existing folder there.
+Paths must stay inside the plugin: a source or target that resolves outside it, or is a symlink, is refused.
 --check  report only (exit 1 when a copy is missing or differs); without it, copies the source over each target.
 """
 import json, sys
 from pathlib import Path
+
+def inside(p, root):
+    """True when p resolves to a path under root (no `..`, absolute path, or symlink escape)."""
+    try: Path(p).resolve().relative_to(Path(root).resolve()); return True
+    except ValueError: return False
 
 def targets(root, pattern):
     parts = Path(pattern).parts
@@ -28,10 +34,12 @@ def plan(root):
     out = []
     for src, pats in (cfg.get("files") or {}).items():
         s = root / src
+        if not inside(s, root) or s.is_symlink(): out.append((src, None, "outside-plugin")); continue
         if not s.is_file(): out.append((src, None, "missing-source")); continue
         data = s.read_bytes()
         for pat in pats if isinstance(pats, list) else [pats]:
             for t in targets(root, pat):
+                if not inside(t, root) or t.is_symlink(): out.append((src, str(pat), "outside-plugin")); continue
                 if t.resolve() == s.resolve(): continue
                 rel = t.relative_to(root).as_posix()
                 out.append((src, rel, "same" if t.is_file() and t.read_bytes() == data else ("differs" if t.exists() else "missing")))
@@ -43,7 +51,7 @@ def main(argv):
     if not (root / ".claude-plugin" / "shared-files.json").exists(): print("no .claude-plugin/shared-files.json: nothing to sync"); return 0
     rows, bad = plan(root), 0
     for src, dst, state in rows:
-        if state == "missing-source": bad += 1; continue
+        if state in ("missing-source", "outside-plugin"): bad += 1; continue
         if state != "same":
             bad += 1
             if not check:
@@ -51,9 +59,9 @@ def main(argv):
     same = sum(1 for r in rows if r[2] == "same")
     print(f"### Scratchpad: Shared Files\n**Scope:** `{root.name}` ({'check' if check else 'sync'})\n\n| Copy | Result |\n|---|---|")
     for src, dst, state in rows:
-        if state != "same": print(f"| {dst or src} | {state if check or state == 'missing-source' else 'updated from ' + src} |")
+        if state != "same": print(f"| {dst or src} | {state if check or state in ('missing-source', 'outside-plugin') else 'updated from ' + src} |")
     print(f"| unchanged | {same} |")
-    return 1 if (check and bad) or any(r[2] == "missing-source" for r in rows) else 0
+    return 1 if (check and bad) or any(r[2] in ("missing-source", "outside-plugin") for r in rows) else 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

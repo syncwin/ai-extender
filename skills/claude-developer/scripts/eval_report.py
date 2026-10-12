@@ -22,7 +22,7 @@ def block(run):
         for e in ex:
             out.append(f"<li class='{'p' if e.get('passed') else 'f'}'>{html.escape(str(e.get('text')))}<br><small>{html.escape(str(e.get('evidence','')))}</small></li>")
         out.append("</ul>")
-    if t: out.append(f"<p><small>{t.get('total_tokens','?')} tokens · {t.get('duration_ms',0)/1000:.1f}s</small></p>")
+    if t: out.append(f"<p><small>{html.escape(str(t.get('total_tokens','?')))} tokens · {t.get('duration_ms',0)/1000:.1f}s</small></p>")
     for f in sorted(run.iterdir()):
         if f.is_file() and f.suffix in {".md", ".txt", ".json", ".py", ".html"} and f.name not in {"grading.json", "timing.json"}:
             body = f.read_text(errors="replace")[:6000]

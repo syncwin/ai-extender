@@ -481,6 +481,52 @@ def check_shared(root):
         if state == "missing-source": add("error", "F001", cfg, f"shared source {src} does not exist")
         elif state != "same": add("warn", "F001", dst, f"{state} copy of {src}: run claude-maintainer/scripts/sync_shared.py")
 
+RANGE = re.compile(r"^\s*(\^|~|\*|>|<|latest$|next$|x$|.*\.x|.*\|\||git[+:]|https?:|file:|link:)")
+RUNNERS = {"npx": "@", "bunx": "@", "pnpx": "@", "uvx": "==", "pipx": "=="}
+
+def check_supply_chain(root, m, name, target="all"):
+    """X006 unpinned dependencies (a warning for release targets, info while developing); X007 guardrail hook that misses one of the plugin's own connectors."""
+    pin = "warn" if target in ("directory", "cowork", "upload") else "info"
+    for req in sorted(root.rglob("requirements*.txt")):
+        if any(x in SKIP_DIRS for x in req.relative_to(root).parts) or req.is_symlink(): continue
+        for no, line in enumerate((read(req) or "").splitlines(), 1):
+            t = line.split("#", 1)[0].strip()
+            if not t or t.startswith(("-", "--")): continue
+            if "==" not in t and "@" not in t: add(pin, "X006", req, f"line {no}: '{t}' is not pinned; pin an exact version (==) before release, ideally with --hash")
+    for pkg in sorted(root.rglob("package.json")):
+        rel = pkg.relative_to(root)
+        if any(x in SKIP_DIRS or x == "node_modules" for x in rel.parts) or pkg.is_symlink(): continue
+        d = load_json(pkg, "X006")
+        if not isinstance(d, dict): continue
+        deps = {**(d.get("dependencies") or {}), **(d.get("optionalDependencies") or {})}
+        for k, v in deps.items():
+            if isinstance(v, str) and RANGE.match(v): add(pin, "X006", pkg, f"dependency '{k}': '{v}' is a range; pin an exact version before release")
+        if deps and not any((pkg.parent / lf).exists() for lf in ("package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb")):
+            add(pin, "X006", pkg, "no lockfile: commit package-lock.json so every install gets the same code")
+    servers = {}
+    if (root / ".mcp.json").exists():
+        d = load_json(root / ".mcp.json", "M001"); servers.update((d.get("mcpServers", d) if isinstance(d, dict) else {}) or {})
+    if isinstance(m.get("mcpServers"), dict): servers.update(m["mcpServers"])
+    for n, s in servers.items():
+        if not isinstance(s, dict) or not s.get("command"): continue
+        cmd, args = Path(str(s["command"])).name, [str(a) for a in (s.get("args") or [])]
+        if cmd in RUNNERS and target != "directory":  # the directory target reports this as D007
+            pk = [a for a in args if not a.startswith("-") and a not in ("run",)]
+            if pk and RUNNERS[cmd] not in pk[0].lstrip("@"): add(pin, "X006", root / ".mcp.json", f"server '{n}': '{cmd} {pk[0]}' runs whatever version is newest; pin it ({pk[0]}{RUNNERS[cmd]}<version>)")
+    hf = root / "hooks" / "hooks.json"
+    hk = load_json(hf, "H001") if hf.exists() else None
+    groups = ((hk or {}).get("hooks", {}) or {}).get("PostToolUse", []) if isinstance(hk, dict) else []
+    guards = [g for g in groups if isinstance(g, dict) and "screen_text.py" in json.dumps(g.get("hooks", []))]
+    if servers and not guards:
+        add("info", "X007", root, "connectors but no injection guardrail: add the PostToolUse screen (standards 5c), scoped to these connectors")
+    for g in guards:
+        mt = g.get("matcher") or ".*"
+        try: rx = re.compile(mt)
+        except re.error: add("error", "X007", hf, f"guardrail matcher '{mt}' is not a valid regex"); continue
+        if mt in (".*", "*", "mcp__.*") or rx.fullmatch("mcp__other-plugin_tool__x"): add("info", "X007", hf, f"guardrail matcher '{mt}' screens every MCP tool in the session; scope it to this plugin's connectors")
+        for n in servers:
+            if not rx.fullmatch(f"mcp__plugin_{name}_{n}__any_tool"): add("warn", "X007", hf, f"guardrail matcher '{mt}' misses connector '{n}': its output is never screened")
+
 def check_plugin(root, opts):
     pj = root / ".claude-plugin" / "plugin.json"
     if not pj.exists():
@@ -543,6 +589,7 @@ def check_plugin(root, opts):
     if (root / ".mcp.json").exists(): check_mcp(root / ".mcp.json")
     if isinstance(m.get("mcpServers"), dict): check_mcp(pj, m["mcpServers"])
     check_user_config(root, m, pj)
+    check_supply_chain(root, m, name, opts["target"])
     scan_outside_skills(root)
     skill_md = [p for p in md_files if p.relative_to(root).parts[0] in ("skills", "agents")]
     check_overlap(skill_md, opts["rules"])
@@ -588,7 +635,7 @@ def tree_key(root, opts):
 
 def cache_file(root):
     base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "ai-extender"
-    return base / ("validate-" + hashlib.sha1(str(root).encode()).hexdigest()[:16] + ".json")
+    return base / ("validate-" + hashlib.sha256(str(root).encode()).hexdigest()[:16] + ".json")
 
 def main(argv):
     opts = {"target": "all", "meta": [], "must": "", "strict": False, "json": False, "known": "", "rules": [], "cache": False}

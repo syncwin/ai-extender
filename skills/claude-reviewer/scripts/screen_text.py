@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 WS, TOK = re.compile(r"\s\s+"), re.compile(r"(?u)\b\w+\b")
 TEXT = {".md", ".txt", ".html", ".htm", ".yaml", ".yml", ".csv", ".xml"}  # prose; code reads as noise to this model
-SKIP = {".git", "node_modules", "__pycache__", ".venv", "dist"}
+SKIP = {".git", ".github", "node_modules", "__pycache__", ".venv", "dist"}  # .github: CI config, never loaded by Claude
 _M = None
 
 def model():
@@ -70,7 +70,7 @@ def strings(o):
 
 def hook(th):
     try:
-        d = json.loads(sys.stdin.read() or "{}")
+        d = json.loads(sys.stdin.read(20_000_000) or "{}")
         text = "\n\n".join(strings(d.get("tool_response", d.get("tool_output", ""))))[:300_000]
         hits = flagged(text, th, strip_code=False)
         if not hits: return 0
@@ -90,9 +90,9 @@ def main(argv):
     if "--hook" in argv: return hook(th)
     if not paths and not use_stdin: print(__doc__); return 2
     rows = []
-    if use_stdin: rows += [("stdin", s, c) for s, c in flagged(sys.stdin.read(), th)]
+    if use_stdin: rows += [("stdin", s, c) for s, c in flagged(sys.stdin.read(20_000_000), th)]
     for p in paths:
-        fs = [p] if p.is_file() else sorted(f for f in p.rglob("*") if f.is_file() and f.suffix in TEXT and not set(f.relative_to(p).parts) & SKIP)
+        fs = [p] if p.is_file() else sorted(f for f in p.rglob("*") if f.is_file() and not f.is_symlink() and f.suffix in TEXT and not set(f.relative_to(p).parts) & SKIP)
         for f in fs:
             try: rows += [(str(f), s, c) for s, c in flagged(f.read_text(encoding="utf-8", errors="replace"), th)]
             except OSError: continue

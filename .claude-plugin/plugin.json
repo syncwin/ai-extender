@@ -13,6 +13,8 @@
   "repository": "https://github.com/syncwin/ai-extender",
   "documentationUrl": "https://github.com/syncwin/ai-extender#readme",
   "supportUrl": "https://github.com/syncwin/ai-extender/issues",
+  "privacyPolicyUrl": "https://github.com/syncwin/ai-extender/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/syncwin/ai-extender/blob/main/LICENSE",
   "license": "MIT",
   "keywords": [
     "skills",

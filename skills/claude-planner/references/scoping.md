@@ -11,7 +11,7 @@ Extract answers from the conversation and attached files first. Decide items 2 t
 5. **Install method:** derived from answer 1 (table below). Never offer public release.
 6. **Naming:** exact required style, else Title Case visible name + kebab-case role slugs. **Acronym:** user's choice or none (standards).
 7. **Metadata** (all optional): author, company, contact, license. Show them as empty defaults in the plan; set only what the user supplies.
-8. **Tests:** suggest evals for objectively checkable outputs, skip for subjective ones; user overrides.
+8. **Tests:** every skill gets behavior tests in the plan: assertion graders for checkable outputs, rubric graders for subjective ones (tone, summaries), plus should and should-not trigger prompts. A private draft may defer them, but the reviewer blocks a release without them.
 
 ## Business use
 

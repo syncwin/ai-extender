@@ -82,6 +82,13 @@ def main(argv):
         hcfg.setdefault("hooks", {}).setdefault("SessionStart", []).append({"hooks": [hook]})
         hf.parent.mkdir(exist_ok=True); hf.write_text(json.dumps(hcfg, indent=2) + "\n")
         nxt = "the SessionStart hook installs requirements.txt into the plugin data folder on first run and after it changes; pin exact versions before release"
+    hf = root / "hooks" / "hooks.json"
+    if hf.exists():  # widen the injection guardrail to screen the new server's output too
+        hcfg = json.loads(hf.read_text())
+        for g in hcfg.get("hooks", {}).get("PostToolUse", []):
+            if "screen_text.py" in json.dumps(g.get("hooks", [])) and g.get("matcher") and not re.fullmatch(g["matcher"], f"mcp__plugin_x_{a['name']}__t"):
+                g["matcher"] += f"|mcp__.*{re.escape(a['name'])}.*"
+        hf.write_text(json.dumps(hcfg, indent=2) + "\n")
     mcp = root / ".mcp.json"
     cfg = json.loads(mcp.read_text()) if mcp.exists() else {}
     cfg.setdefault("mcpServers", {})[a["name"]] = entry

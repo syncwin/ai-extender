@@ -19,8 +19,8 @@ metadata:
 
 1. **Scope:** `references/scoping.md`. Reuse context; ask only real gaps.
 2. **Design:** `references/architecture.md`. Include only confirmed components.
-3. **Lean check:** for every planned file or component ask "does the request need this?" Cut the rest; report `skipped: X, add when Y`.
-4. **One approval:** show the plan in plain words and wait for a yes. This is the only approval gate before building. The plan always states: what it does; the plugin name and every skill name (one skill → named exactly like the plugin); version `0.0.1`; connectors, with Composio listed as the default and which ones the account already has; the injection guardrail when it reads outside content; how it's installed; the companion prompt's form fields; anything skipped.
+3. **Lean check:** for every planned file or component ask "does the request need this?" Cut the rest; report `skipped: X, add when Y`. The defaults are not cut by this check: Composio stays as the default connector even when no app is named (the user may drop it), and so do version `0.0.1`, the companion prompt, and behavior tests.
+4. **One approval:** show the plan in plain words and wait for a yes. This is the only approval gate before building. The plan always states: what it does; the plugin name and every skill name (one skill → named exactly like the plugin); version `0.0.1`; connectors, always with Composio listed as the default (never drop it yourself, even when the extension only reads what the user gives it; say the user can remove it) and which ones the account already has; the injection guardrail when it reads outside content; how it's installed; the companion prompt's form fields, by name; anything skipped. For a user who described the goal in everyday words with no build terms, follow the router's plain-language rule: the plan covers what it does, what they get, and how they share it, and these build details go in the scratchpad instead.
 5. **Hand off** to `ai-extender:claude-developer`. Names, acronym, metadata, licensing: `ai-extender/references/standards.md`.
 
 Finish with the scratchpad (`ai-extender/references/scratchpad.md`).

@@ -11,7 +11,8 @@ Always creates or checks the Prompt Builder companion prompt (prompts/<title-slu
 and copies it next to the package. A read-only source is staged in a temp copy first, so it is never written to.
 Builds in a temp dir, then copies to --out (default ./dist).
 Also writes "<Visible Name> v<version> install.md" next to the package (desktop app, web, Code tab, terminal, undo).
-Reuse: an existing package whose recorded content hash matches is kept as it is (no re-check, no rebuild) unless --force.
+Reuse: an existing package is kept (no re-check, no rebuild) only when its recorded hash and its actual contents both
+match the source, unless --force. Validation always runs fresh, never from the validator's cache.
 Release diff: against --previous, or the newest other version of the same package in --out (release_diff.py).
 Behavior tests: reports whether evals/ results exist and are newer than the last skill change; --require-evals blocks if not.
 """
@@ -50,6 +51,19 @@ def files(root):
 def content_hash(root, fmt):
     h = hashlib.sha256(fmt.encode())
     for p, rel in files(root): h.update(rel.as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
+    return h.hexdigest()
+
+def package_hash(dest, fmt, slug):
+    """The content hash of an existing package, computed the same way as content_hash, or None."""
+    h = hashlib.sha256(fmt.encode())
+    try:
+        with zipfile.ZipFile(dest) as z:
+            for n in sorted(z.namelist()):
+                if n.endswith("/"): continue
+                rel = n if fmt == "plugin" else (n.split("/", 1)[1] if n.startswith(slug + "/") else None)
+                if rel is None: return None
+                h.update(rel.encode() + b"\0" + z.read(n) + b"\0")
+    except (OSError, zipfile.BadZipFile, KeyError): return None
     return h.hexdigest()
 
 def eval_status(root):
@@ -113,13 +127,14 @@ def main(argv):
     if dest.exists() and not force:
         try:
             with zipfile.ZipFile(dest) as z: reused = z.comment.decode("utf-8", "replace") == f"ai-extender:sha256={digest}"
+            reused = reused and package_hash(dest, fmt, slug) == digest
         except (OSError, zipfile.BadZipFile): reused = False
     if not reused:
         if not skip:
             v = here.parents[1] / "claude-reviewer" / "scripts" / "validate_extension.py"
             if v.exists():
                 vt = "cowork" if fmt == "plugin" and target == "all" else target
-                r = subprocess.run([sys.executable, str(v), str(root), "--cache", "--target", vt], capture_output=True, text=True)
+                r = subprocess.run([sys.executable, str(v), str(root), "--target", vt], capture_output=True, text=True)
                 if r.returncode != 0: print(r.stdout); print("Validation failed: fix errors or pass --skip-validate."); return 1
                 counts = re.search(r"\| (\d+) \| (\d+) \| (\d+) \|", r.stdout)
                 warns = re.findall(r"^- `(\w+)` ([^\n]+)$", r.stdout.split("**Warnings**")[1].split("**Info**")[0], re.M) if "**Warnings**" in r.stdout else []
