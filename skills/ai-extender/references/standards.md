@@ -90,6 +90,6 @@ An extension uses the capabilities its work needs because the structure requires
 
 ## 6. GitHub
 
-*(this plugin)* Repo: `syncwin/ai-extender`; issues on GitHub, security reports to `support@syncwin.com`.
+*(this plugin)* Repo: `syncwin/ai-extender`; issues on GitHub, security reports to `support@syncwin.com`. Connector: Composio (`.mcp.json`, shared address), used for GitHub and for outside apps a build needs; no skill requires it.
 
 For any extension: `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Push, tag, and orphan cleanup run only when the user asks for GitHub or the extension already lives in a repo they want kept in sync, and only through tools present in the session, with the owner and repo the user names. Confirm before the first push to a repo. Procedure: `claude-packager/references/github.md`.

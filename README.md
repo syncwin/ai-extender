@@ -60,9 +60,10 @@ AI Extender is Markdown instructions plus a few Python scripts, all readable in 
 - **Two exceptions, both opt-in:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`, and `scan_secrets.py --installed` reads the plugin and skill folders Claude uses on your machine (`~/.claude/plugins`, `~/.claude/skills`, and Cowork's plugin folders) to look for passwords and keys saved in plain text. It masks what it finds and sends nothing.
 - **Folder checks**: the router may run `ls -d /mnt/user-data/outputs mnt/.plugins mnt/.local-plugins` to tell whether it's inside Cowork. If a script path isn't filled in, it runs one `find` under `~/.claude/plugins`, `/mnt`, `mnt`, and the current folder to locate its own scripts. Both read folder and file names only.
 - **Web pages**: if you ask it to refresh its platform facts, Claude fetches Anthropic's official documentation pages with the web tool your session already has. It tells you before fetching.
-- **GitHub**: only when you ask it to publish or keep a repo in sync, and only through your own connector or `gh` login. It asks for the owner and repo, and confirms before the first push.
+- **Composio connector**: the plugin declares one connector, Composio, at its shared address `https://connect.composio.dev/mcp`. It ships no account and no key: you connect it yourself under Customize > Plugins > AI Extender > Connectors and sign in with your own Composio account. AI Extender uses it to push and release to GitHub when you ask, and to reach another app when a build needs one. Every skill still works without it; GitHub then falls back to your own GitHub connector or `gh` login. If you already have Composio connected at the same address, Claude uses that one and doesn't load a second copy.
+- **GitHub**: only when you ask it to publish or keep a repo in sync, and only through Composio, your own GitHub connector, or `gh` login. It asks for the owner and repo, and confirms before the first push.
 
-Nothing else leaves your machine. The plugin has no connectors, hooks, MCP servers, or executables of its own, and it collects no data. Claude asks before any step that deletes, sends, or publishes, and you can report a vulnerability privately by following the steps in `SECURITY.md`.
+Nothing else leaves your machine. Apart from the Composio connector, the plugin has no hooks, MCP servers, or executables of its own, and it collects no data. Claude asks before any step that deletes, sends, or publishes, and you can report a vulnerability privately by following the steps in `SECURITY.md`.
 
 ## Skills and agents
 
@@ -78,6 +79,10 @@ Start with `/ai-extender`. It reads your request and calls the right role, so mo
 | `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
 
 Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
+
+| Connector | Used by | For | Without it |
+|---|---|---|---|
+| Composio (`https://connect.composio.dev/mcp`) | `ai-extender:claude-packager`, and any role when a build needs an outside app | Pushing, tagging, and releasing on GitHub; reaching other apps a build depends on | Skills work as usual; GitHub goes through your own GitHub connector or `gh` |
 
 **Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads, so install the whole plugin instead.
 

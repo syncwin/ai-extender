@@ -28,6 +28,9 @@ Released after the final self-audit, run from an installed copy, and the first l
   - Fixed contradictions: the contents-list threshold is 100 lines in every file, the manifest reference points to its current docs address, the platform-facts header shows its full date range, and the README describes CI exactly.
   - The companion prompt guide lists all five validator codes (`C000` to `C004`), the GitHub asset example uses the full display name, and the Ponytail credit links to its repository.
 - Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
+- README, SECURITY.md, the standards, and the GitHub reference now say the plugin declares one connector instead of none, and the README has a connector table (who uses it, for what, and what happens without it).
+- Guardrail decision recorded in `claude-developer/references/local-models.md`: AI Extender itself keeps the injection hook out, because as a builder the hook would run on every tool call in every session. Outside content is screened where it is used instead.
+- `claude plugin validate . --strict` passes with the connector in place.
 
 **Added**
 - Composio is declared by default in every plugin the scaffolder makes, at Composio's shared address `https://connect.composio.dev/mcp`. Each user signs in with their own account, so no personal link ships. `--no-composio` leaves it out, and the plan shows it as a default the user can drop.
@@ -48,6 +51,7 @@ Released after the final self-audit, run from an installed copy, and the first l
 - Python routing evaluated and not adopted: on 60 labeled requests, lexical and trained stand-ins for Laya and DeBERTa picked the right skill 42% to 58% of the time, below what Claude does from the descriptions. Numbers and the revisit condition are in `claude-developer/references/local-models.md`.
 - Injection screen: `claude-reviewer/scripts/screen_text.py` with a 67 KB model learned from two small Apache-2.0 datasets (deepset/prompt-injections, jackhhao/jailbreak-classification). Pure Python, no downloads. Held out: precision 0.96 to 0.97, recall 0.96 on jailbreaks and 0.63 on subtler injections, no false alarms on skill docs. The validator screens skill and agent text (`X005`), docs refreshes screen fetched pages, and the scaffolder adds it as a `PostToolUse` guardrail hook to generated plugins with connectors (`--no-guardrail`). DeBERTa (568 to 739 MB) and Laya (808 MB) were not bundled: too large for a plugin.
 - 35 self-tests (102 in total) for the new checks and scripts.
+- AI Extender declares its own connector: Composio at the shared address `https://connect.composio.dev/mcp` (`.mcp.json`), so its plugin page shows a Connectors tab. Nothing personal ships; each user connects and signs in with their own Composio account. The packager uses it to push and release on GitHub, and any role can use it when a build needs an outside app. Every skill still works without it.
 
 ## 0.11.0: Self-audit fixes
 

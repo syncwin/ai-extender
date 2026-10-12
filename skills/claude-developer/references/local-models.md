@@ -29,6 +29,8 @@ The authors' conclusion: where labeled data exists, a small trained classifier m
 | Refreshing platform facts | fetched pages are screened before use (`ai-extender/references/claude-docs-sync.md`) |
 | Generated extensions that read outside content | the scaffolder copies the screen into `scripts/guardrail/` and adds a `PostToolUse` hook on web and connector tools (`--hook` mode: exit 2 shows Claude a warning, any error exits 0). Claude Code and Cowork; chat doesn't run hooks |
 
+**AI Extender itself keeps the hook out** (decided 2026-10-12). It declares Composio, so §5c would apply, but it is a builder: a `PostToolUse` hook would run on every tool call in every session where the plugin is on, including sessions that never touch Composio, and it would screen its own build output. Instead, content it reads from outside is screened where it is used: fetched docs before a facts refresh, third-party extensions in audits (`screen_text.py <dir>`, `X005`), and Composio results are treated as data under §5c. Revisit if AI Extender starts reading untrusted app content on its own.
+
 Examples quoted in code blocks are skipped in file mode, so documentation can show an attack without tripping the check.
 
 ## 3. Where it doesn't fit

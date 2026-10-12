@@ -2,7 +2,7 @@
 
 ## Scope
 
-AI Extender for Claude is Markdown instructions plus local Python scripts. It makes no network requests of its own and collects no data. The scripts write only to folders you point them at, and they call other scripts in this plugin through `subprocess` with fixed argument lists. No shell is involved. The README lists the few things Claude may do on your behalf (a folder check in Cowork, fetching Anthropic's docs when you ask, GitHub when you ask).
+AI Extender for Claude is Markdown instructions plus local Python scripts. Its scripts make no network requests and it collects no data. It declares one connector, Composio, at the shared address `https://connect.composio.dev/mcp`, with no account or key inside the plugin: each user connects it and signs in with their own Composio account, and Claude uses it only for GitHub or another app the user asked for. The scripts write only to folders you point them at, and they call other scripts in this plugin through `subprocess` with fixed argument lists. No shell is involved. The README lists the few things Claude may do on your behalf (a folder check in Cowork, fetching Anthropic's docs when you ask, GitHub or another app through Composio when you ask).
 
 ## Reporting a vulnerability
 
