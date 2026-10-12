@@ -4,7 +4,7 @@
 Builds a fixture plugin with the scaffolder, checks the validator passes it, breaks it in known ways and
 checks each break is caught, packages it in both formats, and exercises the eval aggregator and report.
 """
-import json, subprocess, sys, tempfile, zipfile
+import json, os, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 S = Path(__file__).resolve().parents[2]
@@ -224,6 +224,22 @@ with tempfile.TemporaryDirectory() as td:
     r = subprocess.run([sys.executable, str(SC), str(S), str(S.parent / "README.md")], capture_output=True, text=True); check("injection screen raises no false alarms on AI Extender's own docs", r.returncode == 0, r.stdout[-300:])
     q = td / "nomanifest"; shutil.copytree(p, q); shutil.rmtree(q / ".claude-plugin")
     r = RUN(V, q); r2 = RUN(V, q, "--target", "directory"); check("a plugin folder with no manifest is still audited", r.returncode == 0 and "P001" in r.stdout and "P005" not in r.stdout and r2.returncode == 1, r.stdout[-300:])
+    q = td / "odd-folder-name"; q.mkdir()
+    (q / "SKILL.md").write_text("---\nname: notes-helper\ndescription: Summarises notes. Use when the user says summarise my notes.\nlicense: MIT\nmetadata:\n  version: 0.1.0\n---\n\n# Notes Helper\n\nSummarise the notes.\n")
+    r = RUN(PK, q, "--format", "zip", "--skip-validate", "--out", td / "o6"); zf = next((td / "o6").glob("*.zip"), None)
+    names = zipfile.ZipFile(zf).namelist() if zf else []
+    check("zip top folder is the skill name, not the source folder name", r.returncode == 0 and names and all(n.startswith("notes-helper/") for n in names), str(names)[:200])
+    q2 = td / "ro" / "notes-helper"; shutil.copytree(q, q2); shutil.rmtree(q2 / "prompts", ignore_errors=True); os.chmod(q2, 0o555)
+    if os.access(q2, os.W_OK): check("read-only source is staged, not written (running as root, skipped)", True)
+    else:
+        r = RUN(PK, q2, "--format", "zip", "--skip-validate", "--out", td / "o7"); zf = next((td / "o7").glob("*.zip"), None)
+        names = zipfile.ZipFile(zf).namelist() if zf else []
+        check("read-only source is staged, not written", r.returncode == 0 and not (q2 / "prompts").exists() and any(n.startswith("notes-helper/prompts/") for n in names) and "read-only" in r.stdout, r.stdout[-300:])
+    os.chmod(q2, 0o755)
+    import re as _re
+    own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
+    hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_ai-extender_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
+    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "claude-reviewer/scripts/screen_text.py").exists() and "screen_text.py" in own["hooks"][0]["args"][0], str(hits))
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
 

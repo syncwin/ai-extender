@@ -27,9 +27,10 @@ The authors' conclusion: where labeled data exists, a small trained classifier m
 |---|---|
 | Audits (`claude-reviewer`) | the validator screens every skill and agent file (`X005`); `screen_text.py <dir>` screens third-party or downloaded extensions |
 | Refreshing platform facts | fetched pages are screened before use (`ai-extender/references/claude-docs-sync.md`) |
+| AI Extender itself | `hooks/hooks.json`, `PostToolUse` on web tools and Composio only, screen run in place from `claude-reviewer/scripts/` |
 | Generated extensions that read outside content | the scaffolder copies the screen into `scripts/guardrail/` and adds a `PostToolUse` hook on web and connector tools (`--hook` mode: exit 2 shows Claude a warning, any error exits 0). Claude Code and Cowork; chat doesn't run hooks |
 
-**AI Extender itself keeps the hook out** (decided 2026-10-12). It declares Composio, so §5c would apply, but it is a builder: a `PostToolUse` hook would run on every tool call in every session where the plugin is on, including sessions that never touch Composio, and it would screen its own build output. Instead, content it reads from outside is screened where it is used: fetched docs before a facts refresh, third-party extensions in audits (`screen_text.py <dir>`, `X005`), and Composio results are treated as data under §5c. Revisit if AI Extender starts reading untrusted app content on its own.
+**AI Extender itself runs the hook, scoped** (decided 2026-10-12). `hooks/hooks.json` matches `WebFetch|WebSearch|mcp__.*[Cc]omposio.*`, the outside content AI Extender reads, and calls `claude-reviewer/scripts/screen_text.py --hook` in place, with no second copy of the model. It never fires on Bash, Read, Write, Edit, or other connectors, so it costs nothing in sessions that don't fetch or use Composio, and about 50 ms per matched call (Python start plus 1 ms of scoring). Best practice for any extension: scope the matcher to the tools that bring outside text in, warn rather than block, and fail open.
 
 Examples quoted in code blocks are skipped in file mode, so documentation can show an attack without tripping the check.
 

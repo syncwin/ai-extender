@@ -29,8 +29,14 @@ Released after the final self-audit, run from an installed copy, and the first l
   - The companion prompt guide lists all five validator codes (`C000` to `C004`), the GitHub asset example uses the full display name, and the Ponytail credit links to its repository.
 - Two self-tests (67 in total): a `Text` field with no length limit passes, and a zero `maxLength` is rejected.
 - README, SECURITY.md, the standards, and the GitHub reference now say the plugin declares one connector instead of none, and the README has a connector table (who uses it, for what, and what happens without it).
-- Guardrail decision recorded in `claude-developer/references/local-models.md`: AI Extender itself keeps the injection hook out, because as a builder the hook would run on every tool call in every session. Outside content is screened where it is used instead.
-- `claude plugin validate . --strict` passes with the connector in place.
+- AI Extender now runs its own injection guardrail: `hooks/hooks.json` screens the output of web fetches, web searches, and Composio calls (and no other tool) with the bundled 67 KB screen, warns Claude on a hit, and fails open. Claude Code and Cowork; README, SECURITY.md, and `local-models.md` describe it.
+- `claude plugin validate . --strict` passes with the connector and hook in place.
+- Live evals run again from a clean container (2026-10-12), which exposed two fixes:
+  - Packaging: the zip's top folder is now the skill or plugin `name`, not whatever the source folder is called, and a read-only source is packaged from a temp copy instead of being written to. One of three packaging runs had failed on this; after the fix, 3 of 3 passed.
+  - Audits: each problem type gets a table of Original and Corrected, and a Corrected cell must be the replacement text itself, never an instruction such as "add install steps". Claude rereads the cells before sending. The reviewer's description now says to load it before reading the files: the skill went from loading in 1 of 3 audit runs to 6 of 6, and the audit case from 0.00 to 0.75 over six runs.
+  - The router also answers to "what's wrong with this plugin or skill".
+  - Full suite after the fixes (2026-10-12): 0.93 overall (from 0.73), 0.67 above the same runs without the plugin.
+- Three self-tests (105 in total): the zip's top folder, a read-only source, and AI Extender's own hook firing on web and Composio tools only.
 
 **Added**
 - Composio is declared by default in every plugin the scaffolder makes, at Composio's shared address `https://connect.composio.dev/mcp`. Each user signs in with their own account, so no personal link ships. `--no-composio` leaves it out, and the plan shows it as a default the user can drop.

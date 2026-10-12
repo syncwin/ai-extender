@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "WebFetch|WebSearch|mcp__.*[Cc]omposio.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/skills/claude-reviewer/scripts/screen_text.py", "--hook"],
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

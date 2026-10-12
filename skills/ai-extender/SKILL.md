@@ -5,7 +5,7 @@ description: >
   or package a Claude plugin, skill, connector, agent, hook, MCP server, or add-on, including internal tools for a
   team or business. Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn
   this workflow into a Claude plugin or skill", "automate our process for my team", "make Claude check every
-  document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this skill", "bump the version", "package this for
+  document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this plugin or skill", "bump the version", "package this for
   Cowork", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:

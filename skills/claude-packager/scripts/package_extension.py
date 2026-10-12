@@ -4,16 +4,18 @@
 Usage: package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-validate] [--target T]
                             [--previous FILE|DIR] [--repo owner/repo] [--force] [--require-evals]
   plugin: zip with the plugin root as archive root, extension .plugin (Cowork)
-  zip:    zip with the extension folder as the top-level entry (skill upload, manual install)
+  zip:    zip with one top-level folder named after the skill or plugin `name` (skill upload, manual install),
+          whatever the source folder is called
 Filename: "<Visible Name> v<version>.<ext>" (displayName / skill title + metadata.version).
 Always creates or checks the Prompt Builder companion prompt (prompts/<title-slug>.json, via companion_prompt.py)
-and copies it next to the package. Builds in a temp dir, then copies to --out (default ./dist).
+and copies it next to the package. A read-only source is staged in a temp copy first, so it is never written to.
+Builds in a temp dir, then copies to --out (default ./dist).
 Also writes "<Visible Name> v<version> install.md" next to the package (desktop app, web, Code tab, terminal, undo).
 Reuse: an existing package whose recorded content hash matches is kept as it is (no re-check, no rebuild) unless --force.
 Release diff: against --previous, or the newest other version of the same package in --out (release_diff.py).
 Behavior tests: reports whether evals/ results exist and are newer than the last skill change; --require-evals blocks if not.
 """
-import hashlib, json, re, shutil, subprocess, sys, tempfile, zipfile
+import hashlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist"}
@@ -26,7 +28,7 @@ def info(root):
         try: m = json.loads(pj.read_text(encoding="utf-8-sig"))
         except ValueError as e: raise SystemExit(f"plugin.json is not valid JSON: {e}")
         if not isinstance(m, dict) or not m.get("name"): raise SystemExit("plugin.json needs a name")
-        return "plugin", m.get("displayName") or m["name"], str(m.get("version", "0.0.1"))
+        return "plugin", m.get("displayName") or m["name"], str(m.get("version", "0.0.1")), m["name"]
     sm = root / "SKILL.md"
     if sm.exists():
         t = sm.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
@@ -35,7 +37,7 @@ def info(root):
         name = nm.group(1).strip().strip("\"'")
         ver = re.search(r"^\s+version:\s*(\S+)", t, re.M)
         h1 = re.search(r"^#\s+(.+)$", t, re.M)
-        return "skill", (h1.group(1).strip() if h1 else name.replace("-", " ").title()), (ver.group(1).strip("\"'") if ver else "0.0.1")
+        return "skill", (h1.group(1).strip() if h1 else name.replace("-", " ").title()), (ver.group(1).strip("\"'") if ver else "0.0.1"), name
     raise SystemExit(f"not a plugin or skill directory: {root}")
 
 def files(root):
@@ -86,8 +88,16 @@ def main(argv):
         else: print(__doc__); return 2
         i += 1
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
-    kind, visible, version = info(root)
+    kind, visible, version, slug = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
+    staged = None
+    if not os.access(root, os.W_OK) or ((root / "prompts").exists() and not os.access(root / "prompts", os.W_OK)):
+        staged = tempfile.TemporaryDirectory()
+        src, root = root, Path(staged.name) / slug
+        shutil.copytree(src, root, ignore=shutil.ignore_patterns(*EXCLUDE_DIRS, "*.pyc"))
+        for d, _, fs in os.walk(root):
+            for x in [d, *(os.path.join(d, f) for f in fs)]:
+                if not os.path.islink(x): os.chmod(x, os.stat(x).st_mode | 0o200)
     here = Path(__file__).resolve().parent
     cp = here / "companion_prompt.py"
     if cp.exists():
@@ -118,7 +128,7 @@ def main(argv):
             tmp = Path(td) / fname
             with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
                 for p, rel in files(root):
-                    z.write(p, (rel if fmt == "plugin" else Path(root.name) / rel).as_posix())
+                    z.write(p, (rel if fmt == "plugin" else Path(slug) / rel).as_posix())
                 if not skip: z.comment = f"ai-extender:sha256={digest}".encode()
             out.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(tmp, dest)
@@ -132,6 +142,7 @@ def main(argv):
     rows = [("File", f"`{dest}`" + (" (unchanged since the last build: reused, not re-checked)" if reused else "")), ("Entries", n), ("Version", version), ("Validation", "passed when this package was built" if reused else validated),
             ("Companion prompt", f"`prompts/` checked and copied into `{out}`"), ("Install guide", f"`{guide}`" if guide else "not written"),
             ("Behavior tests", ("ok: " if ev_ok else "flag: ") + ev_note)]
+    if staged: rows.append(("Source", "read-only, so a temp copy was packaged; the source folder was not changed and has no `prompts/` folder"))
     prev = prev or previous_package(out, visible, version, ext)
     rd = here.parents[1] / "claude-maintainer" / "scripts" / "release_diff.py"
     if prev and prev.exists() and rd.exists():
