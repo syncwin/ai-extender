@@ -82,7 +82,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 
 ## 5. Finish
 
-Hand over the result first. When something was built or changed: the file, its install guide (install steps in two or three lines in the reply), the companion prompt (`prompts/<title-slug>.json`, also copied next to the package) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the reviewer's report (problem type, Original, Corrected for every finding). Then one scratchpad per `references/scratchpad.md`, opening with the request ledger: every request the user made, its status, and the context they need.
+Hand over the result first. When something was built or changed: the file, its install guide (install steps in two or three lines in the reply), the companion prompt as its own file (`<title-slug>.json`, next to the package, never inside it) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the reviewer's report (problem type, Original, Corrected for every finding). Then one scratchpad per `references/scratchpad.md`, opening with the request ledger: every request the user made, its status, and the context they need.
 
 ## Absorbed skills
 

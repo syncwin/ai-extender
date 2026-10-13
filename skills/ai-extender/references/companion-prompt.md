@@ -1,6 +1,6 @@
 # Companion Prompt (Prompt Builder)
 
-Every extension this plugin builds or updates ships one companion prompt: a JSON file the user imports into Prompt Builder, a Chrome extension that stores prompts with form fields and inserts the filled prompt into Claude, ChatGPT, Gemini, and other chatbots (docs: promptbuilder.eniston.com). It turns "remember the right slash command and what to type" into a short form. Platform-neutral: the same file works wherever the extension runs.
+Every extension this plugin builds or updates ships one companion prompt: a JSON file the user imports into Prompt Builder, a Chrome extension that stores prompts with form fields and inserts the filled prompt into Claude, ChatGPT, Gemini, and other chatbots (docs: promptbuilder.syncwin.com). It turns "remember the right slash command and what to type" into a short form. Platform-neutral: the same file works wherever the extension runs.
 
 ## Contents
 
@@ -13,7 +13,7 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 
 ## 2. File and format
 
-`prompts/<title-slug>.json` inside the extension (title "Meeting Tasks" → `meeting-tasks.json`). Shape of a Prompt Builder 2.0 export:
+`prompts/<title-slug>.json` in the extension's source folder, delivered as a separate file next to the package and never packaged inside it (title "Meeting Tasks" → `meeting-tasks.json`). Shape of a Prompt Builder 2.0 export:
 
 ```json
 { "prompts": [ { "id": "<32 lowercase hex>", "title": "...", "description": "...", "content": "... {{task}} ...",

@@ -139,7 +139,7 @@ def main(argv):
     (root / "README.md").write_text(f"# {a['display']}\n\n{desc}\n\n**Version** 0.0.1 · {who}{contact} · **License** {a['license']}\n\n"
         f"## Skills\n\n| Skill | Role |\n|---|---|\n| `{a['slug']}` | Router |\n{rtable}\n\n"
         f"## Install\n\nCowork or claude.ai: upload the `.plugin` file as a custom plugin. Claude Code: add the marketplace or folder that holds this plugin, then install `{a['slug']}`. Start it with `/{a['slug']}` and describe what you need. Full steps for every app, and how to undo them, come in the install guide the packager writes next to the package.\n\n"
-        f"{ctable}\n## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
+        f"{ctable}\n## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. It is delivered next to the package, never inside it. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
         f"## What it runs, reads, and sends\n\nList every script, connector, and outside service here before you share this plugin.\n")
     (root / "CHANGELOG.md").write_text(f"# Changelog\n\nNewest first.\n\n## 0.0.1: {date.today().isoformat()}\n\n**Added**\n- Initial structure.\n")
     (root / "LICENSE").write_text(MIT.format(year=date.today().year, holder=a["author"] or a["company"] or a["display"]) if a["license"] == "MIT" else f"License: {a['license']}\n")

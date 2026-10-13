@@ -163,7 +163,7 @@ with tempfile.TemporaryDirectory() as td:
     r = mcp("same-known", cz, None, ("--known-connectors", "Composio=https://connect.composio.dev/mcp/", "--strict")); check("exact match with an account connector passes", r.returncode == 0 and "nothing loads twice" in r.stdout, r.stdout[-300:])
     r = mcp("dup-inside", {"a": {"type": "http", "url": "https://x.example/mcp"}, "b": {"type": "http", "url": "https://x.example/mcp/"}}, None, ("--strict",)); check("two connectors at one address are flagged", r.returncode == 1 and "M008" in r.stdout, r.stdout[-300:])
     key = "a8F3kL9q" + "Pz2XcV7bN1mR4tY6"
-    broken("key-like value in server code", "X003", lambda q: (q / "servers/fub.js").write_text(f'const FUB_API_KEY = "{key}";\n'), ("--strict",))
+    broken("key-like value in server code", "X003", lambda q: (q / "servers/crm.js").write_text(f'const CRM_API_KEY = "{key}";\n'), ("--strict",))
     broken("committed .env file", "X004", lambda q: (q / ".env").write_text("A=1\n"))
     rule = "Always confirm the target folder with the user before writing any file into it."
     broken("rule repeated in two skills", "S017", lambda q: [s.write_text(s.read_text() + "\n" + rule + "\n") for s in (q / "skills").glob("*/SKILL.md")], ("--strict",))
@@ -234,7 +234,7 @@ with tempfile.TemporaryDirectory() as td:
     else:
         r = RUN(PK, q2, "--format", "zip", "--skip-validate", "--out", td / "o7"); zf = next((td / "o7").glob("*.zip"), None)
         names = zipfile.ZipFile(zf).namelist() if zf else []
-        check("read-only source is staged, not written", r.returncode == 0 and not (q2 / "prompts").exists() and any(n.startswith("notes-helper/prompts/") for n in names) and "read-only" in r.stdout, r.stdout[-300:])
+        check("read-only source is staged, not written", r.returncode == 0 and not (q2 / "prompts").exists() and any(n.startswith("notes-helper/") for n in names) and not any("/prompts/" in n for n in names) and any((td / "o7").glob("*.json")) and "read-only" in r.stdout, r.stdout[-300:])
     os.chmod(q2, 0o755)
     import re as _re
     own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
@@ -252,6 +252,8 @@ with tempfile.TemporaryDirectory() as td:
         for i, b in items: z1.writestr(i, b + (b"\n# tampered\n" if i.filename.endswith("SKILL.md") else b""))
         z1.comment = cmt
     r2 = RUN(PK, p, "--format", "plugin", "--out", o8); check("packager rebuilds a package whose contents were changed after the build", r1.returncode == 0 and "reused" not in r2.stdout and b"tampered" not in zipfile.ZipFile(pkf).read(next(n for n in zipfile.ZipFile(pkf).namelist() if n.endswith("SKILL.md"))), r2.stdout[-300:])
+    names8 = zipfile.ZipFile(pkf).namelist()
+    check("the Prompt Builder prompt ships beside the package, never inside it", (p / "prompts").is_dir() and not any(n.startswith("prompts/") for n in names8) and any(o8.glob("*.json")), str([n for n in names8 if "prompt" in n])[:200])
     CR = S / "claude-reviewer/scripts/check_report.py"
     (td / "bad-report.md").write_text("| # | Original | Corrected |\n|---|---|---|\n| 1 | `# notes` | Add install steps and an example. |\n| 2 | (missing) | see above |\n")
     (td / "good-report.md").write_text("| # | Original | Corrected |\n|---|---|---|\n| 1 | `description: Helps.` | `description: Summarises notes. Use when the user says summarise my notes.` |\n| 2 | (missing) | `plugin.json`: `{\"name\": \"notes-helper\"}` |\n")

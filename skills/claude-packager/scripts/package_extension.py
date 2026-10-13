@@ -8,7 +8,7 @@ Usage: package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-valida
           whatever the source folder is called
 Filename: "<Visible Name> v<version>.<ext>" (displayName / skill title + metadata.version).
 Always creates or checks the Prompt Builder companion prompt (prompts/<title-slug>.json, via companion_prompt.py)
-and copies it next to the package. A read-only source is staged in a temp copy first, so it is never written to.
+and copies it next to the package; `prompts/` is never put inside the package. A read-only source is staged in a temp copy first, so it is never written to.
 Builds in a temp dir, then copies to --out (default ./dist).
 Also writes "<Visible Name> v<version> install.md" next to the package (desktop app, web, Code tab, terminal, undo).
 Reuse: an existing package is kept (no re-check, no rebuild) only when its recorded hash and its actual contents both
@@ -19,7 +19,7 @@ Behavior tests: reports whether evals/ results exist and are newer than the last
 import hashlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
-EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist"}
+EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
 EXCLUDE_SUFFIX = {".plugin", ".zip", ".pyc"}
 EXCLUDE_NAMES = {".DS_Store"}
 
@@ -155,7 +155,7 @@ def main(argv):
         args = [sys.executable, str(ig), str(root), "--file", fname, "--out", str(guide)] + (["--repo", repo] if repo else [])
         if subprocess.run(args, capture_output=True, text=True).returncode != 0: guide = None
     rows = [("File", f"`{dest}`" + (" (unchanged since the last build: reused, not re-checked)" if reused else "")), ("Entries", n), ("Version", version), ("Validation", "passed when this package was built" if reused else validated),
-            ("Companion prompt", f"`prompts/` checked and copied into `{out}`"), ("Install guide", f"`{guide}`" if guide else "not written"),
+            ("Companion prompt", f"checked and delivered separately in `{out}` (not inside the package)"), ("Install guide", f"`{guide}`" if guide else "not written"),
             ("Behavior tests", ("ok: " if ev_ok else "flag: ") + ev_note)]
     if staged: rows.append(("Source", "read-only, so a temp copy was packaged; the source folder was not changed and has no `prompts/` folder"))
     prev = prev or previous_package(out, visible, version, ext)

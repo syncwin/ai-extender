@@ -43,9 +43,9 @@ claude plugin install ai-extender@syncwin
 
 ## Companion prompt
 
-Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.eniston.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import it under Settings > Import. Fill in the form, and the prompt starts the right skill with everything it needs. The file lives in the extension's `prompts/` folder and is copied next to the package each time you package it.
+Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.syncwin.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import it under Settings > Import ([help](https://promptbuilder.eniston.com/)). Fill in the form, and the prompt starts the right skill with everything it needs. The source file lives in the extension's `prompts/` folder; packaging delivers it as a separate file next to the package and never puts it inside the package, because it belongs to Prompt Builder, not to Claude.
 
-AI Extender has one too: `prompts/ai-extender-for-claude.json`. Pick a goal, describe what you want, and send.
+AI Extender has one too: `ai-extender-for-claude.json`, attached to each release as its own file. Pick a goal, describe what you want, and send.
 
 ## Requirements
 
@@ -55,7 +55,7 @@ Use Claude Code, Cowork, or claude.ai. Skills must be turned on. The bundled scr
 
 AI Extender is Markdown instructions plus a few Python scripts, all readable in this repository.
 
-- **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). Packaging also writes the companion prompt into the extension's `prompts/` folder, and an install guide next to the package. They call only other scripts in this plugin, with fixed arguments and no shell.
+- **Scripts** run on your machine. They make no network requests and read or write only the folders you point them at (plus a temporary folder while packaging). Packaging also writes the companion prompt into the extension's `prompts/` folder and delivers it, with an install guide, next to the package (never inside it). They call only other scripts in this plugin, with fixed arguments and no shell.
 - **Injection screen**: `screen_text.py` scores text with a 67 KB local model that ships in the plugin. It reads only the files or input you give it, downloads nothing, and sends nothing. AI Extender runs it on itself as a hook (`hooks/hooks.json`), and plugins it builds with connectors get the same hook: it warns Claude when web or connector output contains instructions aimed at the model.
 - **Guardrail hook** (Claude Code and Cowork; chat doesn't run hooks): after each web fetch, web search, or Composio call, and no other tool, `screen_text.py --hook` reads that tool's output on your machine. If it looks like an injection, Claude gets a warning, treats the content as data, and asks you before acting on it. It never blocks your work and sends nothing; if Python can't start, Claude carries on without it. To turn it off, remove the `PostToolUse` entry from `hooks/hooks.json`.
 - **Two exceptions, both opt-in:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`, and `scan_secrets.py --installed` reads the plugin and skill folders Claude uses on your machine (`~/.claude/plugins`, `~/.claude/skills`, and Cowork's plugin folders) to look for passwords and keys saved in plain text. It masks what it finds and sends nothing.
@@ -108,7 +108,7 @@ Every change also runs CodeQL, a secret scan, the injection screen, and the full
 
 ## Status
 
-Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 111 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, 0.92 on plain-language intake, and 0.92 on scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
+Version 1.0.0, released after AI Extender audited itself from a real install. Every push to `main` and every pull request runs the 112 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 

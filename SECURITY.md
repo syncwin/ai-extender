@@ -35,7 +35,7 @@ The README section "What it runs, reads, and sends" lists every case in plain wo
   gh attestation verify "AI.Extender.for.Claude.v1.0.0.plugin" --repo syncwin/ai-extender
   sha256sum -c SHA256SUMS
   ```
-- **Every push and pull request** runs 111 self-tests (one pass as a non-root user), the directory validator in strict mode, a secret scan, the injection screen, the trigger simulation, and CodeQL (`security-extended`) on the Python and the workflows. OpenSSF Scorecard runs weekly.
+- **Every push and pull request** runs 112 self-tests (one pass as a non-root user), the directory validator in strict mode, a secret scan, the injection screen, the trigger simulation, and CodeQL (`security-extended`) on the Python and the workflows. OpenSSF Scorecard runs weekly.
 - **Workflows** pin every action to a full commit SHA, default to read-only permissions, grant write access per job only where needed, and never pass untrusted input into a shell. Dependabot proposes action updates weekly.
 - **Repository:** secret scanning with push protection, Dependabot alerts and security updates, private vulnerability reporting, code-owner review, and rules that block force-pushes and deletion of `main` and `v*` release tags for everyone but repository admins.
 
