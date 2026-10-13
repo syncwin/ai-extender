@@ -50,29 +50,40 @@ def chunks(text, strip_code=True, size=1200):
         out += [p[i:i + size] for i in range(0, len(p), size)] if p else []
     return out
 
-def flagged(text, threshold=0.5, strip_code=True):
-    """[(score, chunk)] for chunks of four or more words that score at or above the threshold."""
+def prose(c):
+    """True when a chunk reads as language, not data: letters make up most of its non-space characters."""
+    t = re.sub(r"\s", "", c)
+    return bool(t) and sum(ch.isalpha() for ch in t) / len(t) >= 0.6
+
+def flagged(text, threshold=0.5, strip_code=True, prose_only=False):
+    """[(score, chunk)] for chunks of four or more words that score at or above the threshold.
+    prose_only (hook mode) skips data-like chunks (JSON, logs, tables), which caused false alarms on tool output."""
     hits = []
     for c in chunks(text, strip_code):
-        if len(c.split()) >= 4:
+        if len(c.split()) >= 4 and (not prose_only or prose(c)):
             s = score(c)
             if s >= threshold: hits.append((round(s, 3), c))
     return hits
 
 def excerpt(c, n=90): return re.sub(r"\s+", " ", c)[:n] + ("..." if len(c) > n else "")
 
-def strings(o):
-    if isinstance(o, str): yield o
+def strings(o, depth=0):
+    if isinstance(o, str):
+        t = o.strip()
+        if depth < 4 and t[:1] in "{[":  # JSON inside a string (tool stdout): screen its values, not its syntax
+            try: yield from strings(json.loads(t), depth + 1); return
+            except ValueError: pass
+        yield o
     elif isinstance(o, dict):
-        for v in o.values(): yield from strings(v)
+        for v in o.values(): yield from strings(v, depth)
     elif isinstance(o, list):
-        for v in o: yield from strings(v)
+        for v in o: yield from strings(v, depth)
 
 def hook(th):
     try:
         d = json.loads(sys.stdin.read(20_000_000) or "{}")
         text = "\n\n".join(strings(d.get("tool_response", d.get("tool_output", ""))))[:300_000]
-        hits = flagged(text, th, strip_code=False)
+        hits = flagged(text, th, strip_code=False, prose_only=True)
         if not hits: return 0
         s, c = max(hits)
         print(f"Possible prompt injection in {d.get('tool_name', 'tool')} output (score {s}): \"{excerpt(c)}\". "
