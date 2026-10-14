@@ -41,6 +41,8 @@ The portal's scanner matches text patterns across every file, docs included, so 
 
 A policy hold doesn't stop submission; a reviewer reads that version first. Clearing the holds before submitting makes the review faster.
 
+After submitting, on the plugin's Settings tab: switch on "This plugin collects or transmits user data" whenever the plugin declares a remote MCP server (Composio included) or an HTTP hook, with the privacy policy linked; and finish the GitHub push webhook (payload URL, content type `application/json`, the secret shown once at submission, push event only). If the secret was lost, select Rotate secret first. Without the webhook the directory still checks for new commits about every 6 hours.
+
 ## 4. Security scan
 
 Flags undisclosed behavior (data sent elsewhere, hidden code, permission changes). Describe in the README everything the plugin runs, sends, or fetches; commit readable source.
