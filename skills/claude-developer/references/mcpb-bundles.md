@@ -4,7 +4,7 @@ Verified against github.com/anthropics/mcpb (manifest spec 0.3; `uv` type needs 
 
 ## Layout
 
-`manifest.json` (only required file), `server/` (entry + code), bundled deps (`node_modules/`, `server/lib/`), optional `icon.png`, `.mcpbignore`. Prefer **Node.js**: it ships with Claude Desktop, so no runtime install. Python: `type: "uv"` (deps in `pyproject.toml`, no bundled `lib/` or `venv/`) beats bundling compiled packages.
+`manifest.json` (only required file), `server/` (entry + code), bundled deps (`node_modules/`, `server/lib/`), an optional icon image, `.mcpbignore`. Prefer **Node.js**: it ships with Claude Desktop, so no runtime install. Python: `type: "uv"` (deps in `pyproject.toml`, no bundled `lib/` or `venv/`) beats bundling compiled packages.
 
 ## manifest.json
 

@@ -40,7 +40,7 @@ return audits.filter(Boolean)
 ```
 - `meta` first statement, plain object literal with `name` and `description` (anything non-literal drops it from autocomplete).
 - Body: plain JavaScript with top-level `await`; globals `agent()`, `pipeline()`, `parallel()`, `phase()`, `log()`, `args`. `agent()` can return `null` (stopped/failed): filter it.
-- **No `import()` / module loading** (fails before the run), no direct filesystem or shell from the script (agents do that), no mid-run user input. `Date.now()`, `Math.random()`, and no-arg `new Date()` throw (pass time in via `args`).
+- **No `import()` / module loading** (fails before the run), no direct filesystem or shell from the script (agents do that), no mid-run user input. `Date.now()`, `Math.random()`, and no-arg `new Date()` throw (supply the time through `args`).
 - Limits: 16 concurrent agents by default, 4,096 items per `parallel()`/`pipeline()`, 1,000 agents per run.
 - Use a workflow only when the task needs many agents or a repeatable orchestration; otherwise a skill or agent is cheaper. Costs scale with agents; test on a small slice first.
 

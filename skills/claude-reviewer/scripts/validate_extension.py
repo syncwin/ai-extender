@@ -10,10 +10,11 @@ Usage: validate_extension.py <dir> [--target all|claude-code|upload|cowork|direc
   --rules             project instruction files (CLAUDE.md, AGENTS.md, pasted project instructions):
                       flags skill text that repeats them
   --cache             reuse the last passing result when no file and no option changed
+  --cache-dir <dir>   keep that result in <dir> instead of ~/.cache/ai-extender (implies --cache)
 Exit: 0 pass, 1 errors (or warnings with --strict), 2 usage.
 Complements (does not replace) `claude plugin validate`.
 """
-import hashlib, json, os, re, sys
+import hashlib, json, re, sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True  # never leave __pycache__ inside the plugin being checked
@@ -633,16 +634,17 @@ def tree_key(root, opts):
         h.update(rel.as_posix().encode() + b"\0" + f.read_bytes() + b"\0")
     return h.hexdigest()
 
-def cache_file(root):
-    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "ai-extender"
+def cache_file(root, base=None):
+    base = Path(base) if base else Path.home() / ".cache" / "ai-extender"
     return base / ("validate-" + hashlib.sha256(str(root).encode()).hexdigest()[:16] + ".json")
 
 def main(argv):
     opts = {"target": "all", "meta": [], "must": "", "strict": False, "json": False, "known": "", "rules": [], "cache": False}
+    cache_dir = None
     args, i = [], 0
     while i < len(argv):
         a = argv[i]
-        if a in ("--target", "--require-meta", "--must-contain", "--known-connectors", "--rules") and i + 1 >= len(argv): print(__doc__); return 2
+        if a in ("--target", "--require-meta", "--must-contain", "--known-connectors", "--rules", "--cache-dir") and i + 1 >= len(argv): print(__doc__); return 2
         if a == "--target": opts["target"] = argv[i+1]; i += 1
         elif a == "--require-meta": opts["meta"] = [x for x in argv[i+1].split(",") if x]; i += 1
         elif a == "--must-contain": opts["must"] = argv[i+1]; i += 1
@@ -651,6 +653,7 @@ def main(argv):
         elif a == "--strict": opts["strict"] = True
         elif a == "--json": opts["json"] = True
         elif a == "--cache": opts["cache"] = True
+        elif a == "--cache-dir": opts["cache"] = True; cache_dir = argv[i+1]; i += 1
         elif a.startswith("-"): print(__doc__); return 2
         else: args.append(a)
         i += 1
@@ -659,7 +662,7 @@ def main(argv):
     if not root.is_dir(): print(f"not a directory: {root}"); return 2
     key = cf = None
     if opts["cache"]:
-        key, cf = tree_key(root, opts), cache_file(root)
+        key, cf = tree_key(root, opts), cache_file(root, cache_dir)
         try: prev = json.loads(cf.read_text())
         except (OSError, ValueError): prev = {}
         if prev.get("key") == key and prev.get("exit") == 0:

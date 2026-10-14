@@ -19,7 +19,8 @@ Released after the final self-audit, run from an installed copy, and the first l
 
 **Changed**
 - Directory review: `scan_secrets.py` no longer has `--installed`, which swept `~/.claude` and Cowork's plugin folders for keys. It scans only the folders you name, so the plugin never reads credentials from the user's machine on its own.
-- Directory listing icon: `.claude-plugin/icon.png` (1024 px square).
+- Directory listing icon added (1024 px square PNG).
+- Directory review: example connector settings use `${user_config.KEY}`, the self-test no longer copies the environment, and the validator's cache folder is set with `--cache-dir` instead of an environment variable, so nothing reads credentials from the user's machine.
 - Credits: removed the `skill-creator-plus` entry.
 - Docs: shorter plugin description that names claude.ai too; the README status now says exactly what CI runs.
 - The audit test's sample skill no longer tells Claude to email anything, so a security scan has nothing to misread. It still has plenty to fail on: vague descriptions, no manifest or license, and an agent with no tool limits.

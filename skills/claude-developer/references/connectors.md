@@ -35,9 +35,9 @@ Claude Code skips a plugin connector whose URL (remote) or command and arguments
 ```json
 { "mcpServers": {
   "service-name": { "type": "http", "url": "${SERVICE_URL:-https://api.example.com}/mcp",
-                    "headers": { "Authorization": "Bearer ${SERVICE_API_KEY}" } },
+                    "headers": { "Authorization": "Bearer ${user_config.SERVICE_API_KEY}" } },
   "local-tool":   { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/servers/index.js"],
-                    "env": { "DB_URL": "${DB_URL}" } } } }
+                    "env": { "DB_URL": "${user_config.DB_URL}" } } } }
 ```
 
 - Server keys: kebab-case. Visible connector name (README): Title Case / exact brand spelling.

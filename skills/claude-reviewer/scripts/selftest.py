@@ -171,8 +171,8 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(V, q, "--rules", td / "CLAUDE.md"); check("rule that repeats project instructions is flagged", "S018" in r.stdout, r.stdout[-300:])
     broken("skill the router never names", "S019", lambda q: (q / "skills/ab-extra").mkdir() or (q / "skills/ab-extra/SKILL.md").write_text("---\nname: ab-extra\ndescription: Use when testing.\n---\n\nscratchpad\n"), ("--strict",))
     broken("oversized reference file", "S016", lambda q: (q / "skills/ab-demo/references/big.md").write_text("## Contents\n" + "line\n" * 320 + "\nbig.md\n"), ("--strict",))
-    q = td / "cache"; shutil.copytree(p, q); env = {**os.environ, "XDG_CACHE_HOME": str(td / "xdg")}
-    run_c = lambda: subprocess.run([sys.executable, str(V), str(q), "--cache"], capture_output=True, text=True, env=env)
+    q = td / "cache"; shutil.copytree(p, q); cdir = td / "xdg"
+    run_c = lambda: subprocess.run([sys.executable, str(V), str(q), "--cache-dir", str(cdir)], capture_output=True, text=True)
     r1 = run_c(); r2 = run_c(); sk(q).write_text(sk(q).read_text() + "\nOne more rule.\n"); r3 = run_c()
     check("--cache reuses an unchanged passing result and rechecks after a change", r1.returncode == 0 and "Reused" in r2.stdout and "Reused" not in r3.stdout, r2.stdout[-200:])
     SY = S / "claude-maintainer/scripts/sync_shared.py"
