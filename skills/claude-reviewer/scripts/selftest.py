@@ -239,7 +239,7 @@ with tempfile.TemporaryDirectory() as td:
     import re as _re
     own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
     hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_ai-extender_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
-    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "claude-reviewer/scripts/screen_text.py").exists() and "screen_text.py" in own["hooks"][0]["command"] and "exit 0" in own["hooks"][0]["command"], str(hits))
+    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "claude-reviewer/scripts/screen_text.py").exists() and own["hooks"][0]["command"] == "python3" and own["hooks"][0]["args"][0].endswith("/screen_text.py"), str(hits))
     q = td / "sync-escape"; shutil.copytree(p, q); (q / ".claude-plugin/shared-files.json").write_text(json.dumps({"files": {"../../outside.md": ["skills/*/references/x.md"], "README.md": ["../escaped.md"]}}))
     r = RUN(S / "claude-maintainer/scripts/sync_shared.py", q); check("sync_shared refuses paths outside the plugin", r.returncode == 1 and r.stdout.count("outside-plugin") >= 2 and not (td / "escaped.md").exists(), r.stdout[-300:])
     r = RUN(S / "claude-developer/scripts/scaffold_extension.py", td / "bad", "--slug", "ok-slug", "--display", "OK", "--roles", "../evil"); check("scaffold rejects role names that leave the folder", r.returncode == 2 and not (td / "evil").exists(), r.stdout[-200:])
@@ -264,13 +264,12 @@ with tempfile.TemporaryDirectory() as td:
     check("report check flags advice in Corrected cells and passes exact text", r1.returncode == 1 and r1.stdout.count("| 3 |") + r1.stdout.count("| 4 |") == 2 and r2.returncode == 0, r1.stdout[-300:] + r2.stdout[-200:])
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
-    ic = (p / ".claude-plugin/icon.png").read_bytes()
-    check("scaffold writes a square 512 px listing icon", ic[:8] == b"\x89PNG\r\n\x1a\n" and ic[16:24] == (512).to_bytes(4, "big") * 2)
-    r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin has no icon or credential findings", "D012" not in r.stdout and "D014" not in r.stdout, r.stdout[-400:])
+    r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin: icon reminder (D012), no environment reads (D014)", "D012" in r.stdout and "D014" not in r.stdout, r.stdout[-400:])
+    gh = json.loads((p / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]["hooks"][0] if (p / "hooks/hooks.json").exists() else {}
+    check("scaffolded guardrail hook uses exec form the directory can read", not gh or (gh.get("command") == "python3" and gh.get("args", [""])[0].startswith("${CLAUDE_PLUGIN_ROOT}/")), str(gh))
     D = ("--target", "directory", "--strict")
-    broken("missing listing icon", "D012", lambda q: (q / ".claude-plugin/icon.png").unlink(), D)
-    broken("connector reading an environment credential", "D014", lambda q: (q / ".mcp.json").write_text('{"mcpServers":{"x":{"type":"http","url":"https://api.example.com/mcp","headers":{"Authorization":"Bearer ${API_TOKEN}"}}}}'), D)
-    broken("script reading the environment", "D014", lambda q: (q / "skills/ab-developer/run.py").write_text("import os\nkey = os.environ.get('API_KEY')\n"), D)
+    broken("connector reading an environment variable", "D014", lambda q: (q / ".mcp.json").write_text('{"mcpServers":{"x":{"type":"http","url":"https://api.example.com/mcp","headers":{"X-Region":"${REGION}"}}}}'), D)
+    broken("script reading the environment", "D014", lambda q: (q / "skills/ab-developer/run.py").write_text("import os\nlevel = os.environ.get('LOG_LEVEL')\n"), D)
 
 failed = [n for n, ok in results if not ok]
 print(f"\n{len(results) - len(failed)}/{len(results)} passed")

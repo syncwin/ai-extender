@@ -21,7 +21,7 @@ SessionStart, Setup, UserPromptSubmit, UserPromptExpansion, PreToolUse, Permissi
 - **Exit 2 blocks; exit 1 does not.** Enforcement hooks must `exit 2` (stderr = reason) or return valid decision JSON.
 - Matcher: exact names joined by `|`/`,`; any other character makes it an unanchored regex. Plugin MCP tools match `mcp__plugin_<plugin>_<server>__…`.
 - Prefer **exec form** (`command` + `args`) so paths need no quoting; `${user_config.*}` works only there. Shell form: quote `"${CLAUDE_PLUGIN_ROOT}"`, read `$CLAUDE_PLUGIN_OPTION_<KEY>`.
-- A Python hook that must also run on Windows, where `python3` may be missing, uses the guardrail's fixed shell-form launcher: `p="${CLAUDE_PLUGIN_ROOT}/<script>.py"; for py in python3 python; do command -v "$py" >/dev/null 2>&1 && exec "$py" "$p"; done; exit 0`. No tool output or user text goes into that line.
+- A Python hook uses exec form: `"command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/<script>.py"]`. Anthropic's directory reads exactly what runs; a shell launcher with its own variables (`$py`, `$p`) is treated as code assembled at run time and held for a reviewer, and blocks when the plugin sits in a subfolder. Where `python3` is missing (some Windows setups) the hook fails without blocking; say so in the README.
 - Scope `matcher` to the tools the hook guards (`WebFetch|WebSearch|mcp__.*<server>.*`), never every tool; warn with exit 2 rather than block unless blocking is the point.
 - `if` is best-effort; hard allow/deny belongs in permissions, not hooks.
 - All matching hooks run in parallel; keep them fast and idempotent.

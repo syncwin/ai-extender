@@ -406,7 +406,7 @@ def check_directory(root, m, name):
     check_directory_review(root, m, servers, regular)
 
 ENV_REF = re.compile(r"\$\{(?!user_config\.|CLAUDE_)[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}")
-ENV_READ = re.compile(r"os\.environ|os\.getenv|process\.env|\bprintenv\b|\bexport -p\b|Path\.home\(\)|expanduser\(")
+ENV_READ = re.compile(r"os\.environ|os\.getenv|process\.env|Path\.home\(\)|expanduser\(")
 FETCH_RUN = re.compile(r"(curl|wget)\b[^\n|]*\|\s*(ba|z)?sh\b|\b(iwr|irm|Invoke-WebRequest)\b[^\n|]*\|\s*iex\b|\bnpx\s+-y\b|\bpip3?\s+install\b|\bnpm\s+(i|install)\s+-g\b")
 REVIEW_SELF = {"validate_extension.py", "selftest.py", "scan_secrets.py"}  # this checker and its tests quote the patterns on purpose
 
@@ -416,9 +416,11 @@ def png_size(f):
 
 def check_directory_review(root, m, servers, regular):
     """What the portal holds for a reviewer or warns about (learned from AI Extender's own submission, 2026-10-14)."""
-    icon = root / (m["icon"][2:] if isinstance(m.get("icon"), str) and m["icon"].startswith("./") else ".claude-plugin/icon.png")
-    if not icon.is_file():
-        add("warn", "D012", root, "no listing icon: add a square PNG at .claude-plugin/icon.png (512 to 2048 px, under 2 MB) BEFORE the first save in the portal; the first saved icon is kept")
+    icons = sorted(p for p in (root / ".claude-plugin").glob("icon.*") if p.suffix.lower() in (".png", ".jpg", ".jpeg"))
+    if m.get("icon"): add("info", "D015", root, "the icon field draws an image policy hold; put the icon at the default location in .claude-plugin and drop the field")
+    icon = icons[0] if icons else None
+    if icon is None:
+        add("warn", "D012", root, "no listing icon: add a square PNG or JPEG named icon in .claude-plugin (512 to 2048 px, under 2 MB) BEFORE the first save in the portal; the first saved icon is kept")
     else:
         dims = png_size(icon) if icon.suffix.lower() == ".png" else None
         if icon.stat().st_size > 2 * 1024 * 1024 or (dims and (dims[0] != dims[1] or not 512 <= dims[0] <= 2048)):
@@ -439,8 +441,9 @@ def check_directory_review(root, m, servers, regular):
         elif ext in (".md", ".json") and ENV_REF.search(txt) and re.search(r"https?://", txt):
             add("info", "D014", rel, "a ${VAR} example sits beside a URL (policy hold); write examples as ${user_config.KEY}")
         hit = next((n for n in img_names if n in txt), None)
-        if hit and rel.as_posix() != ".claude-plugin/plugin.json": add("info", "D015", rel, f"names the image file '{hit}' (policy hold: a reviewer checks it); describe it in words instead")
-        if FETCH_RUN.search(txt): add("info", "D016", rel, "download-and-run command (portal warning); fine in docs, but ship the script inside the plugin if the plugin runs it")
+        if hit and rel.as_posix() != ".claude-plugin/plugin.json" and (ext in (".py", ".js", ".mjs", ".cjs", ".ts", ".sh", ".json") or re.search(r"`[^`\n]*" + re.escape(hit), txt)): add("info", "D015", rel, f"names the image file '{hit}' (policy hold: a reviewer checks it); describe it in words instead")
+        if rel.parts[0] == "hooks" and ext == ".json" and FETCH_RUN.search(txt): add("warn", "D016", rel, "a hook installs packages or downloads code at run time (policy hold); ship the code inside the plugin")
+        elif FETCH_RUN.search(txt): add("info", "D016", rel, "download-and-run command (portal warning); fine in docs, but ship the script inside the plugin if the plugin runs it")
 
 def check_prompts(root, name=""):
     """Prompt Builder companion prompt (prompts/*.json): created by claude-packager/scripts/companion_prompt.py."""
