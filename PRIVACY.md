@@ -10,7 +10,7 @@ Nothing. The plugin has no server, no analytics, no telemetry, and no account. S
 
 - **Instructions and scripts** run inside your own Claude session and on your own machine. The scripts make no network requests and only read and write the folders you point them at.
 - **The guardrail hook** reads the output of web fetches, web searches, and Composio calls on your machine to screen it for prompt injection, then discards it. Nothing is stored or sent.
-- **Two opt-in local files:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`, and `scan_secrets.py --installed` reads your local plugin folders to find exposed keys, showing them masked. Neither sends anything.
+- **One opt-in local file:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`. `scan_secrets.py` reads only the folders you name and shows any key it finds masked. Neither sends anything.
 
 ## Services you choose to use
 

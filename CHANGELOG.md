@@ -18,6 +18,8 @@ Released after the final self-audit, run from an installed copy, and the first l
 - Live eval findings (2 of 5 cases passed on the first run after these changes). The validator refused a plugin folder with no manifest, so audits fell back to reading files; it now audits it and reports the missing manifest (`P001`, an error for the directory and Cowork). Audit reports give every finding, including a missing file, an exact Original and Corrected version instead of advice such as "add one". The packager's report and hand-over now state the validation result. The planner's plan always states version 0.0.1, every skill name (one skill is named like the plugin), and the connectors, with Composio as the default. The scaffold case's grader accepts Composio as a listed default. The router's description now also matches "audit this plugin folder" and "what's wrong with this skill": the audit runs that failed never loaded the plugin. Full suite on 2026-10-11 after the fixes: overall score 0.73 (from 0.40), 0.53 above the same runs without the plugin; the audit case then passed 3 of 3 on its own.
 
 **Changed**
+- Directory review: `scan_secrets.py` no longer has `--installed`, which swept `~/.claude` and Cowork's plugin folders for keys. It scans only the folders you name, so the plugin never reads credentials from the user's machine on its own.
+- Directory listing icon: `.claude-plugin/icon.png` (1024 px square).
 - Credits: removed the `skill-creator-plus` entry.
 - Docs: shorter plugin description that names claude.ai too; the README status now says exactly what CI runs.
 - The audit test's sample skill no longer tells Claude to email anything, so a security scan has nothing to misread. It still has plenty to fail on: vague descriptions, no manifest or license, and an agent with no tool limits.
@@ -63,7 +65,7 @@ Released after the final self-audit, run from an installed copy, and the first l
 - `claude-maintainer/scripts/bump_version.py`: one summary becomes the changelog entry and moves every version field (manifest, its metadata, marketplace entry, every skill and agent, README). `--level keep` adds to the current entry without a bump.
 - `claude-maintainer/scripts/release_diff.py`: files kept, changed, added, and dropped between two versions, from folders or packages. The packager prints it against the previous package.
 - `claude-maintainer/scripts/sync_shared.py`: shared files live once and are copied into each skill from `.claude-plugin/shared-files.json`, so plugins no longer need their own copy scripts.
-- `claude-reviewer/scripts/scan_secrets.py`: scans one extension, packages, or with `--installed` every plugin and skill folder on the machine for keys stored in plain text. Values are masked, nothing is sent, and CI runs it on this repository.
+- `claude-reviewer/scripts/scan_secrets.py`: scans the extension folders or packages you name for keys stored in plain text. Values are masked, nothing is sent, and CI runs it on this repository.
 - `claude-packager/scripts/install_guide.py`: install and removal steps for the desktop app, the web, the Code tab, and the terminal, written next to every package.
 - Behavior tests are a release step: every callable skill runs against its test prompts and is graded by a separate grader before packaging. The packager reports missing or stale results, and `--require-evals` blocks the build.
 - Standards: enforcement and accountability (§5d: routed and gated stages, declared dependencies, scripts as gates), plan-first efficiency, and the lean-but-complete quality bar.

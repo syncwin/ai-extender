@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Find passwords and API keys stored in plain text, in one extension or in every installed plugin.
+"""Find passwords and API keys stored in plain text in the extension folders or archives you name.
 
-Usage: scan_secrets.py [<dir-or-archive> ...] [--installed] [--json]
---installed  also scan the usual plugin and skill folders on this machine: ~/.claude/plugins, ~/.claude/skills,
-             and Cowork's mnt/.plugins, mnt/.local-plugins, /mnt/.plugins, /mnt/.local-plugins when present.
+Usage: scan_secrets.py <dir-or-archive> [...] [--json]
+Scans only the paths given on the command line.
 Reads files only; sends nothing anywhere. Values are masked in the report. Exit 1 when anything is found.
 After a hit: move the value to userConfig with "sensitive": true (or an environment variable), then rotate the key,
 because anyone who received a copy still has the old one.
@@ -41,14 +40,8 @@ def scan_zip(z):
                 for no, code, masked in find_secrets(zf.read(n).decode("utf-8", "replace")): yield (f"{z}!{n}", no, code, masked)
     except (OSError, zipfile.BadZipFile): return
 
-def installed_roots():
-    home = Path.home()
-    cands = [home / ".claude" / "plugins", home / ".claude" / "skills", Path("mnt/.plugins"), Path("mnt/.local-plugins"), Path("/mnt/.plugins"), Path("/mnt/.local-plugins")]
-    return [c for c in cands if c.is_dir()]
-
 def main(argv):
     paths = [Path(a) for a in argv if not a.startswith("--")]
-    if "--installed" in argv: paths += installed_roots()
     if not paths: print(__doc__); return 2
     hits, seen = [], set()
     for p in paths:

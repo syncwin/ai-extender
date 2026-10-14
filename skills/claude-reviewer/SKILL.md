@@ -28,7 +28,7 @@ metadata:
 4. Judgment checks the script can't make (below).
 5. Reuse results for files unchanged since the last run (`--cache`).
 6. Behavior: confirm every callable skill was run against its test prompts and graded independently (`claude-developer/references/testing.md` §6). Missing or stale results are a release blocker, not a note.
-7. Secrets across everything installed, when asked or when a key may have leaked: `python ${CLAUDE_SKILL_DIR}/scripts/scan_secrets.py --installed` (reads local plugin folders only; values masked). A found key must be rotated as well as moved.
+7. Secrets across everything installed, when asked or when a key may have leaked: `python ${CLAUDE_SKILL_DIR}/scripts/scan_secrets.py <folder> [<folder> ...]` on the folders the user names (values masked). A found key must be rotated as well as moved.
 8. Audit reports: `python ${CLAUDE_SKILL_DIR}/scripts/check_report.py <report.md>` (every finding has Original and exact Corrected text).
 9. Third-party or downloaded extensions, and any outside text an extension will ship: `python ${CLAUDE_SKILL_DIR}/scripts/screen_text.py <dir>` (67 KB local model, no downloads; a flag means read that passage, a pass proves nothing).
 
