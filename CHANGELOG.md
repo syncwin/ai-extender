@@ -20,6 +20,7 @@ Released after the final self-audit, run from an installed copy, and the first l
 **Changed**
 - Directory review: `scan_secrets.py` no longer has `--installed`, which swept `~/.claude` and Cowork's plugin folders for keys. It scans only the folders you name, so the plugin never reads credentials from the user's machine on its own.
 - Directory listing icon added (1024 px square PNG).
+- Directory review checks: the validator's `--target directory` now reports what the portal holds or warns about, so plugins AI Extender builds pass on the first try: missing or wrong-size listing icon (`D012`), credentials read from the user's environment or home folder (`D014`), docs that name a shipped image file (`D015`), and download-and-run commands (`D016`). The directory checklist explains each one, and the scaffolder now writes a placeholder listing icon. Five self-tests (118 in total). AI Extender's own icon is declared through the `icon` field.
 - Directory review: example connector settings use `${user_config.KEY}`, the self-test no longer copies the environment, and the validator's cache folder is set with `--cache-dir` instead of an environment variable, so nothing reads credentials from the user's machine.
 - Credits: removed the `skill-creator-plus` entry.
 - Docs: shorter plugin description that names claude.ai too; the README status now says exactly what CI runs.

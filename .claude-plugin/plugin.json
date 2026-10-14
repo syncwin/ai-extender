@@ -16,6 +16,7 @@
   "privacyPolicyUrl": "https://github.com/syncwin/ai-extender/blob/main/PRIVACY.md",
   "termsOfServiceUrl": "https://github.com/syncwin/ai-extender/blob/main/LICENSE",
   "license": "MIT",
+  "icon": "./.claude-plugin/logo.png",
   "keywords": [
     "skills",
     "plugins",

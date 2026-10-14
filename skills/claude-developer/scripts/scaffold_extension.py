@@ -17,7 +17,7 @@ from claude-reviewer/scripts) and a PostToolUse hook that screens web and connec
 --no-guardrail leaves it out.
 Stubs contain real structure and a scratchpad step: fill the bodies, then run the validator.
 """
-import json, re, subprocess, sys
+import json, re, struct, subprocess, sys, zlib
 from datetime import date
 from pathlib import Path
 
@@ -59,6 +59,14 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+def placeholder_icon(path, size=512):
+    """Square two-tone PNG (standard library only) so the directory listing has an icon from the first save; replace it with real artwork."""
+    edge, inner = (31, 42, 68), (217, 119, 87)
+    lo, hi = size // 5, size - size // 5
+    rows = b"".join(b"\0" + b"".join(bytes(inner if lo <= x < hi and lo <= y < hi else edge) for x in range(size)) for y in range(size))
+    chunk = lambda k, d: struct.pack(">I", len(d)) + k + d + struct.pack(">I", zlib.crc32(k + d) & 0xFFFFFFFF)
+    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b""))
+
 def frontmatter(name, desc, a, display):
     meta = ["  version: 0.0.1", f"  displayName: {json.dumps(display)}"] + ([f"  author: {json.dumps(a['author'])}"] if a["author"] else []) + ([f"  company: {json.dumps(a['company'])}"] if a["company"] else [])
     return f"---\nname: {name}\ndescription: >\n  {desc}\nlicense: {a['license']}\nmetadata:\n" + "\n".join(meta) + "\n---\n\n"
@@ -98,6 +106,7 @@ def main(argv):
     if a["company"] and author: manifest["author"]["company"] = a["company"]
     manifest["metadata"] = {k: v for k, v in (("displayName", a["display"]), ("version", "0.0.1"), ("author", a["author"]), ("company", a["company"])) if v}
     (root / ".claude-plugin" / "plugin.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    placeholder_icon(root / ".claude-plugin" / "icon.png")
     rtable = "\n".join(f"| `{nm(r)}` | {r.title()} |" for r in roles) or "| (none yet) | |"
     titles = {a["slug"]: a["display"], **{nm(r): f"{a['display']} {r.title()}" for r in roles}}
     skills = {a["slug"]: (f"{desc} Entry point and router: use whenever the user asks for anything this plugin covers. Routes to the skill that owns the task.",
@@ -140,7 +149,8 @@ def main(argv):
         f"## Skills\n\n| Skill | Role |\n|---|---|\n| `{a['slug']}` | Router |\n{rtable}\n\n"
         f"## Install\n\nCowork or claude.ai: upload the `.plugin` file as a custom plugin. Claude Code: add the marketplace or folder that holds this plugin, then install `{a['slug']}`. Start it with `/{a['slug']}` and describe what you need. Full steps for every app, and how to undo them, come in the install guide the packager writes next to the package.\n\n"
         f"{ctable}\n## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. It is delivered next to the package, never inside it. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
-        f"## What it runs, reads, and sends\n\nList every script, connector, and outside service here before you share this plugin.\n")
+        f"## What it runs, reads, and sends\n\nList every script, connector, and outside service here before you share this plugin.\n\n"
+        f"The listing icon in `.claude-plugin/` is a placeholder: replace it with your own square artwork (512 to 2048 px) before the first directory submission.\n")
     (root / "CHANGELOG.md").write_text(f"# Changelog\n\nNewest first.\n\n## 0.0.1: {date.today().isoformat()}\n\n**Added**\n- Initial structure.\n")
     (root / "LICENSE").write_text(MIT.format(year=date.today().year, holder=a["author"] or a["company"] or a["display"]) if a["license"] == "MIT" else f"License: {a['license']}\n")
     (root / ".gitignore").write_text(".DS_Store\n*.plugin\n*.zip\n.env\ndist/\n")

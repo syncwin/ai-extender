@@ -264,6 +264,13 @@ with tempfile.TemporaryDirectory() as td:
     check("report check flags advice in Corrected cells and passes exact text", r1.returncode == 1 and r1.stdout.count("| 3 |") + r1.stdout.count("| 4 |") == 2 and r2.returncode == 0, r1.stdout[-300:] + r2.stdout[-200:])
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
+    ic = (p / ".claude-plugin/icon.png").read_bytes()
+    check("scaffold writes a square 512 px listing icon", ic[:8] == b"\x89PNG\r\n\x1a\n" and ic[16:24] == (512).to_bytes(4, "big") * 2)
+    r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin has no icon or credential findings", "D012" not in r.stdout and "D014" not in r.stdout, r.stdout[-400:])
+    D = ("--target", "directory", "--strict")
+    broken("missing listing icon", "D012", lambda q: (q / ".claude-plugin/icon.png").unlink(), D)
+    broken("connector reading an environment credential", "D014", lambda q: (q / ".mcp.json").write_text('{"mcpServers":{"x":{"type":"http","url":"https://api.example.com/mcp","headers":{"Authorization":"Bearer ${API_TOKEN}"}}}}'), D)
+    broken("script reading the environment", "D014", lambda q: (q / "skills/ab-developer/run.py").write_text("import os\nkey = os.environ.get('API_KEY')\n"), D)
 
 failed = [n for n, ok in results if not ok]
 print(f"\n{len(results) - len(failed)}/{len(results)} passed")
