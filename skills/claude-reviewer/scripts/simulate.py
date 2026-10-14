@@ -109,7 +109,7 @@ def install(root, out):
         if (inst / ".mcp.json").exists(): mcp = list(json.loads((inst / ".mcp.json").read_text()).get("mcpServers", {}))
         hooks = list(json.loads((inst / "hooks/hooks.json").read_text()).get("hooks", {})) if (inst / "hooks/hooks.json").exists() else []
         print(f"### Scratchpad: Install Simulation\n**Scope:** `{f.name}` extracted to a clean directory\n")
-        print(f"| Check | Result |\n|---|---|\n| Archive root is plugin root | {'yes' if (inst/'.claude-plugin'/'plugin.json').exists() else 'NO'} |\n| Validator on extracted copy (--strict) | {'pass' if vr.returncode == 0 else 'FAIL'} |\n| Router skill = plugin name | {'yes' if name in skills else 'NO'} |")
+        print(f"| Check | Result |\n|---|---|\n| Archive root is plugin root | {'yes' if (inst/'.claude-plugin'/'plugin.json').exists() else 'NO'} |\n| Validator on extracted copy (--strict) | {'passed' if vr.returncode == 0 else 'FAIL'} |\n| Router skill = plugin name | {'yes' if name in skills else 'NO'} |")
         print("\n**Components a user would see**")
         for n in skills: print(f"- skill `/{name}:{n}`" if n != name else f"- skill `/{name}:{n}` (router)")
         for a in agents: print(f"- agent `{name}:{a}`")

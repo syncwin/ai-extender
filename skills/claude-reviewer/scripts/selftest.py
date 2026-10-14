@@ -264,7 +264,7 @@ with tempfile.TemporaryDirectory() as td:
     check("report check flags advice in Corrected cells and passes exact text", r1.returncode == 1 and r1.stdout.count("| 3 |") + r1.stdout.count("| 4 |") == 2 and r2.returncode == 0, r1.stdout[-300:] + r2.stdout[-200:])
     r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
-    r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin: icon reminder (D012), no environment reads (D014)", "D012" in r.stdout and "D014" not in r.stdout, r.stdout[-400:])
+    r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin reads nothing from the environment (D014)", "D014" not in r.stdout, r.stdout[-400:])
     gh = json.loads((p / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]["hooks"][0] if (p / "hooks/hooks.json").exists() else {}
     check("scaffolded guardrail hook uses exec form the directory can read", not gh or (gh.get("command") == "python3" and gh.get("args", [""])[0].startswith("${CLAUDE_PLUGIN_ROOT}/")), str(gh))
     D = ("--target", "directory", "--strict")

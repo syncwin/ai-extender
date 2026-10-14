@@ -410,21 +410,9 @@ ENV_READ = re.compile(r"os\.environ|os\.getenv|process\.env|Path\.home\(\)|expan
 FETCH_RUN = re.compile(r"(curl|wget)\b[^\n|]*\|\s*(ba|z)?sh\b|\b(iwr|irm|Invoke-WebRequest)\b[^\n|]*\|\s*iex\b|\bnpx\s+-y\b|\bpip3?\s+install\b|\bnpm\s+(i|install)\s+-g\b")
 REVIEW_SELF = {"validate_extension.py", "selftest.py", "scan_secrets.py"}  # this checker and its tests quote the patterns on purpose
 
-def png_size(f):
-    b = f.read_bytes()[:24]
-    return (int.from_bytes(b[16:20], "big"), int.from_bytes(b[20:24], "big")) if b[:8] == b"\x89PNG\r\n\x1a\n" else None
-
 def check_directory_review(root, m, servers, regular):
     """What the portal holds for a reviewer or warns about (learned from AI Extender's own submission, 2026-10-14)."""
-    icons = sorted(p for p in (root / ".claude-plugin").glob("icon.*") if p.suffix.lower() in (".png", ".jpg", ".jpeg"))
-    if m.get("icon"): add("info", "D015", root, "the icon field draws an image policy hold; put the icon at the default location in .claude-plugin and drop the field")
-    icon = icons[0] if icons else None
-    if icon is None:
-        add("warn", "D012", root, "no listing icon: add a square PNG or JPEG named icon in .claude-plugin (512 to 2048 px, under 2 MB) BEFORE the first save in the portal; the first saved icon is kept")
-    else:
-        dims = png_size(icon) if icon.suffix.lower() == ".png" else None
-        if icon.stat().st_size > 2 * 1024 * 1024 or (dims and (dims[0] != dims[1] or not 512 <= dims[0] <= 2048)):
-            add("warn", "D012", icon.relative_to(root), f"icon must be square, 512 to 2048 px, under 2 MB (found {dims or 'non-PNG'}, {icon.stat().st_size // 1024} KiB)")
+    if m.get("icon"): add("info", "D015", root, "the icon field draws an image policy hold; keep the listing icon at its default location and drop the field")
     for n, s in servers.items():
         blob = json.dumps({k: s.get(k) for k in ("env", "headers", "args", "url") if k in s})
         for ref in sorted({x.group(0) for x in ENV_REF.finditer(blob)}):
