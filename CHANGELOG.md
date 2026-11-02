@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 1.0.1: Icon and listing name
+
+- Plugin icon (`assets/icon.png`, `assets/icon.svg`), set in `plugin.json`.
+- The marketplace entry shows the display name "AI Extender for Claude".
+
 ## 1.0.0: First public release
 
 Released after the final self-audit, run from an installed copy, and the first live `claude plugin eval` run.
