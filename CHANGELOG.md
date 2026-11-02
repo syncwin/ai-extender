@@ -10,8 +10,10 @@ Newest first.
 - Directory route: push nothing to the default branch while a submission is in review; use a separate branch and merge after.
 - Standards: names an extension generates on users' projects (such as class prefixes) never hardcode the author's company; ask once, record, neutral default.
 
+**Fixed**
+- Packager: on Windows an unchanged package was always rebuilt, because the source and package hashes sorted files differently. Both now sort by POSIX path (selftest 117/117).
+
 **Changed**
-- Marketplace and release guidance from publishing four plugins.
 - Versions: set `version` in `plugin.json` only, never also in the marketplace entry (per Claude's host-marketplace docs).
 
 ## 1.0.1: Icon and listing name
