@@ -50,7 +50,8 @@ def files(root):
 
 def content_hash(root, fmt):
     h = hashlib.sha256(fmt.encode())
-    for p, rel in files(root): h.update(rel.as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
+    # Same order as package_hash (sorted zip names): Windows Path sorting differs from POSIX string sorting.
+    for p, rel in sorted(files(root), key=lambda f: f[1].as_posix()): h.update(rel.as_posix().encode() + b"\0" + p.read_bytes() + b"\0")
     return h.hexdigest()
 
 def package_hash(dest, fmt, slug):

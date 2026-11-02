@@ -2,6 +2,18 @@
 
 Newest first.
 
+## 1.1.0: Marketplace and release guidance
+
+**Added**
+- Distribution routes: one repo and one marketplace per product; pick the marketplace name once (distinctive, `<company>-<plugin>`); what a rename does to existing installs; where users add a marketplace on claude.ai, desktop and mobile versus Claude Code, and why not both; uploaded `.plugin` files never update; how updates arrive and how to prove a repo with an isolated `CLAUDE_CONFIG_DIR` install.
+- Release prep: `displayName` in `plugin.json` and the marketplace entry, an `icon` (`./assets/icon.png`), and a README that lists every `/<plugin>:<skill>` command.
+- Directory route: push nothing to the default branch while a submission is in review; use a separate branch and merge after.
+- Standards: names an extension generates on users' projects (such as class prefixes) never hardcode the author's company; ask once, record, neutral default.
+
+**Changed**
+- Marketplace and release guidance from publishing four plugins.
+- Versions: set `version` in `plugin.json` only, never also in the marketplace entry (per Claude's host-marketplace docs).
+
 ## 1.0.1: Icon and listing name
 
 - Plugin icon (`assets/icon.png`, `assets/icon.svg`), set in `plugin.json`.
