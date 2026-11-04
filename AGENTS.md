@@ -16,7 +16,6 @@ AI Extender for Claude: plans, builds, checks and packages Claude skills, plugin
 1. Read the skill or script you change, plus its neighbours.
 2. Make the smallest change; run the closest check, then the full gate.
 3. Update `CHANGELOG.md` for behavior changes; log ideas in `IMPROVEMENTS.md`.
-4. Branch, commit, open a PR; never push to main.
 
 ## Rules
 - Run the closest check and the full gate before committing. Never delete or weaken tests or evals. Report failed, skipped or timed-out runs honestly; NOT RUN is never a pass.
@@ -25,7 +24,7 @@ AI Extender for Claude: plans, builds, checks and packages Claude skills, plugin
 - No commits, pushes or PRs unless asked. Work on a branch and open a PR; never push to main.
 - No new dependencies without asking (scripts stay on the Python standard library).
 - Never commit secrets. Never pick names or slugs without user confirmation.
-- Scripts use the Python 3 standard library only. Pin any GitHub Action to a full commit SHA with the version in a comment; give each job least permissions.
+- Pin any GitHub Action to a full commit SHA with the version in a comment; give each job least permissions.
 - A platform fact needs its official page and the date checked. Keep private data (keys, client names, internal URLs) out of every file.
 - Plugin versions 1.0.0 and 1.1.0 are both kept (user decision, 4 Nov). The public-review `syncwin` marketplace entry is not changed.
 
