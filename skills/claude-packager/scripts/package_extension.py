@@ -104,7 +104,7 @@ def main(argv):
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
     kind, visible, version, slug = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
-    staged = None
+    staged, src = None, root
     if not os.access(root, os.W_OK) or ((root / "prompts").exists() and not os.access(root / "prompts", os.W_OK)):
         staged = tempfile.TemporaryDirectory()
         src, root = root, Path(staged.name) / slug
