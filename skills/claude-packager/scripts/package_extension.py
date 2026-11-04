@@ -19,9 +19,9 @@ Behavior tests: reports whether evals/ results exist and are newer than the last
 import hashlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
-EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
+EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts", "evals", ".claude"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
 EXCLUDE_SUFFIX = {".plugin", ".zip", ".pyc"}
-EXCLUDE_NAMES = {".DS_Store"}
+EXCLUDE_NAMES = {".DS_Store", "IMPROVEMENTS.md"}
 
 def info(root):
     pj = root / ".claude-plugin" / "plugin.json"
@@ -104,7 +104,7 @@ def main(argv):
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
     kind, visible, version, slug = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
-    staged = None
+    staged, src = None, root
     if not os.access(root, os.W_OK) or ((root / "prompts").exists() and not os.access(root / "prompts", os.W_OK)):
         staged = tempfile.TemporaryDirectory()
         src, root = root, Path(staged.name) / slug
@@ -117,7 +117,7 @@ def main(argv):
     if cp.exists():
         r = subprocess.run([sys.executable, str(cp), str(root), "--out", str(out)], capture_output=True, text=True)
         if r.returncode != 0: print(r.stdout + r.stderr); print("Companion prompt failed: fix it, then package again."); return 1
-    ev_ok, ev_note = eval_status(root)
+    ev_ok, ev_note = eval_status(Path(src))  # read evals from the source: evals/ is excluded from the package copy
     if need_evals and not ev_ok: print(f"Behavior tests: {ev_note}. Run them, or package without --require-evals."); return 1
     ext = ".plugin" if fmt == "plugin" else ".zip"
     fname = re.sub(r'[\\/:*?"<>|]', "", f"{visible} v{version}{ext}")
