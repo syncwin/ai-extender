@@ -31,10 +31,10 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 | Field | Rule |
 |---|---|
 | Variable name | letters, digits, underscores; used in `content` as `{{name}}`; every `{{name}}` has a variable and every variable is used |
-| `type` | `Text` (one line: a name, a keyword, a URL), `Textarea` (several lines), `Radio` (pick one), `Checkbox` (pick several) |
+| `type` | `Text` (one line: a name, a keyword, a URL), `Textarea` (several lines), `Radio` (pick one), `Checkbox` (pick several), `Predefined` (a toggle that inserts the field's `predefinedContent` text; add that key) |
 | `label` | short, Title Case, shown above the field |
 | `placeholder` | example input for text fields; for Radio/Checkbox exports repeat the variable name |
-| `context` | the tooltip. Stored HTML-escaped (an apostrophe becomes `&#x27;`); the script escapes it for you |
+| `context` | the tooltip. Plain ASCII text, never HTML-escaped: Prompt Builder escapes on import, so `&#x27;` or `&amp;` would show up double-escaped. The checker fails on HTML entities and on any non-ASCII character in title, description, content, and field text |
 | `maxLength` | `Text`/`Textarea`: a positive whole number, or `""` for no limit; `""` for Radio/Checkbox |
 | `required` | `true` only for what the extension cannot run without (usually one field) |
 | `options` | Radio/Checkbox only: at least two, one per line, no duplicates; `""` otherwise |

@@ -2,6 +2,21 @@
 
 Newest first.
 
+## 1.1.0: Prompt Builder
+
+**Added**
+- New skill ai-extender:prompt-builder. Crafts new prompts, tightens existing ones, and makes templates with {{variables}} for any AI model: intake, batched clarifying questions, Markdown draft with XML tags where they help, tighten pass, validation checklist. References for method, structure patterns, platform tips (Claude, OpenAI, Gemini, local models), and credited sources.
+- Prompt Builder JSON export. skills/prompt-builder/scripts/export_prompt.py reuses the packager companion_prompt.py schema and checker to emit ready-to-import files.
+- ascii_check.py. Generated prompts are ASCII only: the script normalizes common look-alikes (smart quotes, dashes, arrows, check marks, ellipsis) and fails on any other non-ASCII character.
+- Three behavior tests (craft, tighten, template with JSON) and new trigger phrases.
+
+**Changed**
+- The router routes prompt requests to prompt-builder.
+- Companion prompt files keep plain text. Field text is no longer HTML-escaped on export, because Prompt Builder escapes on import and the old output showed double-escaped characters; the checker now fails on HTML entities and non-ASCII characters in title, description, content, and field text. The Predefined field type from the Prompt Builder repo is accepted.
+
+**Fixed**
+- prompts/ai-extender-for-claude.json carried HTML entities; rewritten as plain text.
+
 ## 1.0.1: Update
 
 **Changed**

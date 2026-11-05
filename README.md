@@ -2,7 +2,7 @@
 
 Tell Claude what you want. Use your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Version** 1.0.1 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.1.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -78,6 +78,7 @@ Start with `/ai-extender`. It reads your request and calls the right role, so mo
 | `ai-extender:claude-maintainer` | Updates existing extensions, versions, changelogs |
 | `ai-extender:claude-reviewer` | Validates and audits before anything ships |
 | `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
+| `ai-extender:prompt-builder` | Writes, tightens, and templates prompts for any AI model; exports Prompt Builder JSON |
 
 Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
 
