@@ -6,11 +6,11 @@ description: >
   team or business. Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn
   this workflow into a Claude plugin or skill", "automate our process for my team", "make Claude check every
   document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this plugin or skill", "bump the version", "package this for
-  Cowork", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
+  Cowork", "write me a prompt", "tighten this prompt", "make this prompt reusable with variables", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 1.0.1
+  version: 1.1.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -55,6 +55,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 | Update existing | has a skill or plugin already and wants it changed or fixed |
 | Audit | wants a check before sharing or shipping |
 | Convert | "turn this conversation / workflow / prompt into a skill" |
+| Prompt | wants a prompt written, tightened, or made reusable (a prompt itself, not a skill or plugin); "export this prompt to Prompt Builder" |
 
 ## 3. Route
 
@@ -65,6 +66,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 | Update existing | `ai-extender:claude-maintainer` → `ai-extender:claude-reviewer` → `ai-extender:claude-packager` |
 | Audit | `ai-extender:claude-reviewer` → owning skill for each fix |
 | Convert | `ai-extender:claude-planner` (extract intent) → as New |
+| Prompt | `ai-extender:prompt-builder` alone; no plan, build, or package stages. The skill finishes with the prompt (and Prompt Builder JSON on request) |
 
 - Load each stage's skill with the Skill tool before doing its work; never do a stage from memory of what it says.
 - Skip stages the request doesn't need; never chain by default.
@@ -82,7 +84,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 
 ## 5. Finish
 
-Hand over the result first. When something was built or changed: the file, its install guide (install steps in two or three lines in the reply), the companion prompt as its own file (`<title-slug>.json`, next to the package, never inside it) with one line on importing it into Prompt Builder, and one example prompt to try. For an audit only: the reviewer's report (problem type, Original, Corrected for every finding). Then one scratchpad per `references/scratchpad.md`, opening with the request ledger: every request the user made, its status, and the context they need.
+Hand over the result first. When something was built or changed: the file, its install guide (install steps in two or three lines in the reply), the companion prompt as its own file (`<title-slug>.json`, next to the package, never inside it) with one line on importing it into Prompt Builder, and one example prompt to try. For a prompt: the prompt in one block with short notes, and the JSON file if asked. For an audit only: the reviewer's report (problem type, Original, Corrected for every finding). Then one scratchpad per `references/scratchpad.md`, opening with the request ledger: every request the user made, its status, and the context they need.
 
 ## Absorbed skills
 
