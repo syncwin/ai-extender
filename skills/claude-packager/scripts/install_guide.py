@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write install and removal steps for an extension, for every place people use Claude.
 
-Usage: install_guide.py <dir> [--repo owner/repo] [--marketplace name] [--file "<package file name>"] [--out FILE]
+Usage: install_guide.py <dir> [--repo owner/repo] [--marketplace name] [--file "<package file name>"] [--out FILE] [--prompts md|json|both]
 Covers the Claude desktop app, claude.ai on the web, the desktop app's Code tab, and the terminal, plus how to undo each.
 Without --repo the Code tab and terminal steps load the folder or add a local marketplace instead.
 Steps verified 2026-10-11 against support.claude.com articles 13837440 (plugins) and 12512180 (skills), and
@@ -21,15 +21,23 @@ def info(root):
     h1 = re.search(r"^#\s+(.+)$", t, re.M)
     return "skill", name, h1.group(1).strip() if h1 else name, ver.group(1) if ver else "0.0.1", {}
 
-def guide(root, repo="", market="", fname=""):
+def prompt_note(title, ver, prompts):
+    md, js = f"{title} v{ver} prompt.md", f"{re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')}.json"
+    parts = []
+    if prompts in ("md", "both"): parts.append(f"`{md}` is the same prompt as plain Markdown: copy it into any chat, or into a project's instructions, and fill in the {{{{variables}}}} by hand.")
+    if prompts in ("json", "both"): parts.append(f"`{js}` is the same prompt as a Prompt Builder import file (a fillable form).")
+    return "## Companion prompt\n\nShips next to the package, never inside it.\n\n" + "\n".join(f"- {x}" for x in parts) + "\n"
+
+def guide(root, repo="", market="", fname="", prompts="both"):
     kind, slug, title, ver, m = info(root)
+    note = prompt_note(title, ver, prompts) if prompts != "none" else ""
     if kind == "skill":
         f = fname or f"{title} v{ver}.zip"
         return (f"# Install {title}\n\n"
                 f"## Claude desktop app and claude.ai on the web\n\n1. Open **Customize** in the left sidebar, then **Skills**.\n2. Click **+**, then **Create skill > Upload a skill**, and choose `{f}`.\n3. Turn the skill on. Start it by typing `/{slug}` or by describing the task.\n\n"
                 f"**Undo:** in **Customize > Skills**, turn the skill off, or delete it from its menu.\n\n"
                 f"## Claude Code (terminal or the desktop app's Code tab)\n\nUnzip `{f}` into `~/.claude/skills/` (every project) or `.claude/skills/` (this project only). Start a new session.\n\n"
-                f"**Undo:** delete the `{slug}` folder you added.\n")
+                f"**Undo:** delete the `{slug}` folder you added.\n" + ("\n" + note if note else ""))
     f = fname or f"{title} v{ver}.plugin"
     mk = market or (json.loads((root / ".claude-plugin" / "marketplace.json").read_text()).get("name") if (root / ".claude-plugin" / "marketplace.json").exists() else "")
     src = repo or "./path/to/marketplace-folder"
@@ -62,16 +70,17 @@ def guide(root, repo="", market="", fname=""):
             out.append(f"- Connector **{n}**" + (f" (`{u}`)" if u and "${" not in u else "") + ": in Chat or Cowork, open the plugin's **Connectors** tab and select **Connect**; you sign in with your own account, so nothing personal is stored in the plugin.")
         out.append("- In Claude Code, set options and connector settings under `/plugin` > **Installed** > the plugin > **Configure options** or **Configure**.")
         out.append("- A connector you already have at the same address is reused: Claude Code skips the plugin's copy.\n")
+    if note: out.append(note)
     return "\n".join(out)
 
 def main(argv):
     if not argv or argv[0].startswith("-"): print(__doc__); return 2
-    root, a, i = Path(argv[0]).resolve(), {"repo": "", "marketplace": "", "file": "", "out": ""}, 1
+    root, a, i = Path(argv[0]).resolve(), {"repo": "", "marketplace": "", "file": "", "out": "", "prompts": "both"}, 1
     while i < len(argv):
         k = argv[i][2:]
         if argv[i].startswith("--") and k in a and i + 1 < len(argv): a[k] = argv[i+1]; i += 2
         else: print(__doc__); return 2
-    text = guide(root, a["repo"], a["marketplace"], a["file"])
+    text = guide(root, a["repo"], a["marketplace"], a["file"], a["prompts"])
     if a["out"]: Path(a["out"]).write_text(text, encoding="utf-8"); print(f"wrote {a['out']}")
     else: print(text)
     return 0

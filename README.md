@@ -2,7 +2,7 @@
 
 Tell Claude what you want. Use your own words, and AI Extender turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Version** 1.1.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.2.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 

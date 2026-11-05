@@ -49,3 +49,7 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 ## 5. Tooling
 
 `python ${CLAUDE_SKILL_DIR}/../claude-packager/scripts/companion_prompt.py <extension-dir> [--spec spec.json] [--out DIR] [--force]` writes a default prompt (task, stage when there are several role skills, files, details) or one from a spec (`{"title"?, "description"?, "content", "variables"}`), checks it, and copies it to `--out`. `--check <file>` checks any Prompt Builder JSON. `package_extension.py` runs it on every package; the validator reports `C000` (no prompt yet, or the checker is missing; info), `C001` (unreadable JSON), `C002` (error), `C003` (warning), and `C004` when the prompt never names the extension's slash command.
+
+## 6. Markdown form
+
+The same prompt also ships as raw Markdown, `<Name> v<version> prompt.md` (ASCII only, `<prompt>` and `<fields>` XML tags, {{variables}} kept), generated from the JSON by `companion_prompt.py` (`--formats md|json|both`, default both; `--to-md FILE` converts any Prompt Builder JSON). The JSON in `prompts/` stays the single source. The packager asks the user once which form they want; see `claude-packager/references/prompt-builder.md`.
