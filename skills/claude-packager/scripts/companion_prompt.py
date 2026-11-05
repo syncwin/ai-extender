@@ -21,7 +21,7 @@ it to start the extension with a short form instead of a blank chat.
 Exit: 0 ok, 1 problems found, 2 usage. Standard library only; no network.
 Format notes and field rules: ai-extender/references/companion-prompt.md.
 """
-import html, json, re, secrets, shutil, sys
+import html, json, re, secrets, shutil, sys, unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -97,6 +97,25 @@ def default_spec(title, slug, desc, roles):
                                "Everything the task needs that isn't a file.", False, 2000)
     return {"title": title, "description": f"{short}. Fill in the task and run {title} in one step.", "content": "\n".join(lines), "variables": variables}
 
+# Written as escapes so this file stays ASCII.
+_MAP = {"—": "-", "–": "-", "‒": "-", "−": "-", "‐": "-", "‑": "-", "‘": "'", "’": "'",
+        "‚": "'", "‛": "'", "“": '"', "”": '"', "„": '"', "«": '"', "»": '"', "…": "...",
+        "→": "->", "←": "<-", "⇒": "=>", "↔": "<->", "✓": "[x]", "✔": "[x]", "✗": "[ ]",
+        "•": "-", "·": "-", "×": "x", "≥": ">=", "≤": "<=", "≠": "!="}
+_SPACES = {" ", " ", " ", " ", " "}
+_DROP = {"​", "‌", "‍", "⁠", "﻿", "­"}
+
+def ascii_text(s):
+    """Common Unicode to plain ASCII (quotes, dashes, ellipsis, arrows, NBSP, accents via NFKD). Anything else non-ASCII is left for check() to reject."""
+    if not isinstance(s, str): return s
+    out = "".join(" " if c in _SPACES else _MAP.get(c, c) for c in s if c not in _DROP)
+    return "".join(c for c in unicodedata.normalize("NFKD", out) if not unicodedata.combining(c)) if any(ord(c) > 127 for c in out) else out
+
+def ascii_deep(o, skip=("id",)):
+    if isinstance(o, dict): return {k: (v if k in skip else ascii_deep(v, skip)) for k, v in o.items()}
+    if isinstance(o, list): return [ascii_deep(x, skip) for x in o]
+    return ascii_text(o)
+
 def plain(s):
     """Plain text only: Prompt Builder escapes on its own when it imports, so a pre-escaped value would be escaped twice."""
     return html.unescape(html.unescape(s)) if isinstance(s, str) else s
@@ -112,6 +131,7 @@ def build(spec, title, old=None):
     p = {"id": (old or {}).get("id") or secrets.token_hex(16), "title": spec.get("title") or title,
          "description": plain(spec.get("description", "")), "content": plain(spec["content"]), "variables": variables,
          "lastModified": stamp, "created": (old or {}).get("created") or stamp}
+    p = ascii_deep(p)
     return {"prompts": [p], "metadata": {"exportDate": stamp, "version": FORMAT_VERSION, "format": FORMAT, "count": 1, "checksum": CHECKSUM}}
 
 def check(d):
@@ -178,7 +198,7 @@ def check(d):
 
 def to_markdown(doc):
     """Raw Markdown form of the (single-source) Prompt Builder JSON: ASCII only, {{variables}} kept, fields in an XML block."""
-    p = doc["prompts"][0]
+    p = ascii_deep(doc["prompts"][0])
     out = [f"# {p['title']}", ""]
     if p.get("description"): out += [p["description"], ""]
     body = p["content"].strip()

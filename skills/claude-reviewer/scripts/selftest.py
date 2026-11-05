@@ -153,6 +153,11 @@ with tempfile.TemporaryDirectory() as td:
             check("--prompts md ships only the Markdown file", r.returncode == 0 and (td / "out-md" / "AB Demo v0.0.1 prompt.md").exists() and not (td / "out-md" / "ab-demo.json").exists(), r.stdout[-300:] + r.stderr[-200:])
             r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", "zip", "--out", td / "out-js", "--prompts", "json")
             check("--prompts json ships only the JSON file", r.returncode == 0 and (td / "out-js" / "ab-demo.json").exists() and not (td / "out-js" / "AB Demo v0.0.1 prompt.md").exists(), r.stdout[-300:] + r.stderr[-200:])
+            q = td / "cp-uni"; shutil.copytree(p, q); (q / "prompts" / "ab-demo.json").unlink()
+            uni = {"title": "Café Prompt", "description": "It’s a “test” — ok…", "content": "# T\n\nRun /ab-demo for “{{task}}” now → go", "variables": {"task": {"type": "Textarea", "label": "Tâche", "placeholder": "x", "context": "naïve", "maxLength": 100, "required": True, "options": ""}}}
+            (q / "uni.json").write_text(json.dumps(uni), encoding="utf-8")
+            r = RUN(CP, q, "--spec", q / "uni.json", "--out", td / "out-uni"); ju = (q / "prompts" / "ab-demo.json").read_text(encoding="utf-8"); mu = list((td / "out-uni").glob("*.md"))
+            check("curly quotes and accents are normalized to ASCII in JSON and Markdown", r.returncode == 0 and chr(92) + "u" not in ju and "Cafe" in ju and mu and all(ord(c) < 128 for c in mu[0].read_text(encoding="utf-8")), r.stdout[-300:] + r.stderr[-200:])
             r = RUN(CP, "--to-md", pf); check("--to-md converts Prompt Builder JSON", r.returncode == 0 and "<prompt>" in r.stdout, r.stdout[-200:])
         if f.exists():
             names = zipfile.ZipFile(f).namelist()
