@@ -2,6 +2,18 @@
 
 Newest first.
 
+## 1.2.0: Companion prompt in Markdown
+
+**Added**
+- Markdown companion prompt. Every packaged plugin can ship `<Name> v<ver> prompt.md` (raw Markdown, ASCII only, `<prompt>` and `<fields>` tags, {{variables}}) next to the package. It is generated from the same source as the Prompt Builder JSON (companion_prompt.py `to_markdown`, `--to-md`), so the two never drift.
+- `--prompts md|json|both` (default both) on package_extension.py, install_guide.py and `--formats` on companion_prompt.py.
+- claude-packager/references/prompt-builder.md holds `prompt_builder_url` and the one-line, neutral Prompt Builder note.
+
+**Changed**
+- claude-packager asks the user once which prompt files they need (Markdown, JSON, both) and mentions Prompt Builder only when relevant.
+- The install guide explains the prompt files.
+- Selftest covers the Markdown output, the three choices, and `--to-md`.
+
 ## 1.1.0: Prompt Builder
 
 **Added**

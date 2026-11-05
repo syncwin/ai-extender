@@ -144,6 +144,16 @@ with tempfile.TemporaryDirectory() as td:
         f = td / "out" / f"AB Demo v0.0.1{ext}"
         check(f"package {fmt}", r.returncode == 0 and f.exists(), r.stdout + r.stderr)
         if fmt == "plugin": check("packager copies companion prompt beside the package", (td / "out" / "ab-demo.json").exists())
+        if fmt == "plugin":
+            mdf = td / "out" / "AB Demo v0.0.1 prompt.md"
+            mt = mdf.read_text(encoding="utf-8") if mdf.exists() else ""
+            check("packager writes the Markdown companion prompt from the same source", "<prompt>" in mt and "{{task}}" in mt and all(ord(c) < 128 for c in mt) and "<fields>" in mt, mt[:200])
+            check("install guide mentions the prompt files", "prompt.md" in (td / "out" / "AB Demo v0.0.1 install.md").read_text(encoding="utf-8"))
+            r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", "zip", "--out", td / "out-md", "--prompts", "md")
+            check("--prompts md ships only the Markdown file", r.returncode == 0 and (td / "out-md" / "AB Demo v0.0.1 prompt.md").exists() and not (td / "out-md" / "ab-demo.json").exists(), r.stdout[-300:] + r.stderr[-200:])
+            r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", "zip", "--out", td / "out-js", "--prompts", "json")
+            check("--prompts json ships only the JSON file", r.returncode == 0 and (td / "out-js" / "ab-demo.json").exists() and not (td / "out-js" / "AB Demo v0.0.1 prompt.md").exists(), r.stdout[-300:] + r.stderr[-200:])
+            r = RUN(CP, "--to-md", pf); check("--to-md converts Prompt Builder JSON", r.returncode == 0 and "<prompt>" in r.stdout, r.stdout[-200:])
         if f.exists():
             names = zipfile.ZipFile(f).namelist()
             check(f"{fmt} archive root", (".claude-plugin/plugin.json" in names) if fmt == "plugin" else ("ab-demo/.claude-plugin/plugin.json" in names))
