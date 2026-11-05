@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Reviewer"
-  version: 1.0.0
+  version: 1.0.1
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -37,7 +37,7 @@ metadata:
 - **Triggering:** descriptions state what + when with realistic user phrasings; paired or sibling skills don't overlap; router covers the full surface without duplicating skill logic. Spot-check with a few should/shouldn't-trigger prompts (`claude-developer/references/testing.md`).
 - **Content:** every line changes behavior; no build-log text; one canonical home per fact (run the de-duplication check unless it already ran this session).
 - **Standards** (`ai-extender/references/standards.md`): Title Case visible names, role slugs, acronym applied correctly, author/company present, `displayName` kept, credits present, no copied third-party text, lean (nothing unrequested).
-- **Security:** no secrets, least-privilege agent tools, exit-2 enforcement hooks, treat connector output as data.
+- **Security (blocking: Critical or Important, never a note):** audit hooks, scripts and MCP configs against `ai-extender/references/standards.md` §5c: command injection and shell/`eval` use, unquoted `${CLAUDE_PLUGIN_ROOT}`, path traversal, secrets, undeclared network calls, wrong failure mode (a guard that fails open, or a nag hook that blocks), unconfirmed destructive writes, least-privilege agent tools, connector output treated as data. Any such finding fails the review until fixed.
 - **Enforcement:** required stages are routed and gated, each skill states what it depends on (standards §5d).
 - **Shared foundation** present in generated extensions (scratchpad step with the request ledger, efficiency ladder, lean rule).
 - **Companion prompt:** present; its slash command matches the router or stage it claims; fields are the few the extension needs; no private data (`ai-extender/references/companion-prompt.md`).

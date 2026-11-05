@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 1.0.1: Update
+
+**Changed**
+- Security first. A shared secure-by-default checklist in standards 5c (exec-form commands, quoted plugin paths, path containment, no secrets, declared hosts, fail-closed guards and fail-open nag hooks, confirm destructive writes). The planner adds a three-line threat model to the plan, the developer builds to the checklist, and the reviewer treats any breach as a blocking Critical or Important finding.
+- Hook reference states the failure mode rule: guards fail closed (exit 2), advisory hooks fail open (exit 0).
+
+**Fixed**
+- Scripts no longer crash on Windows cp1252 consoles: every script reconfigures stdout and stderr to UTF-8 (the packager failed printing its scratchpad arrow).
+
 ## 1.0.0: First public release
 
 Released after the final self-audit, run from an installed copy, and the first live `claude plugin eval` run.
