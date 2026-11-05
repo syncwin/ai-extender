@@ -8,7 +8,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Developer"
-  version: 1.0.0
+  version: 1.0.1
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -43,6 +43,7 @@ Build only what the plan confirmed. No approved plan in context: hand to `ai-ext
 - **Lean first:** least code and text that meets the request; reuse existing tools, connectors, skills. Report `skipped: X, add when Y`.
 - Verify field names and limits against `ai-extender/references/claude-platform-facts.md` (refresh via `claude-docs-sync.md` when stale or doubtful).
 - Names, acronym, metadata: `ai-extender/references/standards.md`.
+- **Secure by default:** every component follows `ai-extender/references/standards.md` §5c (exec-form commands, quoted `${CLAUDE_PLUGIN_ROOT}`, path containment, fail-closed guards, no secrets); the reference templates already do.
 - Copy the shared foundation (scratchpad, efficiency ladder, lean build, security; standards §5) into generated extensions when relevant.
 - Every skill, agent, and connector you write ends with a scratchpad step.
 - Every extension gets its companion prompt: write the fields agreed in the plan as a spec and run `companion_prompt.py <dir> --spec <spec.json>` (the scaffold's default is a starting point, not the finish).

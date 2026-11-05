@@ -130,4 +130,7 @@ def main(argv):
     return install(root, opt("--out", None))
 
 if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):  # Windows cp1252 consoles cannot print arrows or dashes
+        try: _s.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError): pass
     sys.exit(main(sys.argv[1:]))
