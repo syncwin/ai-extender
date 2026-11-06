@@ -19,7 +19,7 @@
           "type": "Textarea",
           "label": "What I Want",
           "placeholder": "Turn my meeting notes into a task list with owners and due dates. Or: check every client proposal against our pricing rules. Or: my onboarding skill skips the contract step, fix it.",
-          "context": "Describe it the way you&#x27;d explain it to a colleague: what goes in, what should come out, and any rules it must follow. Name the tools or apps it should work with, if any. No technical terms needed.",
+          "context": "Describe it the way you'd explain it to a colleague: what goes in, what should come out, and any rules it must follow. Name the tools or apps it should work with, if any. No technical terms needed.",
           "maxLength": 3000,
           "required": true,
           "options": ""

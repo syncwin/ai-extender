@@ -108,7 +108,17 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(CP, "--check", f); check("Text field with no length limit passes", r.returncode == 0 and "| 0 | 0 |" in r.stdout, r.stdout[-300:])
     q = td / "cp-spec"; shutil.copytree(p, q); (q / "spec.json").write_text(json.dumps({"content": "Run /ab-demo for {{client}}.", "variables": {"client": {"type": "Textarea", "label": "Client", "maxLength": 80, "required": True, "context": "Who it's for"}}}))
     r = RUN(CP, q, "--spec", q / "spec.json"); d = json.loads((q / "prompts/ab-demo.json").read_text())
-    check("companion prompt from spec keeps id and escapes context", r.returncode == 0 and d["prompts"][0]["id"] == json.loads(pf.read_text())["prompts"][0]["id"] and "&#x27;" in d["prompts"][0]["variables"]["client"]["context"], r.stdout[-300:])
+    check("companion prompt from spec keeps id and writes plain context", r.returncode == 0 and d["prompts"][0]["id"] == json.loads(pf.read_text())["prompts"][0]["id"] and d["prompts"][0]["variables"]["client"]["context"] == "Who it's for" and "&#x" not in (q / "prompts/ab-demo.json").read_text(), r.stdout[-300:])
+    bad_prompt("html entity", lambda pr: pr["variables"]["task"].update({"context": "isn&#x27;t"}))
+    bad_prompt("non-ascii text", lambda pr: pr.update({"description": pr["description"] + " \u2014 x"}))
+    PB = S / "prompt-builder/scripts"
+    pm = td / "pb.md"; pm.write_text("# T \u2014 \u201cq\u201d\nGo {{topic}} \u2192 \u2713 it's\n", encoding="utf-8")
+    r = RUN(PB / "ascii_check.py", pm); check("ascii_check fails on non-ASCII", r.returncode == 1 and "U+2014" in r.stdout, r.stdout[-200:])
+    r = RUN(PB / "export_prompt.py", "--md", pm, "--title", "PB Demo", "--out", td / "pbo"); pj = td / "pbo" / "pb-demo.json"
+    dd = json.loads(pj.read_text()) if pj.exists() else {}
+    cc = dd["prompts"][0]["content"] if dd else ""
+    check("export_prompt normalizes to ASCII, writes plain text, valid schema", r.returncode == 0 and "&#x" not in pj.read_text() and cc.startswith("# T - ") and "->" in cc and "[x]" in cc and all(ord(c) < 128 for c in cc) and RUN(CP, "--check", pj).returncode == 0, r.stdout[-300:])
+    r = RUN(PB / "ascii_check.py", pm, "--fix"); check("ascii_check --fix normalizes and passes", r.returncode == 0 and pm.read_text(encoding="utf-8").startswith('# T - "q"'), r.stdout[-200:])
     check("validator leaves no bytecode in the plugin", not list(S.parent.rglob("__pycache__")), str(list(S.parent.rglob("__pycache__"))))
     def man_edit(label, code, change):
         q = td / ("mf-" + label); shutil.copytree(p, q); f = q / ".claude-plugin/plugin.json"
@@ -134,6 +144,21 @@ with tempfile.TemporaryDirectory() as td:
         f = td / "out" / f"AB Demo v0.0.1{ext}"
         check(f"package {fmt}", r.returncode == 0 and f.exists(), r.stdout + r.stderr)
         if fmt == "plugin": check("packager copies companion prompt beside the package", (td / "out" / "ab-demo.json").exists())
+        if fmt == "plugin":
+            mdf = td / "out" / "AB Demo v0.0.1 prompt.md"
+            mt = mdf.read_text(encoding="utf-8") if mdf.exists() else ""
+            check("packager writes the Markdown companion prompt from the same source", "<prompt>" in mt and "{{task}}" in mt and all(ord(c) < 128 for c in mt) and "<fields>" in mt, mt[:200])
+            check("install guide mentions the prompt files", "prompt.md" in (td / "out" / "AB Demo v0.0.1 install.md").read_text(encoding="utf-8"))
+            r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", "zip", "--out", td / "out-md", "--prompts", "md")
+            check("--prompts md ships only the Markdown file", r.returncode == 0 and (td / "out-md" / "AB Demo v0.0.1 prompt.md").exists() and not (td / "out-md" / "ab-demo.json").exists(), r.stdout[-300:] + r.stderr[-200:])
+            r = RUN(S / "claude-packager/scripts/package_extension.py", p, "--format", "zip", "--out", td / "out-js", "--prompts", "json")
+            check("--prompts json ships only the JSON file", r.returncode == 0 and (td / "out-js" / "ab-demo.json").exists() and not (td / "out-js" / "AB Demo v0.0.1 prompt.md").exists(), r.stdout[-300:] + r.stderr[-200:])
+            q = td / "cp-uni"; shutil.copytree(p, q); (q / "prompts" / "ab-demo.json").unlink()
+            uni = {"title": "Café Prompt", "description": "It’s a “test” — ok…", "content": "# T\n\nRun /ab-demo for “{{task}}” now → go", "variables": {"task": {"type": "Textarea", "label": "Tâche", "placeholder": "x", "context": "naïve", "maxLength": 100, "required": True, "options": ""}}}
+            (q / "uni.json").write_text(json.dumps(uni), encoding="utf-8")
+            r = RUN(CP, q, "--spec", q / "uni.json", "--out", td / "out-uni"); ju = (q / "prompts" / "ab-demo.json").read_text(encoding="utf-8"); mu = list((td / "out-uni").glob("*.md"))
+            check("curly quotes and accents are normalized to ASCII in JSON and Markdown", r.returncode == 0 and chr(92) + "u" not in ju and "Cafe" in ju and mu and all(ord(c) < 128 for c in mu[0].read_text(encoding="utf-8")), r.stdout[-300:] + r.stderr[-200:])
+            r = RUN(CP, "--to-md", pf); check("--to-md converts Prompt Builder JSON", r.returncode == 0 and "<prompt>" in r.stdout, r.stdout[-200:])
         if f.exists():
             names = zipfile.ZipFile(f).namelist()
             check(f"{fmt} archive root", (".claude-plugin/plugin.json" in names) if fmt == "plugin" else ("ab-demo/.claude-plugin/plugin.json" in names))

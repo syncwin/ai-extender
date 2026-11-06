@@ -31,10 +31,10 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 | Field | Rule |
 |---|---|
 | Variable name | letters, digits, underscores; used in `content` as `{{name}}`; every `{{name}}` has a variable and every variable is used |
-| `type` | `Text` (one line: a name, a keyword, a URL), `Textarea` (several lines), `Radio` (pick one), `Checkbox` (pick several) |
+| `type` | `Text` (one line: a name, a keyword, a URL), `Textarea` (several lines), `Radio` (pick one), `Checkbox` (pick several), `Predefined` (a toggle that inserts the field's `predefinedContent` text; add that key) |
 | `label` | short, Title Case, shown above the field |
 | `placeholder` | example input for text fields; for Radio/Checkbox exports repeat the variable name |
-| `context` | the tooltip. Stored HTML-escaped (an apostrophe becomes `&#x27;`); the script escapes it for you |
+| `context` | the tooltip. Plain ASCII text, never HTML-escaped: Prompt Builder escapes on import, so `&#x27;` or `&amp;` would show up double-escaped. The checker fails on HTML entities and on any non-ASCII character in title, description, content, and field text |
 | `maxLength` | `Text`/`Textarea`: a positive whole number, or `""` for no limit; `""` for Radio/Checkbox |
 | `required` | `true` only for what the extension cannot run without (usually one field) |
 | `options` | Radio/Checkbox only: at least two, one per line, no duplicates; `""` otherwise |
@@ -49,3 +49,7 @@ Every extension this plugin builds or updates ships one companion prompt: a JSON
 ## 5. Tooling
 
 `python ${CLAUDE_SKILL_DIR}/../claude-packager/scripts/companion_prompt.py <extension-dir> [--spec spec.json] [--out DIR] [--force]` writes a default prompt (task, stage when there are several role skills, files, details) or one from a spec (`{"title"?, "description"?, "content", "variables"}`), checks it, and copies it to `--out`. `--check <file>` checks any Prompt Builder JSON. `package_extension.py` runs it on every package; the validator reports `C000` (no prompt yet, or the checker is missing; info), `C001` (unreadable JSON), `C002` (error), `C003` (warning), and `C004` when the prompt never names the extension's slash command.
+
+## 6. Markdown form
+
+The same prompt also ships as raw Markdown, `<Name> v<version> prompt.md` (ASCII only, `<prompt>` and `<fields>` XML tags, {{variables}} kept), generated from the JSON by `companion_prompt.py` (`--formats md|json|both`, default both; `--to-md FILE` converts any Prompt Builder JSON). The JSON in `prompts/` stays the single source. The packager asks the user once which form they want; see `claude-packager/references/prompt-builder.md`.
