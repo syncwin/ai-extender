@@ -10,6 +10,9 @@ Held out at 0.5: precision 0.96 to 0.97; recall 0.96 on jailbreak prompts and 0.
 alarms on held-out skill docs. It is a screen, not a verdict: a flag means read carefully, and a pass proves nothing.
 Exit: 0 nothing flagged; 1 flagged (file or stdin mode); 2 flagged in --hook mode, so Claude sees the warning.
 In --hook mode any error exits 0 (fail open), so a broken screen never blocks work.
+Allowed samples: in files, text between a line `<!-- screen:allow-sample -->` and a line `<!-- /screen:allow-sample -->` is
+skipped, for test prompts that are meant to read like instructions (eval prompts and graders). Only matched pairs count;
+an unclosed start marker allows nothing. Never honored for --stdin or --hook input, so tool output cannot opt out.
 """
 import json, math, re, sys
 from pathlib import Path
@@ -42,7 +45,10 @@ def score(text):
     z = m["intercept"] + sum(w.get(x, 0.0) for x in features(text))
     return 1 / (1 + math.exp(-max(-60.0, min(60.0, z))))
 
-def chunks(text, strip_code=True, size=1200):
+ALLOW = re.compile(r"^[ \t]*<!-- screen:allow-sample -->[ \t]*\n.*?^[ \t]*<!-- /screen:allow-sample -->[ \t]*$", re.S | re.M)
+
+def chunks(text, strip_code=True, size=1200, allow=False):
+    if allow: text = ALLOW.sub(" ", text)  # marked test samples only; the rest of the file is still screened
     if strip_code:  # examples in code blocks are quoted, and a leading YAML header is metadata: neither is an instruction
         text = re.sub(r"```.*?```", " ", re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S), flags=re.S)
     out = []
@@ -55,11 +61,11 @@ def prose(c):
     t = re.sub(r"\s", "", c)
     return bool(t) and sum(ch.isalpha() for ch in t) / len(t) >= 0.6
 
-def flagged(text, threshold=0.5, strip_code=True, prose_only=False):
+def flagged(text, threshold=0.5, strip_code=True, prose_only=False, allow=False):
     """[(score, chunk)] for chunks of four or more words that score at or above the threshold.
     prose_only (hook mode) skips data-like chunks (JSON, logs, tables), which caused false alarms on tool output."""
     hits = []
-    for c in chunks(text, strip_code):
+    for c in chunks(text, strip_code, allow=allow):
         if len(c.split()) >= 4 and (not prose_only or prose(c)):
             s = score(c)
             if s >= threshold: hits.append((round(s, 3), c))
@@ -105,7 +111,7 @@ def main(argv):
     for p in paths:
         fs = [p] if p.is_file() else sorted(f for f in p.rglob("*") if f.is_file() and not f.is_symlink() and f.suffix in TEXT and not set(f.relative_to(p).parts) & SKIP)
         for f in fs:
-            try: rows += [(str(f), s, c) for s, c in flagged(f.read_text(encoding="utf-8", errors="replace"), th)]
+            try: rows += [(str(f), s, c) for s, c in flagged(f.read_text(encoding="utf-8", errors="replace"), th, allow=True)]
             except OSError: continue
     if as_json: print(json.dumps([{"source": a, "score": s, "excerpt": excerpt(c)} for a, s, c in rows], indent=2, ensure_ascii=False))
     else:
