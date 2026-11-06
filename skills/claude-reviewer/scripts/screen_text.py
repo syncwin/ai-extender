@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 WS, TOK = re.compile(r"\s\s+"), re.compile(r"(?u)\b\w+\b")
 TEXT = {".md", ".txt", ".html", ".htm", ".yaml", ".yml", ".csv", ".xml"}  # prose; code reads as noise to this model
-SKIP = {".git", ".github", "node_modules", "__pycache__", ".venv", "dist"}  # .github: CI config, never loaded by Claude
+SKIP = {".git", ".github", "evals", "node_modules", "__pycache__", ".venv", "dist"}  # .github: CI config; evals: test inputs and graders, never loaded by Claude or packaged
 _M = None
 
 def model():
