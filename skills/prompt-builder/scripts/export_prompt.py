@@ -14,6 +14,8 @@ import re
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # set before the imports below: no __pycache__ inside the plugin
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent.parent / "claude-packager" / "scripts"))

@@ -11,6 +11,8 @@ Exit: 0 clean, 1 non-ASCII left, 2 usage. Standard library only.
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # never leave __pycache__ inside the plugin
+
 # Written as escapes so this file itself stays ASCII.
 MAP = {
     "\u2014": "-", "\u2013": "-", "\u2012": "-", "\u2212": "-", "\u2010": "-", "\u2011": "-",
@@ -54,7 +56,7 @@ def main(argv):
             print("--fix needs a file")
             return 2
         text = normalize(text)
-        Path(src).write_text(text, encoding="utf-8", newline="")
+        Path(src).write_bytes(text.encode("utf-8"))  # write_text(newline=) needs Python 3.10+
     hits = find(text)
     report(hits, src)
     print("ASCII only." if not hits else f"{len(hits)} non-ASCII character(s) left.")
