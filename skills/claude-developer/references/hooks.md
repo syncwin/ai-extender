@@ -25,6 +25,6 @@ SessionStart, Setup, UserPromptSubmit, UserPromptExpansion, PreToolUse, Permissi
 - Scope `matcher` to the tools the hook guards (`WebFetch|WebSearch|mcp__.*<server>.*`), never every tool; warn with exit 2 rather than block unless blocking is the point.
 - `if` is best-effort; hard allow/deny belongs in permissions, not hooks.
 - All matching hooks run in parallel; keep them fast and idempotent.
-- Security: sanitize input, quote variables, reject `..` paths, skip `.env`/`.git`/keys, absolute script paths, no secrets in the file.
+- Security: sanitize input, quote variables, reject `..` paths, skip `.env`/`.git`/keys, absolute script paths, no secrets in the file. A guard (blocks or protects) fails closed: on an error or doubt, exit 2. A nag or advisory hook fails open: on its own error, exit 0 (standards §5c).
 - Hooks in subagent frontmatter are ignored for plugin subagents.
 - Use a hook instead of a skill instruction whenever the behavior must always happen.

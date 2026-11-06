@@ -3,12 +3,13 @@
 
 Usage: package_extension.py <dir> --format plugin|zip [--out DIR] [--skip-validate] [--target T]
                             [--previous FILE|DIR] [--repo owner/repo] [--force] [--require-evals]
+                            [--prompts md|json|both]
   plugin: zip with the plugin root as archive root, extension .plugin (Cowork)
   zip:    zip with one top-level folder named after the skill or plugin `name` (skill upload, manual install),
           whatever the source folder is called
 Filename: "<Visible Name> v<version>.<ext>" (displayName / skill title + metadata.version).
 Always creates or checks the Prompt Builder companion prompt (prompts/<title-slug>.json, via companion_prompt.py)
-and copies it next to the package; `prompts/` is never put inside the package. A read-only source is staged in a temp copy first, so it is never written to.
+and copies it next to the package as Prompt Builder JSON, raw Markdown ("<Visible Name> v<version> prompt.md"), or both (--prompts, default both; both come from the same source); `prompts/` is never put inside the package. A read-only source is staged in a temp copy first, so it is never written to.
 Builds in a temp dir, then copies to --out (default ./dist).
 Also writes "<Visible Name> v<version> install.md" next to the package (desktop app, web, Code tab, terminal, undo).
 Reuse: an existing package is kept (no re-check, no rebuild) only when its recorded hash and its actual contents both
@@ -19,9 +20,9 @@ Behavior tests: reports whether evals/ results exist and are newer than the last
 import hashlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
-EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
+EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts", "evals", ".claude"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
 EXCLUDE_SUFFIX = {".plugin", ".zip", ".pyc"}
-EXCLUDE_NAMES = {".DS_Store"}
+EXCLUDE_NAMES = {".DS_Store", "IMPROVEMENTS.md"}
 
 def info(root):
     pj = root / ".claude-plugin" / "plugin.json"
@@ -88,6 +89,7 @@ def previous_package(out, visible, version, ext):
 def main(argv):
     if not argv or argv[0].startswith("-"): print(__doc__); return 2
     root, fmt, out, skip, target, prev, repo, force, need_evals = Path(argv[0]).resolve(), None, Path("dist"), False, "all", None, "", False, False
+    prompts = "both"
     i = 1
     while i < len(argv):
         a = argv[i]
@@ -99,13 +101,14 @@ def main(argv):
         elif a == "--repo": repo = argv[i+1]; i += 1
         elif a == "--skip-validate": skip = True
         elif a == "--force": force = True
+        elif a == "--prompts" and i + 1 < len(argv) and argv[i+1] in ("md", "json", "both"): prompts = argv[i+1]; i += 1
         elif a == "--require-evals": need_evals = True
         else: print(__doc__); return 2
         i += 1
     if fmt not in ("plugin", "zip"): print(__doc__); return 2
     kind, visible, version, slug = info(root)
     if fmt == "plugin" and kind != "plugin": print(".plugin format requires a plugin directory"); return 2
-    staged = None
+    staged, src = None, root
     if not os.access(root, os.W_OK) or ((root / "prompts").exists() and not os.access(root / "prompts", os.W_OK)):
         staged = tempfile.TemporaryDirectory()
         src, root = root, Path(staged.name) / slug
@@ -116,9 +119,9 @@ def main(argv):
     here = Path(__file__).resolve().parent
     cp = here / "companion_prompt.py"
     if cp.exists():
-        r = subprocess.run([sys.executable, str(cp), str(root), "--out", str(out)], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(cp), str(root), "--out", str(out), "--formats", prompts], capture_output=True, text=True)
         if r.returncode != 0: print(r.stdout + r.stderr); print("Companion prompt failed: fix it, then package again."); return 1
-    ev_ok, ev_note = eval_status(root)
+    ev_ok, ev_note = eval_status(Path(src))  # read evals from the source: evals/ is excluded from the package copy
     if need_evals and not ev_ok: print(f"Behavior tests: {ev_note}. Run them, or package without --require-evals."); return 1
     ext = ".plugin" if fmt == "plugin" else ".zip"
     fname = re.sub(r'[\\/:*?"<>|]', "", f"{visible} v{version}{ext}")
@@ -153,10 +156,10 @@ def main(argv):
     ig = here / "install_guide.py"
     guide = out / f"{fname[:-len(ext)]} install.md"
     if ig.exists():
-        args = [sys.executable, str(ig), str(root), "--file", fname, "--out", str(guide)] + (["--repo", repo] if repo else [])
+        args = [sys.executable, str(ig), str(root), "--file", fname, "--out", str(guide)] + (["--repo", repo] if repo else []) + ["--prompts", prompts]
         if subprocess.run(args, capture_output=True, text=True).returncode != 0: guide = None
     rows = [("File", f"`{dest}`" + (" (unchanged since the last build: reused, not re-checked)" if reused else "")), ("Entries", n), ("Version", version), ("Validation", "passed when this package was built" if reused else validated),
-            ("Companion prompt", f"checked and delivered separately in `{out}` (not inside the package)"), ("Install guide", f"`{guide}`" if guide else "not written"),
+            ("Companion prompt", f"checked ({prompts}) and delivered separately in `{out}` (not inside the package)"), ("Install guide", f"`{guide}`" if guide else "not written"),
             ("Behavior tests", ("ok: " if ev_ok else "flag: ") + ev_note)]
     if staged: rows.append(("Source", "read-only, so a temp copy was packaged; the source folder was not changed and has no `prompts/` folder"))
     prev = prev or previous_package(out, visible, version, ext)
@@ -170,4 +173,7 @@ def main(argv):
     return 0
 
 if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):  # Windows cp1252 consoles cannot print arrows or dashes
+        try: _s.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError): pass
     sys.exit(main(sys.argv[1:]))

@@ -2,7 +2,43 @@
 
 Newest first.
 
-## 1.1.0: Marketplace and release guidance
+## 1.2.0: Companion prompt in Markdown
+
+**Added**
+- Markdown companion prompt. Every packaged plugin can ship `<Name> v<ver> prompt.md` (raw Markdown, ASCII only, `<prompt>` and `<fields>` tags, {{variables}}) next to the package. It is generated from the same source as the Prompt Builder JSON (companion_prompt.py `to_markdown`, `--to-md`), so the two never drift.
+- `--prompts md|json|both` (default both) on package_extension.py, install_guide.py and `--formats` on companion_prompt.py.
+- claude-packager/references/prompt-builder.md holds `prompt_builder_url` and the one-line, neutral Prompt Builder note.
+
+**Changed**
+- claude-packager asks the user once which prompt files they need (Markdown, JSON, both) and mentions Prompt Builder only when relevant.
+- The install guide explains the prompt files.
+- Selftest covers the Markdown output, the three choices, and `--to-md`.
+
+## 1.1.0: Prompt Builder
+
+**Added**
+- New skill ai-extender:prompt-builder. Crafts new prompts, tightens existing ones, and makes templates with {{variables}} for any AI model: intake, batched clarifying questions, Markdown draft with XML tags where they help, tighten pass, validation checklist. References for method, structure patterns, platform tips (Claude, OpenAI, Gemini, local models), and credited sources.
+- Prompt Builder JSON export. skills/prompt-builder/scripts/export_prompt.py reuses the packager companion_prompt.py schema and checker to emit ready-to-import files.
+- ascii_check.py. Generated prompts are ASCII only: the script normalizes common look-alikes (smart quotes, dashes, arrows, check marks, ellipsis) and fails on any other non-ASCII character.
+- Three behavior tests (craft, tighten, template with JSON) and new trigger phrases.
+
+**Changed**
+- The router routes prompt requests to prompt-builder.
+- Companion prompt files keep plain text. Field text is no longer HTML-escaped on export, because Prompt Builder escapes on import and the old output showed double-escaped characters; the checker now fails on HTML entities and non-ASCII characters in title, description, content, and field text. The Predefined field type from the Prompt Builder repo is accepted.
+
+**Fixed**
+- prompts/ai-extender-for-claude.json carried HTML entities; rewritten as plain text.
+
+## 1.0.1: Update
+
+**Changed**
+- Security first. A shared secure-by-default checklist in standards 5c (exec-form commands, quoted plugin paths, path containment, no secrets, declared hosts, fail-closed guards and fail-open nag hooks, confirm destructive writes). The planner adds a three-line threat model to the plan, the developer builds to the checklist, and the reviewer treats any breach as a blocking Critical or Important finding.
+- Hook reference states the failure mode rule: guards fail closed (exit 2), advisory hooks fail open (exit 0).
+
+**Fixed**
+- Scripts no longer crash on Windows cp1252 consoles: every script reconfigures stdout and stderr to UTF-8 (the packager failed printing its scratchpad arrow).
+
+## Next branch: Marketplace and release guidance (was 1.1.0 on next)
 
 **Added**
 - Distribution routes: one repo and one marketplace per product; pick the marketplace name once (distinctive, `<company>-<plugin>`); what a rename does to existing installs; where users add a marketplace on claude.ai, desktop and mobile versus Claude Code, and why not both; uploaded `.plugin` files never update; how updates arrive and how to prove a repo with an isolated `CLAUDE_CONFIG_DIR` install.
@@ -16,7 +52,7 @@ Newest first.
 **Changed**
 - Versions: set `version` in `plugin.json` only, never also in the marketplace entry (per Claude's host-marketplace docs).
 
-## 1.0.1: Icon and listing name
+## Next branch: Icon and listing name (was 1.0.1 on next)
 
 - Plugin icon (`assets/icon.png`, `assets/icon.svg`), set in `plugin.json`.
 - The marketplace entry shows the display name "AI Extender for Claude".

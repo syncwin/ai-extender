@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Create, check, and deliver the Prompt Builder companion prompt for an extension.
 
-Usage: companion_prompt.py <extension-dir> [--spec FILE] [--out DIR] [--force]
+Usage: companion_prompt.py <extension-dir> [--spec FILE] [--out DIR] [--force] [--formats md|json|both]
        companion_prompt.py --check FILE
+       companion_prompt.py --to-md FILE [--out FILE]
 
 Every extension ships one companion prompt: <extension-dir>/prompts/<title-slug>.json, in Prompt Builder's
 JSON import format (format "prompt-builder-plain", version 2.0). Users import it into Prompt Builder and use
@@ -13,19 +14,23 @@ it to start the extension with a short form instead of a blank chat.
   --spec FILE             writes the prompt from a spec: {"title"?, "description"?, "content", "variables"}.
   (file already there)    checks it and leaves it untouched unless --force or --spec is given.
   --out DIR               also copies the checked file into DIR (next to the packaged extension).
+  --formats F             which companion files to deliver into --out: json, md, or both (default both; the Markdown is only written into --out). The JSON in
+                          prompts/ stays the single source; the Markdown file "<Name> v<ver> prompt.md" is generated from it.
   --check FILE            checks any Prompt Builder JSON file and exits.
+  --to-md FILE            prints (or writes to --out) the Markdown form of a Prompt Builder JSON file.
 Exit: 0 ok, 1 problems found, 2 usage. Standard library only; no network.
 Format notes and field rules: ai-extender/references/companion-prompt.md.
 """
-import html, json, re, secrets, shutil, sys
+import html, json, re, secrets, shutil, sys, unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
 FORMAT, FORMAT_VERSION = "prompt-builder-plain", "2.0"
 # Copied from Prompt Builder 2.0 exports; every export inspected carries this value regardless of content.
 CHECKSUM = "-9vapbe"
-TYPES = {"Text", "Textarea", "Radio", "Checkbox"}
+TYPES = {"Text", "Textarea", "Radio", "Checkbox", "Predefined"}  # Predefined: toggle that inserts predefinedContent (Prompt Builder repo, VariableInput)
 VAR = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
+ENTITY = re.compile(r"&#x?[0-9a-fA-F]+;|&(?:amp|lt|gt|quot|apos);")
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
 FILE_OPTIONS = "Attached in This Message\nIn the Claude Project Files\nCreated Earlier in This Chat\nNone, Start from Scratch"
 
@@ -92,20 +97,41 @@ def default_spec(title, slug, desc, roles):
                                "Everything the task needs that isn't a file.", False, 2000)
     return {"title": title, "description": f"{short}. Fill in the task and run {title} in one step.", "content": "\n".join(lines), "variables": variables}
 
-def esc_context(s):
-    """Prompt Builder exports store the tooltip context HTML-escaped (an apostrophe becomes &#x27;)."""
-    return html.escape(html.unescape(s), quote=True)
+# Written as escapes so this file stays ASCII.
+_MAP = {"—": "-", "–": "-", "‒": "-", "−": "-", "‐": "-", "‑": "-", "‘": "'", "’": "'",
+        "‚": "'", "‛": "'", "“": '"', "”": '"', "„": '"', "«": '"', "»": '"', "…": "...",
+        "→": "->", "←": "<-", "⇒": "=>", "↔": "<->", "✓": "[x]", "✔": "[x]", "✗": "[ ]",
+        "•": "-", "·": "-", "×": "x", "≥": ">=", "≤": "<=", "≠": "!="}
+_SPACES = {" ", " ", " ", " ", " "}
+_DROP = {"​", "‌", "‍", "⁠", "﻿", "­"}
+
+def ascii_text(s):
+    """Common Unicode to plain ASCII (quotes, dashes, ellipsis, arrows, NBSP, accents via NFKD). Anything else non-ASCII is left for check() to reject."""
+    if not isinstance(s, str): return s
+    out = "".join(" " if c in _SPACES else _MAP.get(c, c) for c in s if c not in _DROP)
+    return "".join(c for c in unicodedata.normalize("NFKD", out) if not unicodedata.combining(c)) if any(ord(c) > 127 for c in out) else out
+
+def ascii_deep(o, skip=("id",)):
+    if isinstance(o, dict): return {k: (v if k in skip else ascii_deep(v, skip)) for k, v in o.items()}
+    if isinstance(o, list): return [ascii_deep(x, skip) for x in o]
+    return ascii_text(o)
+
+def plain(s):
+    """Plain text only: Prompt Builder escapes on its own when it imports, so a pre-escaped value would be escaped twice."""
+    return html.unescape(html.unescape(s)) if isinstance(s, str) else s
 
 def build(spec, title, old=None):
     stamp = now()
     variables = {}
     for k, v in spec["variables"].items():
-        v = dict(v); v["context"] = esc_context(v.get("context", ""))
+        v = dict(v); v["context"] = plain(v.get("context", ""))
         variables[k] = {f: v.get(f, d) for f, d in (("type", "Textarea"), ("label", k.replace("_", " ").title()), ("placeholder", k),
                         ("context", ""), ("maxLength", ""), ("required", False), ("options", ""))}
+        if v.get("type") == "Predefined": variables[k]["predefinedContent"] = v.get("predefinedContent", "")
     p = {"id": (old or {}).get("id") or secrets.token_hex(16), "title": spec.get("title") or title,
-         "description": spec.get("description", ""), "content": spec["content"], "variables": variables,
+         "description": plain(spec.get("description", "")), "content": plain(spec["content"]), "variables": variables,
          "lastModified": stamp, "created": (old or {}).get("created") or stamp}
+    p = ascii_deep(p)
     return {"prompts": [p], "metadata": {"exportDate": stamp, "version": FORMAT_VERSION, "format": FORMAT, "count": 1, "checksum": CHECKSUM}}
 
 def check(d):
@@ -150,6 +176,7 @@ def check(d):
             for f in ("placeholder", "context", "options"):
                 if not isinstance(v.get(f, ""), str): E.append(f"{vat}.{f} must be text")
             if not isinstance(v.get("required", False), bool): E.append(f"{vat}.required must be true or false")
+            if ty == "Predefined" and not str(v.get("predefinedContent", "")).strip(): E.append(f"{vat}: Predefined needs predefinedContent")
             opts = [o for o in re.split(r"\n", str(v.get("options", ""))) if o.strip()]
             ml = v.get("maxLength", "")
             if ty in ("Radio", "Checkbox"):
@@ -159,8 +186,45 @@ def check(d):
             else:
                 if opts: W.append(f"{vat}.options is ignored for {ty}")
                 if ml not in ("", None) and not (isinstance(ml, int) and not isinstance(ml, bool) and ml > 0): E.append(f"{vat}.maxLength must be a positive whole number, or \"\" for no limit, for {ty}")
+        texts = [("title", p.get("title")), ("description", p.get("description")), ("content", p.get("content"))]
+        for n, v in (vs.items() if isinstance(vs, dict) else []):
+            if isinstance(v, dict): texts += [(f"variables.{n}.{f}", v.get(f)) for f in ("label", "placeholder", "context", "options", "predefinedContent")]
+        for f, t in texts:
+            if not isinstance(t, str): continue
+            if ENTITY.search(t): E.append(f"{at}.{f}: contains an HTML entity (such as &#x27; or &amp;); write the plain character, Prompt Builder escapes on import")
+            if any(ord(c) > 127 for c in t): E.append(f"{at}.{f}: contains a non-ASCII character; use plain ASCII (- \" ' -> [x] ...)")
         if re.search(r"<script|javascript:", json.dumps(p), re.I): E.append(f"{at}: contains script content")
     return E, W
+
+def to_markdown(doc):
+    """Raw Markdown form of the (single-source) Prompt Builder JSON: ASCII only, {{variables}} kept, fields in an XML block."""
+    p = ascii_deep(doc["prompts"][0])
+    out = [f"# {p['title']}", ""]
+    if p.get("description"): out += [p["description"], ""]
+    body = p["content"].strip()
+    body = re.sub(r"^# .*\n+", "", body, count=1)  # the title is already the heading
+    out += ["<prompt>", body, "</prompt>", "", "<fields>"]
+    for k, v in p.get("variables", {}).items():
+        bits = [v.get("type", "Textarea").lower(), "required" if v.get("required") else "optional"]
+        line = f"- {{{{{k}}}}} ({v.get('label', k)}; {', '.join(bits)}): {v.get('context', '')}".rstrip(": ")
+        opts = [o for o in str(v.get("options", "")).split("\n") if o.strip()]
+        if opts: line += " Options: " + " | ".join(opts) + "."
+        out.append(line)
+    out += ["</fields>", ""]
+    text = "\n".join(out)
+    bad = sorted({c for c in text if ord(c) > 127})
+    if bad: raise SystemExit(f"Markdown prompt must be ASCII only; found {bad}")
+    return text
+
+def md_name(root):
+    """'<Name> v<ver> prompt.md', the same visible name and version the packager uses."""
+    title = info(root)[0]; ver = "0.0.1"
+    pj = root / ".claude-plugin" / "plugin.json"
+    if pj.exists(): ver = str(json.loads(pj.read_text(encoding="utf-8-sig")).get("version", ver))
+    elif (root / "SKILL.md").exists():
+        m = re.search(r"^\s+version:\s*[\"']?([^\s\"']+)", (root / "SKILL.md").read_text(encoding="utf-8-sig"), re.M)
+        ver = m.group(1) if m else ver
+    return re.sub(r'[\\/:*?"<>|]', "", f"{title} v{ver} prompt.md")
 
 def report(path, E, W):
     print(f"### Scratchpad: Companion Prompt\n**Scope:** `{path}`\n\n| Errors | Warnings |\n|---|---|\n| {len(E)} | {len(W)} |")
@@ -177,12 +241,21 @@ def main(argv):
     if argv[0] == "--check":
         if len(argv) != 2: print(__doc__); return 2
         E, W = check(load(argv[1])); report(argv[1], E, W); return 1 if E else 0
-    root, spec, out, force, i = Path(argv[0]).resolve(), None, None, False, 1
+    if argv[0] == "--to-md":
+        if len(argv) not in (2, 4) or (len(argv) == 4 and argv[2] != "--out"): print(__doc__); return 2
+        d = load(argv[1]); E, _ = check(d)
+        if E: report(argv[1], E, []); return 1
+        t = to_markdown(d)
+        if len(argv) == 4: Path(argv[3]).write_text(t, encoding="utf-8"); print(f"wrote {argv[3]}")
+        else: print(t)
+        return 0
+    root, spec, out, force, i, formats = Path(argv[0]).resolve(), None, None, False, 1, "both"
     while i < len(argv):
         a = argv[i]
         if a == "--spec" and i + 1 < len(argv): spec = load(argv[i + 1]); i += 1
         elif a == "--out" and i + 1 < len(argv): out = Path(argv[i + 1]); i += 1
         elif a == "--force": force = True
+        elif a == "--formats" and i + 1 < len(argv) and argv[i + 1] in ("md", "json", "both"): formats = argv[i + 1]; i += 1
         else: print(__doc__); return 2
         i += 1
     if not root.is_dir(): print(f"not a directory: {root}"); return 2
@@ -197,17 +270,25 @@ def main(argv):
         E, W = check(doc)
         if E: report(target, E, W); return 1
         target.parent.mkdir(exist_ok=True)
-        target.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        target.write_text(json.dumps(doc, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
         action = "written"
     else:
         doc, action = existing, "checked"
     E, W = check(doc)
     report(target.relative_to(root), E, W)
     if E: return 1
+    rows = f"\n| Item | Result |\n|---|---|\n| File | `{target}` ({action}) |"
     if out:
-        out.mkdir(parents=True, exist_ok=True); shutil.copyfile(target, out / target.name)
-    print(f"\n| Item | Result |\n|---|---|\n| File | `{target}` ({action}) |" + (f"\n| Copied to | `{out / target.name}` |" if out else ""))
+        out.mkdir(parents=True, exist_ok=True)
+    if out and formats in ("json", "both"):
+        shutil.copyfile(target, out / target.name); rows += f"\n| JSON | `{out / target.name}` |"
+    if out and formats in ("md", "both"):
+        mp = out / md_name(root); mp.write_text(to_markdown(doc), encoding="utf-8"); rows += f"\n| Markdown | `{mp}` |"
+    print(rows)
     return 0
 
 if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):  # Windows cp1252 consoles cannot print arrows or dashes
+        try: _s.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError): pass
     sys.exit(main(sys.argv[1:]))
