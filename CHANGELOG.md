@@ -4,6 +4,9 @@ Newest first.
 
 ## 1.2.1: Research before building
 
+**Added**
+- GitHub Actions workflow `release-plugin.yml` builds `ai-extender.plugin` and attaches it to each v* release and keeps a rolling `next` pre-release updated on every push to the next branch (README links).
+
 **Changed**
 - Standing rule: research before building. Check current official docs and widely recommended, secure practice before choosing an approach, file, tool, config or dependency; cite the source; mark anything unverified; never guess; keep research scoped to the task.
 

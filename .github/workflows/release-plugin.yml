@@ -1,0 +1,85 @@
+name: Release plugin
+
+# Builds ai-extender.plugin from the plugin.json version and attaches it to the GitHub release.
+# Release (v* tag): https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin
+# Next (push to the next branch): rolling pre-release tagged "next",
+#   https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin
+# The existing release.yml still attaches the signed, dotted-name package to v* releases.
+on:
+  push:
+    tags: ["v*"]
+    branches: [next]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-plugin-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and attach ai-extender.plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NAME: "AI Extender for Claude"
+      ASSET: ai-extender.plugin
+      ROOT: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the package
+        id: build
+        run: |
+          python3 - <<'PY'
+          import json, os, zipfile
+          root, asset = os.environ["ROOT"], os.environ["ASSET"]
+          version = json.load(open(os.path.join(root, ".claude-plugin", "plugin.json"), encoding="utf-8"))["version"]
+          skip_dirs = {".git", ".github", ".claude", "tests", "node_modules", "__pycache__", "evals", "prompts", "dist"}
+          skip_files = {"IMPROVEMENTS.md"}
+          os.makedirs("dist", exist_ok=True)
+          out = os.path.join(os.getcwd(), "dist", asset)
+          if os.path.exists(out):
+              os.remove(out)
+          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+              for d, dirs, files in os.walk(root):
+                  dirs[:] = sorted(x for x in dirs if x not in skip_dirs)
+                  for f in sorted(files):
+                      if f in skip_files or f.endswith(".pyc"):
+                          continue
+                      p = os.path.join(d, f)
+                      z.write(p, os.path.relpath(p, root).replace(os.sep, "/"))
+          with zipfile.ZipFile(out) as z:
+              assert ".claude-plugin/plugin.json" in z.namelist(), "plugin.json missing at zip root"
+          with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a") as g:
+              g.write("version=" + version + "\n")
+          print("built", out, "version", version)
+          PY
+      - name: Check the tag matches the plugin version
+        if: github.ref_type == 'tag'
+        env:
+          VERSION: ${{ steps.build.outputs.version }}
+        run: test "$GITHUB_REF_NAME" = "v$VERSION" || { echo "tag $GITHUB_REF_NAME does not match plugin version $VERSION"; exit 1; }
+      - name: Attach to the version release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.build.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "dist/$ASSET" --clobber
+          else
+            gh release create "$tag" "dist/$ASSET" --title "$NAME $tag" --generate-notes --target "$GITHUB_SHA"               || gh release upload "$tag" "dist/$ASSET" --clobber
+          fi
+      - name: Update the rolling next pre-release
+        if: github.ref_type == 'branch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.build.outputs.version }}
+        run: |
+          gh release delete next --cleanup-tag --yes || true
+          gh release create next "dist/$ASSET" --prerelease --target "$GITHUB_SHA"             --title "$NAME next (v$VERSION)"             --notes "Rolling pre-release built from the next branch at $GITHUB_SHA. Not for production; the stable package is on the latest v* release."
