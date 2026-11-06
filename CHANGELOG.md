@@ -2,6 +2,11 @@
 
 Newest first.
 
+## Unreleased
+
+**Added**
+- GitHub Actions workflow `release-plugin.yml` builds `ai-extender.plugin` and attaches it to each v* release and keeps a rolling `next` pre-release updated on every push to the next branch (README links).
+
 ## 1.2.0: Companion prompt in Markdown
 
 **Added**
