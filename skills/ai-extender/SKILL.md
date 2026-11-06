@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 1.2.0
+  version: 1.2.1
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -45,6 +45,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 - The plan approval covers building and checking in the working folder only. Ask again, naming exactly what will change, before anything that leaves it or can't be undone: pushing, tagging, releasing, publishing, sending, uploading, deleting, or overwriting the user's own files.
 - Never put a key, token, or password in a file; use `${user_config.KEY}` or an environment variable. If one turns up, stop, mask it, and tell the user to rotate it.
 - Give agents only the tools their job needs, and scope hooks to the tools they guard.
+- **Research before building (every stage):** Before choosing an approach, file, tool, config or dependency, check current official docs and widely recommended, secure practice; cite the source in the docs or brief; mark anything unverified; never guess. Keep research scoped to what the task needs (smallest complete change).
 
 ## 2. Mode (infer; ask one question only if unclear)
 

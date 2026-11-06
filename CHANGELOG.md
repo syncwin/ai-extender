@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 1.2.1: Research before building
+
+**Changed**
+- Standing rule: research before building. Check current official docs and widely recommended, secure practice before choosing an approach, file, tool, config or dependency; cite the source; mark anything unverified; never guess; keep research scoped to the task.
+
 ## 1.2.0: Companion prompt in Markdown
 
 **Added**
