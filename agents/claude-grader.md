@@ -6,7 +6,7 @@ color: green
 tools: ["Read", "Grep", "Glob", "Write"]
 metadata:
   displayName: "AI Extender Grader"
-  version: 1.2.1
+  version: 1.3.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
