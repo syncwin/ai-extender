@@ -2,7 +2,7 @@
 
 AI Extender for Claude: plans, builds, checks and packages Claude skills, plugins, connectors and agents.
 
-**Structure:** `skills/aix` (router) and `aix-planner|developer|maintainer|reviewer|packager|prompter`, `agents/` (comparator, grader), `hooks/hooks.json`, `evals/`, `.github/` (CI).
+**Structure:** `skills/aix` (router) and `aix-planner|developer|maintainer|reviewer|packager|prompter|cleaner`, `agents/` (comparator, grader), `hooks/hooks.json`, `evals/`, `.github/` (CI).
 
 ## Commands
 - Self-test (must pass): `python skills/aix-reviewer/scripts/selftest.py`

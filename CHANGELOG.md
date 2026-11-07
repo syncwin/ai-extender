@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 1.4.0: aix-cleaner
+
+**Added**
+- New skill ai-extender:aix-cleaner: deep clean-up and de-duplication of plugins and skills without losing anything unique. Script-only inventory (files, headings, normalized line hashes, exact and near-duplicate paragraphs by shingle Jaccard), overlap map, a plan where every merge or removal lists where each unique line lands (keep-unique proof), a hard stop for operator approval, smallest diffs, and a before/after proof. Dry-run by default; never deletes (archive folder); Python standard library only, Python 3.9, no bytecode.
+- Scripts `inventory.py`, `prove.py` (fails on any lost unique line) and `archive.py` (dry-run move); references `workflow.md` and `plan-template.md`.
+- Behavior test `clean-duplicate-plugin` (fixture with a duplicated paragraph and a unique line that must survive), trigger phrases, and self-tests for the three scripts.
+- Registered in the router (mode and route table) and the README skill table.
+
 ## 1.3.0: Short skill names (aix) and script-path rule
 
 **Changed**

@@ -8,7 +8,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Developer"
-  version: 1.3.0
+  version: 1.4.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
