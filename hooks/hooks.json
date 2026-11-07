@@ -8,7 +8,7 @@
             "type": "command",
             "command": "python3",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/skills/claude-reviewer/scripts/screen_text.py",
+              "${CLAUDE_PLUGIN_ROOT}/skills/aix-reviewer/scripts/screen_text.py",
               "--hook"
             ],
             "timeout": 15

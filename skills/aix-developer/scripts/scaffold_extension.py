@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""Scaffold a lean Claude plugin: only the components you ask for.
+
+Usage: scaffold_extension.py <out-dir> --slug my-thing --display "My Thing"
+         [--description "..."] [--author "@name"] [--company "Co"] [--email a@b.c] [--url https://..]
+         [--license MIT] [--roles planner,developer] [--prefix acronym|none] [--agents] [--hooks] [--connectors]
+         [--no-composio] [--no-guardrail]
+Creates <out-dir>/<slug>/ with: plugin.json (version 0.0.1), router skill named <slug>, one stub skill per
+--roles entry (<prefix>-<role>, or bare <role> without --prefix), scratchpad reference, README, CHANGELOG, LICENSE (MIT), .gitignore,
+and the Prompt Builder companion prompt (prompts/<title-slug>.json, via aix-packager/scripts/companion_prompt.py).
+Metadata on the manifest and every skill: displayName, version, and author/company when given.
+Optional empty-but-valid: agents/ (--agents), hooks/hooks.json (--hooks), .mcp.json (--connectors).
+Composio is declared by default (.mcp.json "composio" at the shared https://connect.composio.dev/mcp; each user signs
+in with their own account, so nothing personal ships). --no-composio leaves it out.
+With any connector, the injection guardrail is added too: scripts/guardrail/ (screen_text.py and its 67 KB model, copied
+from aix-reviewer/scripts) and a PostToolUse hook that screens web and connector output in Claude Code and Cowork.
+--no-guardrail leaves it out.
+Stubs contain real structure and a scratchpad step: fill the bodies, then run the validator.
+"""
+import json, re, subprocess, sys
+from datetime import date
+from pathlib import Path
+
+COMPOSIO_URL = "https://connect.composio.dev/mcp"  # shared Composio Connect endpoint; OAuth per user
+
+SCRATCH = """# Scratchpad Format
+
+Every skill, connector, and agent ends its task with one. Standalone: emit at the end. Chained: each stage adds rows to one running scratchpad, emitted once at the end.
+
+It opens with the request ledger: one row per individual request the user made during the task (split compound asks; include requests added mid-task, questions, and anything declined or deferred), so nothing goes unaccounted for. Status is one of done, partly done, in progress, failed, not started, needs you. Context is one clause: the result, the blocker, or what is left.
+
+```
+### Scratchpad: <Visible Name> v<version>
+**Scope:** <what was run>
+
+| # | Request | Status | Context |
+|---|---|---|---|
+| 1 | <one request, in the user's words> | <status> | <result, blocker, or what's left> |
+
+| Area | Result |
+|---|---|
+| <thing built/checked/changed> | <done / pass / fail + one clause> |
+
+**Changed:** <files or components, one line each>
+**Flags:** <failures, assumptions, open items; omit if none>
+**Next:** <single next action; omit if none>
+```
+
+Facts only. Omit inapplicable sections. Successes in one line; detail only for failures.
+"""
+MIT = """MIT License
+
+Copyright (c) {year} {holder}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+def frontmatter(name, desc, a, display):
+    meta = ["  version: 0.0.1", f"  displayName: {json.dumps(display)}"] + ([f"  author: {json.dumps(a['author'])}"] if a["author"] else []) + ([f"  company: {json.dumps(a['company'])}"] if a["company"] else [])
+    return f"---\nname: {name}\ndescription: >\n  {desc}\nlicense: {a['license']}\nmetadata:\n" + "\n".join(meta) + "\n---\n\n"
+
+def main(argv):
+    a = {"slug": None, "display": None, "description": "", "author": "", "company": "", "email": "", "url": "", "license": "MIT",
+         "roles": [], "prefix": "", "agents": False, "hooks": False, "connectors": False, "composio": True, "guardrail": True}
+    out, i = None, 0
+    while i < len(argv):
+        x = argv[i]
+        if x in ("--agents", "--hooks", "--connectors"): a[x[2:]] = True
+        elif x == "--no-composio": a["composio"] = False
+        elif x == "--no-guardrail": a["guardrail"] = False
+        elif x.startswith("--") and x[2:] in a: a[x[2:]] = argv[i+1]; i += 1
+        elif not x.startswith("-") and out is None: out = Path(x)
+        else: print(__doc__); return 2
+        i += 1
+    if not (out and a["slug"] and a["display"]) or not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", a["slug"]): print(__doc__); return 2
+    if re.match(r"^(claude|anthropic|anthropics|cc-plugin)(-|$)", a["slug"]):
+        print(f"slug '{a['slug']}' is reserved for Anthropic's own plugins; pick a name of your own and put the brand in --display"); return 2
+    roles = [r for r in (a["roles"].split(",") if a["roles"] else []) if r]
+    prefix = a["prefix"] if a["prefix"] not in ("", "none") else ""
+    slugish = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+    bad = [r for r in roles if not slugish.match(r)] + ([prefix] if prefix and not slugish.match(prefix) else [])
+    if bad: print(f"role and prefix names must be lowercase letters, digits, and hyphens: {', '.join(bad)}"); return 2
+    if any(re.search(r"[\x00-\x1f\x7f]", str(a[k])) for k in ("display", "description", "author", "company", "email", "url")):
+        print("display, description, author, company, email, and url must be single-line text"); return 2
+    if a["url"] and not a["url"].startswith("https://"): print("--url must start with https://"); return 2
+    nm = lambda r: f"{prefix}-{r}" if prefix else r
+    root = out / a["slug"]
+    if root.exists(): print(f"exists: {root}"); return 1
+    desc = a["description"] or f"{a['display']}."
+    (root / ".claude-plugin").mkdir(parents=True)
+    author = {k: v for k, v in (("name", a["author"] or a["company"]), ("email", a["email"]), ("url", a["url"])) if v}
+    manifest = {"name": a["slug"], "displayName": a["display"], "version": "0.0.1", "description": desc, "license": a["license"]}
+    if author: manifest["author"] = author
+    if a["company"] and author: manifest["author"]["company"] = a["company"]
+    manifest["metadata"] = {k: v for k, v in (("displayName", a["display"]), ("version", "0.0.1"), ("author", a["author"]), ("company", a["company"])) if v}
+    (root / ".claude-plugin" / "plugin.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    rtable = "\n".join(f"| `{nm(r)}` | {r.title()} |" for r in roles) or "| (none yet) | |"
+    titles = {a["slug"]: a["display"], **{nm(r): f"{a['display']} {r.title()}" for r in roles}}
+    skills = {a["slug"]: (f"{desc} Entry point and router: use whenever the user asks for anything this plugin covers. Routes to the skill that owns the task.",
+              f"# {a['display']}\n\nRouter only. Detect context, pick the skill, hand off.\n\n| Task | Skill |\n|---|---|\n" + "\n".join(f"| {r} | `{nm(r)}` |" for r in roles) + "\n\nFinish with the scratchpad (`references/scratchpad.md`).\n")}
+    for r in roles:
+        skills[nm(r)] = (f"{r.title()} role for {a['display']}. Use when the task needs the {r} stage.",
+              f"# {a['display']} {r.title()}\n\nSteps for the {r} role go here as numbered rules.\n\nFinish with the scratchpad (`{a['slug']}/references/scratchpad.md`).\n")
+    for n, (d, body) in skills.items():
+        p = root / "skills" / n; p.mkdir(parents=True)
+        (p / "SKILL.md").write_text(frontmatter(n, d, a, titles[n]) + body)
+    (root / "skills" / a["slug"] / "references").mkdir(exist_ok=True)
+    (root / "skills" / a["slug"] / "references" / "scratchpad.md").write_text(SCRATCH)
+    if a["agents"]: (root / "agents").mkdir(); (root / "agents" / ".gitkeep").write_text("")
+    a["guardrail"] = a["guardrail"] and (a["composio"] or a["connectors"])
+    src = Path(__file__).resolve().parents[2] / "aix-reviewer" / "scripts"
+    if a["guardrail"] and not (src / "injection_model.json").exists(): a["guardrail"] = False
+    hooks = {}
+    if a["guardrail"]:
+        g = root / "scripts" / "guardrail"; g.mkdir(parents=True)
+        for fn in ("screen_text.py", "injection_model.json"): (g / fn).write_bytes((src / fn).read_bytes())
+        names = ["composio"] if a["composio"] else []
+        scope = "|".join(f"mcp__.*[{n[0].upper()}{n[0]}]{re.escape(n[1:])}.*" for n in names) or "mcp__.*"  # no named connector yet: every MCP tool, until one is added
+        hooks["PostToolUse"] = [{"matcher": f"WebFetch|WebSearch|{scope}", "hooks": [{"type": "command", "timeout": 15, "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py", "--hook"]}]}]
+    if a["hooks"] or hooks: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text(json.dumps({"hooks": hooks}, indent=2) + "\n")
+    servers = {"composio": {"type": "http", "url": COMPOSIO_URL}} if a["composio"] else {}
+    if a["connectors"] or servers: (root / ".mcp.json").write_text(json.dumps({"mcpServers": servers}, indent=2) + "\n")
+    ctable = ("\n## Connectors\n\n| Connector | Used by | Purpose | Auth | Data sent |\n|---|---|---|---|---|\n"
+              f"| Composio | all skills, when a task needs an outside app | one connection to 1,000+ apps (Gmail, Notion, Slack, CRMs) | each user's own Composio sign-in (OAuth) | only what a task sends to the app it uses |\n\n"
+              "In Chat or Cowork, open the plugin's Connectors tab and select Connect. Claude Code reuses a Composio connector you already have at this exact address instead of loading a second copy.\n") if a["composio"] else ""
+    ctable += ("\n## Injection guardrail\n\nIn Claude Code and Cowork, a hook screens what web pages and connectors return with a small local model "
+               "(`scripts/guardrail/`, 67 KB, no downloads) and warns Claude when it finds instructions aimed at the model. It never blocks your work: "
+               "Claude treats flagged content as data and asks you before acting on it. Chat on claude.ai doesn't run hooks. "
+               "It runs only after web tools and this plugin's own connectors; when you add a connector, add its name to the hook's `matcher` (the validator flags one it misses, `X007`). "
+               "To turn it off, remove the `PostToolUse` entry from `hooks/hooks.json`.\n") if a["guardrail"] else ""
+    contact = f" · **Contact** {a['email']}" if a["email"] else ""
+    who = " · ".join(x for x in (f"**Author** {a['author']}" if a["author"] else "", f"**Company** {a['company']}" if a["company"] else "") if x)
+    slug_t = re.sub(r"[^a-z0-9]+", "-", a["display"].lower()).strip("-")
+    (root / "README.md").write_text(f"# {a['display']}\n\n{desc}\n\n**Version** 0.0.1 · {who}{contact} · **License** {a['license']}\n\n"
+        f"## Skills\n\n| Skill | Role |\n|---|---|\n| `{a['slug']}` | Router |\n{rtable}\n\n"
+        f"## Install\n\nCowork or claude.ai: upload the `.plugin` file as a custom plugin. Claude Code: add the marketplace or folder that holds this plugin, then install `{a['slug']}`. Start it with `/{a['slug']}` and describe what you need. Full steps for every app, and how to undo them, come in the install guide the packager writes next to the package.\n\n"
+        f"{ctable}\n## Companion prompt\n\n`prompts/{slug_t}.json` is a ready-made form for Prompt Builder. It is delivered next to the package, never inside it. Import it there, fill in the fields, and send it to Claude to start this plugin without typing the request from scratch.\n\n"
+        f"## What it runs, reads, and sends\n\nList every script, connector, and outside service here before you share this plugin.\n\n"
+        f"Before a directory submission, add a square listing icon (PNG or JPEG, 512 to 2048 px) named icon in the .claude-plugin folder.\n")
+    (root / "CHANGELOG.md").write_text(f"# Changelog\n\nNewest first.\n\n## 0.0.1: {date.today().isoformat()}\n\n**Added**\n- Initial structure.\n")
+    (root / "LICENSE").write_text(MIT.format(year=date.today().year, holder=a["author"] or a["company"] or a["display"]) if a["license"] == "MIT" else f"License: {a['license']}\n")
+    (root / ".gitignore").write_text(".DS_Store\n*.plugin\n*.zip\n.env\ndist/\n")
+    cp = Path(__file__).resolve().parents[2] / "aix-packager" / "scripts" / "companion_prompt.py"
+    prompt = "not created (companion_prompt.py not found)"
+    if cp.exists():
+        r = subprocess.run([sys.executable, str(cp), str(root)], capture_output=True, text=True)
+        prompt = "prompts/ (default; edit the form fields to match the skills)" if r.returncode == 0 else "FAILED: " + r.stdout[-300:]
+    print(f"### Scratchpad: Scaffold\n**Scope:** {a['slug']}\n\n| Item | Result |\n|---|---|\n| Path | `{root}` |\n| Skills | {', '.join(skills)} |\n| Extras | {', '.join(k for k in ('agents','hooks','connectors','composio','guardrail') if a[k]) or 'none'} |\n| Companion prompt | {prompt} |\n\n**Next:** fill skill bodies, then run the validator.")
+    return 0
+
+if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):  # Windows cp1252 consoles cannot print arrows or dashes
+        try: _s.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError): pass
+    sys.exit(main(sys.argv[1:]))

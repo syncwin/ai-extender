@@ -2,13 +2,13 @@
 
 AI Extender for Claude: plans, builds, checks and packages Claude skills, plugins, connectors and agents.
 
-**Structure:** `skills/ai-extender` (router) and `claude-planner|developer|maintainer|reviewer|packager`, `agents/` (comparator, grader), `hooks/hooks.json`, `evals/`, `.github/` (CI).
+**Structure:** `skills/aix` (router) and `aix-planner|developer|maintainer|reviewer|packager|prompter`, `agents/` (comparator, grader), `hooks/hooks.json`, `evals/`, `.github/` (CI).
 
 ## Commands
-- Self-test (must pass): `python skills/claude-reviewer/scripts/selftest.py`
-- Strict validation (must pass): `python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
-- Secret scan: `python skills/claude-reviewer/scripts/scan_secrets.py`
-- Version bump: `skills/claude-maintainer/scripts/bump_version.py`; package: `skills/claude-packager/scripts/package_extension.py`
+- Self-test (must pass): `python skills/aix-reviewer/scripts/selftest.py`
+- Strict validation (must pass): `python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
+- Secret scan: `python skills/aix-reviewer/scripts/scan_secrets.py`
+- Version bump: `skills/aix-maintainer/scripts/bump_version.py`; package: `skills/aix-packager/scripts/package_extension.py`
 - Validate: `claude plugin validate . --strict`
 - Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python A:\Automation\plugin-evals\regen_evals.py <plugin> <router> <fixture ids>`. Write results outside the repo (`D:\SyncWin\AI Outputs\<plugin>\eval-results`); the packager includes repo files.
 

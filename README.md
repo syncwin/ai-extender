@@ -21,7 +21,7 @@ It also updates, audits, versions, and packages extensions you already have. One
 ## Quick start
 
 1. Install the plugin (below).
-2. Type `/ai-extender`, or just describe what you want: "make a skill that turns my meeting notes into action items."
+2. Type `/aix`, or just describe what you want: "make a skill that turns my meeting notes into action items."
 3. Answer the few questions only you can answer, usually who will use it and where.
 4. Approve the short plan. AI Extender builds it, checks it, and gives you the file, install steps, and its companion prompt.
 
@@ -70,25 +70,39 @@ Nothing else leaves your machine. Apart from the Composio connector and the guar
 
 ## Skills and agents
 
-Start with `/ai-extender`. It reads your request and calls the right role, so most people never call the others directly.
+Start with `/aix`. It reads your request and calls the right role, so most people never call the others directly.
 
 | Skill | What it does |
 |---|---|
-| `ai-extender` | Router. Asks what you want, picks the steps |
-| `ai-extender:claude-planner` | Scopes the request and designs the structure |
-| `ai-extender:claude-developer` | Writes skills, connectors, agents, hooks, MCP servers, and tests |
-| `ai-extender:claude-maintainer` | Updates existing extensions, versions, changelogs |
-| `ai-extender:claude-reviewer` | Validates and audits before anything ships |
-| `ai-extender:claude-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
-| `ai-extender:prompt-builder` | Writes, tightens, and templates prompts for any AI model; exports Prompt Builder JSON |
+| `ai-extender:aix` | Router. Asks what you want, picks the steps |
+| `ai-extender:aix-planner` | Scopes the request and designs the structure |
+| `ai-extender:aix-developer` | Writes skills, connectors, agents, hooks, MCP servers, and tests |
+| `ai-extender:aix-maintainer` | Updates existing extensions, versions, changelogs |
+| `ai-extender:aix-reviewer` | Validates and audits before anything ships |
+| `ai-extender:aix-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
+| `ai-extender:aix-prompter` | Writes, tightens, and templates prompts for any AI model; exports Prompt Builder JSON |
+
+**Renamed in 1.3.0:**
+
+| Old name | New name |
+|---|---|
+| `ai-extender` (router skill) | `aix` |
+| `claude-planner` | `aix-planner` |
+| `claude-developer` | `aix-developer` |
+| `claude-reviewer` | `aix-reviewer` |
+| `claude-maintainer` | `aix-maintainer` |
+| `claude-packager` | `aix-packager` |
+| `prompt-builder` | `aix-prompter` |
+
+The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `claude-grader` keep their names.
 
 Agents: `ai-extender:claude-grader` grades test runs against their assertions, and `ai-extender:claude-comparator` compares two outputs blind.
 
 | Connector | Used by | For | Without it |
 |---|---|---|---|
-| Composio (`https://connect.composio.dev/mcp`) | `ai-extender:claude-packager`, and any role when a build needs an outside app | Pushing, tagging, and releasing on GitHub; reaching other apps a build depends on | Skills work as usual; GitHub goes through your own GitHub connector or `gh` |
+| Composio (`https://connect.composio.dev/mcp`) | `ai-extender:aix-packager`, and any role when a build needs an outside app | Pushing, tagging, and releasing on GitHub; reaching other apps a build depends on | Skills work as usual; GitHub goes through your own GitHub connector or `gh` |
 
-**Naming.** `ai-` marks parts that aren't tied to one platform; `claude-` marks Claude-specific parts. ChatGPT or Gemini layers could sit beside the Claude one later (`skills/ai-extender/references/platforms.md`). Only the Claude layer exists today. Because the role skills contain the word `claude`, claude.ai and the API reject them as individual skill uploads, so install the whole plugin instead.
+**Naming.** Skills use the short prefix `aix-` (router `aix`). The two agents keep `claude-` names. Other platform layers could sit beside this one later (`skills/aix/references/platforms.md`).
 
 ## Security and verification
 
@@ -103,11 +117,11 @@ Every change also runs CodeQL, a secret scan, the injection screen, and the full
 
 ## Troubleshooting
 
-- **A skill doesn't trigger.** Say what you want in plain words ("audit my plugin") or call `/ai-extender` directly. To check the descriptions offline: `python skills/claude-reviewer/scripts/simulate.py . triggers`.
-- **Validation fails.** Run `python skills/claude-reviewer/scripts/validate_extension.py <dir> --strict` and fix the listed codes. Each message names the file and the rule.
+- **A skill doesn't trigger.** Say what you want in plain words ("audit my plugin") or call `/aix` directly. To check the descriptions offline: `python skills/aix-reviewer/scripts/simulate.py . triggers`.
+- **Validation fails.** Run `python skills/aix-reviewer/scripts/validate_extension.py <dir> --strict` and fix the listed codes. Each message names the file and the rule.
 - **A skill upload is rejected on claude.ai.** Skill names that contain `claude` can't be uploaded alone. Upload the `.plugin` file instead.
 - **A plugin's connector shows "Not added" though you already use that service.** The plugin points at a different address than your own connector, so Claude treats them as two. Run the validator with `--known-connectors "Name=https://your-connector-url"` and use the address it reports. Claude Code skips a plugin connector only when the address matches exactly.
-- **A key or password ended up in a plugin.** Run `python skills/claude-reviewer/scripts/scan_secrets.py <plugin-folder>`, move each value it finds into the plugin's settings, and rotate the key, since anyone who received a copy still has it.
+- **A key or password ended up in a plugin.** Run `python skills/aix-reviewer/scripts/scan_secrets.py <plugin-folder>`, move each value it finds into the plugin's settings, and rotate the key, since anyone who received a copy still has it.
 
 ## Status
 

@@ -29,15 +29,15 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
-        run: python skills/claude-reviewer/scripts/selftest.py
+        run: python skills/aix-reviewer/scripts/selftest.py
       - name: Validate for the Claude plugin directory
-        run: python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+        run: python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
-        run: python skills/claude-reviewer/scripts/scan_secrets.py .
+        run: python skills/aix-reviewer/scripts/scan_secrets.py .
       - name: Screen docs for prompt injection
-        run: python skills/claude-reviewer/scripts/screen_text.py .
+        run: python skills/aix-reviewer/scripts/screen_text.py .
       - name: Simulate skill triggers
-        run: python skills/claude-reviewer/scripts/simulate.py . triggers
+        run: python skills/aix-reviewer/scripts/simulate.py . triggers
       - name: Self-test as a non-root user
         if: matrix.python == '3.13'
-        run: test "$(id -u)" != 0 && python skills/claude-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
+        run: test "$(id -u)" != 0 && python skills/aix-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
