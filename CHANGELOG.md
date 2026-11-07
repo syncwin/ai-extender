@@ -2,6 +2,29 @@
 
 Newest first.
 
+## 1.3.0: Short skill names (aix) and script-path rule
+
+**Changed**
+- Skills renamed (folders, frontmatter, every cross-reference, evals, docs). Content is otherwise unchanged:
+
+| Old name | New name |
+|---|---|
+| `ai-extender` (router skill) | `aix` |
+| `claude-planner` | `aix-planner` |
+| `claude-developer` | `aix-developer` |
+| `claude-reviewer` | `aix-reviewer` |
+| `claude-maintainer` | `aix-maintainer` |
+| `claude-packager` | `aix-packager` |
+| `prompt-builder` | `aix-prompter` |
+
+The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `claude-grader` keep their names.
+- The router slug no longer has to equal the plugin slug when it is the short prefix of the role skills (`aix` + `aix-*`); validator P009 and the install simulator accept it.
+- Skill names no longer contain `claude`, so single-skill uploads are not rejected on that rule.
+
+**Added**
+- Hard rule E9: skills that run scripts copy the needed scripts once per session into the working folder (for example `./tools/`) and run them from there; never a `/root/.claude` or `~/.claude` path in a shell command (standards 5c, router, aix-developer, aix-reviewer).
+- E10: validator `R001` (error) for a shell command naming `/root/.claude` in SKILL.md, commands, agents or hooks, and `R002` (warning) for `~/.claude`. The packager refuses to package while `R001` exists, even with `--skip-validate`. Self-tests: one failing and one passing fixture.
+
 ## 1.2.1: Research before building
 
 **Added**

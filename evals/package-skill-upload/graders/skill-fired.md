@@ -1,5 +1,5 @@
 ---
 type: tool_used
 tool: Skill
-input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(ai-extender|claude-packager)"'
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(aix|aix-packager)"'
 ---
