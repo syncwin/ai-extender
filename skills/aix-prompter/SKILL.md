@@ -69,8 +69,6 @@ Method is platform-neutral. Model-specific tips are in `references/platform-tips
 
 - ASCII only: no smart quotes, em or en dashes, arrows, check marks, bullets, or ellipsis characters. Write `-`, `"`, `->`, `[x]`, `...`. When a file is available, run `scripts/ascii_check.py <file> --fix`; it normalizes the common ones and fails on any other non-ASCII character. Without a script, check by eye.
 
-- ASCII only: no smart quotes, em or en dashes, arrows, check marks, bullets, or ellipsis characters. Write `-`, `"`, `->`, `[x]`, `...`. When a file is available, run `scripts/ascii_check.py <file> --fix`; it normalizes the common ones and fails on any other non-ASCII character. Without a script, check by eye.
-
 ## Reusable and exportable prompts
 
 For Template mode, or when the user wants the prompt in Prompt Builder: choose variables (rules in `aix/references/companion-prompt.md` section 3: type `Text`, `Textarea`, `Radio`, `Checkbox`, or `Predefined`; label, placeholder, context, `required` only for essentials), write a spec `{"title","description","content","variables"}`, then run `scripts/export_prompt.py <spec.json> --out <dir>` (it normalizes to ASCII and refuses anything left). It reuses the packager's `companion_prompt.py` schema and checker, so the file imports into Prompt Builder (Settings > Import) unchanged. Without Python, show the spec and say the export did not run.
