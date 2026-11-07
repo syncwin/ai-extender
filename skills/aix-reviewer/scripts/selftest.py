@@ -73,6 +73,17 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(S / "aix-packager/scripts/package_extension.py", q, "--format", "zip", "--skip-validate", "--out", td / "o-e10"); check("E10 packager refuses while R001 exists", r.returncode == 1 and "R001" in r.stdout, r.stdout[-300:])
     q = mk("e10-ok", {}); skm = sorted(q.glob("skills/*/SKILL.md"))[0]; skm.write_text(skm.read_text() + "\n```bash\ncp -r skills/x/scripts ./tools && python ./tools/run.py\n```\n")
     r = RUN(V, q); check("E10 passes a working-folder copy", r.returncode == 0 and "R001" not in r.stdout, r.stdout[-300:])
+    # aix-cleaner: inventory finds the duplicated paragraph; proof passes when the unique line survives and fails when it is lost
+    CL = S / "aix-cleaner/scripts"; fx = S.parent / "evals/clean-duplicate-plugin/fixture/dupe-helper"
+    r = RUN("-B", CL / "inventory.py", fx, "--out", td / "inv.json")
+    inv = json.loads((td / "inv.json").read_text()) if r.returncode == 0 else {}
+    check("cleaner inventory finds the duplicated paragraph", r.returncode == 0 and inv.get("totals", {}).get("exact_duplicate_paragraphs") == 1, r.stdout + r.stderr)
+    good = td / "cl-good"; shutil.copytree(fx, good); gf = good / "skills/filing/SKILL.md"
+    para = [l for l in gf.read_text().split("\n") if l.startswith("Invoice details captured")][0]; gf.write_text(gf.read_text().replace(para + "\n\n", ""))
+    r = RUN("-B", CL / "prove.py", fx, good); check("cleaner proof passes when the unique line survives", r.returncode == 0 and "PASS" in r.stdout, r.stdout)
+    bad = td / "cl-bad"; shutil.copytree(good, bad); bf = bad / "skills/filing/SKILL.md"; bf.write_text(bf.read_text().replace("Always ask for the invoice number before filing.\n", ""))
+    r = RUN("-B", CL / "prove.py", fx, bad); check("cleaner proof fails when a unique line is lost", r.returncode == 1 and "LOST" in r.stdout and "invoice number" in r.stdout, r.stdout)
+    r = RUN("-B", CL / "archive.py", good, "skills/filing/SKILL.md", "--archive", td / "cl-arch"); check("cleaner archive is a dry-run by default", r.returncode == 0 and gf.exists() and not (td / "cl-arch").exists(), r.stdout)
     good_wf = "export const meta = { name: 'a', description: 'b' }\nconst r = await agent('x')\nreturn r\n"
     r = RUN(V, mk("wf-ok", {"workflows/a.js": good_wf})); check("accepts valid workflow", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("wf-import", {"workflows/a.js": good_wf + "import x from 'y'\n"})); check("rejects workflow import", r.returncode == 1 and "W003" in r.stdout, r.stdout[-200:])

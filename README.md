@@ -4,7 +4,7 @@ Tell Claude what you want. Use your own words, and AI Extender turns that into a
 
 **Download:** [ai-extender.plugin](https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin) (latest release) or the [rolling next build](https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin)
 
-**Version** 1.3.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.4.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -80,6 +80,7 @@ Start with `/aix`. It reads your request and calls the right role, so most peopl
 | `ai-extender:aix-maintainer` | Updates existing extensions, versions, changelogs |
 | `ai-extender:aix-reviewer` | Validates and audits before anything ships |
 | `ai-extender:aix-packager` | Builds `.plugin` and `.zip` files, companion prompts, and marketplace entries |
+| `ai-extender:aix-cleaner` | Deep clean-up and de-duplication with a keep-unique proof; dry-run, plan approval, never deletes |
 | `ai-extender:aix-prompter` | Writes, tightens, and templates prompts for any AI model; exports Prompt Builder JSON |
 
 **Renamed in 1.3.0:**

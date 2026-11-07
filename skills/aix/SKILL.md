@@ -6,11 +6,11 @@ description: >
   team or business. Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn
   this workflow into a Claude plugin or skill", "automate our process for my team", "make Claude check every
   document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this plugin or skill", "bump the version", "package this for
-  Cowork", "write me a prompt", "tighten this prompt", "make this prompt reusable with variables", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
+  Cowork", "write me a prompt", "tighten this prompt", "make this prompt reusable with variables", "clean up my plugin", "find duplicate content in my skills", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Load first; routes only.
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 1.3.0
+  version: 1.4.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -55,6 +55,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 | Internal business solution | a process, checklist, or tool for a team or company ("for my team", "our process", "every client") |
 | Update existing | has a skill or plugin already and wants it changed or fixed |
 | Audit | wants a check before sharing or shipping |
+| Clean up | wants duplicates found, skills merged, or the extension made smaller without losing anything |
 | Convert | "turn this conversation / workflow / prompt into a skill" |
 | Prompt | wants a prompt written, tightened, or made reusable (a prompt itself, not a skill or plugin); "export this prompt to Prompt Builder" |
 
@@ -66,6 +67,7 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 | Internal business solution | as New; the planner also settles who installs it and how it reaches them (`aix-planner/references/scoping.md` §Business use) |
 | Update existing | `ai-extender:aix-maintainer` → `ai-extender:aix-reviewer` → `ai-extender:aix-packager` |
 | Audit | `ai-extender:aix-reviewer` → owning skill for each fix |
+| Clean up | `ai-extender:aix-cleaner` (plan, operator approval, then smallest diffs) → `ai-extender:aix-reviewer` → `ai-extender:aix-maintainer` for version and changelog |
 | Convert | `ai-extender:aix-planner` (extract intent) → as New |
 | Prompt | `ai-extender:aix-prompter` alone; no plan, build, or package stages. The skill finishes with the prompt (and Prompt Builder JSON on request) |
 
