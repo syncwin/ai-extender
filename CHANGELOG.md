@@ -2,6 +2,61 @@
 
 Newest first.
 
+## 1.6.0: aix-cleaner no-loss gate
+
+**Added**
+- aix-cleaner no-loss gate: mandatory check before any merge, shorten or de-dup is accepted. Script no_loss_check.py (clause coverage, mapping completeness, strength downgrades, side-by-side file, per-clause pairs for an independent semantic review), reference no-loss-gate.md, rules in SKILL.md (preserve over compress, mandatory fresh-context semantic review, report table), self-tests with a lossy and a clean fixture pair.
+
+## 1.5.0: Distribution standard
+
+**Added**
+- Reviewer warnings for the SyncWin distribution standard: S021 description over 300 chars, S022 description not trigger-first, S023 skill reading outside its own folder, H008 hook needing python or node with no fallback (S008 already covers a body over 500 lines).
+- aix-packager/scripts/build_skill_zips.py and a release-plugin.yml step that attach one <skill>.zip per skill beside ai-extender.plugin.
+- Distribution rules (standards section 7, skills.md, hooks.md, architecture.md, targets.md, directory-checklist.md) and per-skill install paths in the README.
+
+**Changed**
+- Every skill description is now trigger-first: reordered only, every original trigger phrase kept (S021 over 300 chars is advisory).
+- The plugin's own guardrail hook and the scaffolded hooks run in plain shell with a python3, python, py fallback and exit 0 when none runs.
+
+## 1.4.0: aix-cleaner
+
+**Added**
+- New skill ai-extender:aix-cleaner: deep clean-up and de-duplication of plugins and skills without losing anything unique. Script-only inventory (files, headings, normalized line hashes, exact and near-duplicate paragraphs by shingle Jaccard), overlap map, a plan where every merge or removal lists where each unique line lands (keep-unique proof), a hard stop for operator approval, smallest diffs, and a before/after proof. Dry-run by default; never deletes (archive folder); Python standard library only, Python 3.9, no bytecode.
+- Scripts `inventory.py`, `prove.py` (fails on any lost unique line) and `archive.py` (dry-run move); references `workflow.md` and `plan-template.md`.
+- Behavior test `clean-duplicate-plugin` (fixture with a duplicated paragraph and a unique line that must survive), trigger phrases, and self-tests for the three scripts.
+- Registered in the router (mode and route table) and the README skill table.
+
+## 1.3.0: Short skill names (aix) and script-path rule
+
+**Changed**
+- Skills renamed (folders, frontmatter, every cross-reference, evals, docs). Content is otherwise unchanged:
+
+| Old name | New name |
+|---|---|
+| `ai-extender` (router skill) | `aix` |
+| `claude-planner` | `aix-planner` |
+| `claude-developer` | `aix-developer` |
+| `claude-reviewer` | `aix-reviewer` |
+| `claude-maintainer` | `aix-maintainer` |
+| `claude-packager` | `aix-packager` |
+| `prompt-builder` | `aix-prompter` |
+
+The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `claude-grader` keep their names.
+- The router slug no longer has to equal the plugin slug when it is the short prefix of the role skills (`aix` + `aix-*`); validator P009 and the install simulator accept it.
+- Skill names no longer contain `claude`, so single-skill uploads are not rejected on that rule.
+
+**Added**
+- Hard rule E9: skills that run scripts copy the needed scripts once per session into the working folder (for example `./tools/`) and run them from there; never a `/root/.claude` or `~/.claude` path in a shell command (standards 5c, router, aix-developer, aix-reviewer).
+- E10: validator `R001` (error) for a shell command naming `/root/.claude` in SKILL.md, commands, agents or hooks, and `R002` (warning) for `~/.claude`. The packager refuses to package while `R001` exists, even with `--skip-validate`. Self-tests: one failing and one passing fixture.
+
+## 1.2.1: Research before building
+
+**Added**
+- GitHub Actions workflow `release-plugin.yml` builds `ai-extender.plugin` and attaches it to each v* release and keeps a rolling `next` pre-release updated on every push to the next branch (README links).
+
+**Changed**
+- Standing rule: research before building. Check current official docs and widely recommended, secure practice before choosing an approach, file, tool, config or dependency; cite the source; mark anything unverified; never guess; keep research scoped to the task.
+
 ## 1.2.0: Companion prompt in Markdown
 
 **Added**
@@ -37,6 +92,25 @@ Newest first.
 
 **Fixed**
 - Scripts no longer crash on Windows cp1252 consoles: every script reconfigures stdout and stderr to UTF-8 (the packager failed printing its scratchpad arrow).
+
+## Next branch: Marketplace and release guidance (was 1.1.0 on next)
+
+**Added**
+- Distribution routes: one repo and one marketplace per product; pick the marketplace name once (distinctive, `<company>-<plugin>`); what a rename does to existing installs; where users add a marketplace on claude.ai, desktop and mobile versus Claude Code, and why not both; uploaded `.plugin` files never update; how updates arrive and how to prove a repo with an isolated `CLAUDE_CONFIG_DIR` install.
+- Release prep: `displayName` in `plugin.json` and the marketplace entry, an `icon` (`./assets/icon.png`), and a README that lists every `/<plugin>:<skill>` command.
+- Directory route: push nothing to the default branch while a submission is in review; use a separate branch and merge after.
+- Standards: names an extension generates on users' projects (such as class prefixes) never hardcode the author's company; ask once, record, neutral default.
+
+**Fixed**
+- Packager: on Windows an unchanged package was always rebuilt, because the source and package hashes sorted files differently. Both now sort by POSIX path (selftest 117/117).
+
+**Changed**
+- Versions: set `version` in `plugin.json` only, never also in the marketplace entry (per Claude's host-marketplace docs).
+
+## Next branch: Icon and listing name (was 1.0.1 on next)
+
+- Plugin icon (`assets/icon.png`, `assets/icon.svg`), set in `plugin.json`.
+- The marketplace entry shows the display name "AI Extender for Claude".
 
 ## 1.0.0: First public release
 

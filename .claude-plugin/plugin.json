@@ -1,7 +1,7 @@
 {
   "name": "ai-extender",
   "displayName": "AI Extender for Claude",
-  "version": "1.2.0",
+  "version": "1.6.0",
   "description": "Describe what you want Claude to do, in your own words. AI Extender plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
   "author": {
     "name": "@wasimness",
@@ -31,12 +31,13 @@
   ],
   "metadata": {
     "displayName": "AI Extender for Claude",
-    "version": "1.2.0",
+    "version": "1.6.0",
     "author": "@wasimness",
     "company": "SyncWin",
     "homepage": "https://github.com/syncwin/ai-extender",
     "repository": "https://github.com/syncwin/ai-extender",
     "license": "MIT",
     "companionPrompt": "prompts/ai-extender-for-claude.json"
-  }
+  },
+  "icon": "./assets/icon.png"
 }

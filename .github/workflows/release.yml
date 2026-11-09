@@ -35,7 +35,7 @@ jobs:
         with:
           ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Check the tag matches the plugin version
@@ -44,14 +44,14 @@ jobs:
           test "$TAG" = "v$v" || { echo "tag $TAG does not match plugin version $v"; exit 1; }
       - name: Run every check
         run: |
-          python skills/claude-reviewer/scripts/selftest.py
-          python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
-          python skills/claude-reviewer/scripts/scan_secrets.py .
-          python skills/claude-reviewer/scripts/screen_text.py .
+          python skills/aix-reviewer/scripts/selftest.py
+          python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+          python skills/aix-reviewer/scripts/scan_secrets.py .
+          python skills/aix-reviewer/scripts/screen_text.py .
       - name: Build the package
         id: build
         run: |
-          python skills/claude-packager/scripts/package_extension.py . --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
+          python skills/aix-packager/scripts/package_extension.py . --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
           cd dist
           orig=$(ls -- *.plugin | head -1)
           asset="${orig// /.}"

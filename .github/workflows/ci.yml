@@ -12,6 +12,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
   checks:
     name: Checks (Python ${{ matrix.python }})
@@ -25,19 +28,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
-        run: python skills/claude-reviewer/scripts/selftest.py
+        run: python skills/aix-reviewer/scripts/selftest.py
       - name: Validate for the Claude plugin directory
-        run: python skills/claude-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+        run: python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
-        run: python skills/claude-reviewer/scripts/scan_secrets.py .
+        run: python skills/aix-reviewer/scripts/scan_secrets.py .
       - name: Screen docs for prompt injection
-        run: python skills/claude-reviewer/scripts/screen_text.py .
+        run: python skills/aix-reviewer/scripts/screen_text.py .
       - name: Simulate skill triggers
-        run: python skills/claude-reviewer/scripts/simulate.py . triggers
+        run: python skills/aix-reviewer/scripts/simulate.py . triggers
       - name: Self-test as a non-root user
         if: matrix.python == '3.13'
-        run: test "$(id -u)" != 0 && python skills/claude-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
+        run: test "$(id -u)" != 0 && python skills/aix-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"

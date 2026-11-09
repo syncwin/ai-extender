@@ -1,0 +1,3 @@
+- You should run the validator before every release.
+- Keep files under 500 lines, e.g. SKILL.md.
+- A hook blocks edits to .env.
