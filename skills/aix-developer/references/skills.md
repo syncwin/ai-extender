@@ -9,7 +9,7 @@ Keep to the **portable set** so the skill works in Claude Code, claude.ai upload
 | Field | Rule |
 |---|---|
 | `name` | role slug, kebab-case, ≤64, equals folder; platform prefixes per standards §1 |
-| `description` | trigger first ("Use when...", real phrases users type), then what; ≤300 chars recommended (`S021`, `S022`); combined with `when_to_use` it is cut at 1,536 chars; ≤1,024 for API |
+| `description` | trigger first ("Use when...", real phrases users type) with the key use case in that first sentence, then what + when + trigger phrases; ≤300 chars recommended (`S021`, `S022`); combined with `when_to_use` it is cut at 1,536 chars; ≤1,024 for API |
 | `metadata` | `author`, `company`, `version` (free-form map) |
 | `license` | SPDX |
 
