@@ -4,7 +4,7 @@ Tell Claude what you want. Use your own words, and AI Extender turns that into a
 
 **Download:** [ai-extender.plugin](https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin) (latest release) or the [rolling next build](https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin)
 
-**Version** 1.5.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.6.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
