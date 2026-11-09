@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"
-  version: 1.4.0
+  version: 1.6.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender

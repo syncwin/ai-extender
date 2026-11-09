@@ -84,6 +84,10 @@ with tempfile.TemporaryDirectory() as td:
     bad = td / "cl-bad"; shutil.copytree(good, bad); bf = bad / "skills/filing/SKILL.md"; bf.write_text(bf.read_text().replace("Always ask for the invoice number before filing.\n", ""))
     r = RUN("-B", CL / "prove.py", fx, bad); check("cleaner proof fails when a unique line is lost", r.returncode == 1 and "LOST" in r.stdout and "invoice number" in r.stdout, r.stdout)
     r = RUN("-B", CL / "archive.py", good, "skills/filing/SKILL.md", "--archive", td / "cl-arch"); check("cleaner archive is a dry-run by default", r.returncode == 0 and gf.exists() and not (td / "cl-arch").exists(), r.stdout)
+    # aix-cleaner no-loss gate: lossy fixture (dropped clause, must->should) exits 1; identical text exits 0
+    NL = CL / "no_loss_check.py"; nf = CL / "fixtures"
+    r = RUN("-B", NL, "--old", nf / "old.md", "--new", nf / "new_lossy.md"); check("no-loss gate fails dropped clause and must->should", r.returncode == 1 and "CLAUSE FLAG" in r.stdout and "DOWNGRADE" in r.stdout, r.stdout)
+    r = RUN("-B", NL, "--old", nf / "old.md", "--new", nf / "new_clean.md"); check("no-loss gate passes a clean pair", r.returncode == 0, r.stdout)
     good_wf = "export const meta = { name: 'a', description: 'b' }\nconst r = await agent('x')\nreturn r\n"
     r = RUN(V, mk("wf-ok", {"workflows/a.js": good_wf})); check("accepts valid workflow", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("wf-import", {"workflows/a.js": good_wf + "import x from 'y'\n"})); check("rejects workflow import", r.returncode == 1 and "W003" in r.stdout, r.stdout[-200:])

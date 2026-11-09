@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 1.6.0: aix-cleaner no-loss gate
+
+**Added**
+- aix-cleaner no-loss gate: mandatory check before any merge, shorten or de-dup is accepted. Script no_loss_check.py (clause coverage, mapping completeness, strength downgrades, side-by-side file, per-clause pairs for an independent semantic review), reference no-loss-gate.md, rules in SKILL.md (preserve over compress, mandatory fresh-context semantic review, report table), self-tests with a lossy and a clean fixture pair.
+
 ## 1.4.0: aix-cleaner
 
 **Added**
