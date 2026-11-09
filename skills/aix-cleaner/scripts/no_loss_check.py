@@ -35,7 +35,10 @@ def items(old):
     ids = re.findall(r"^\s*#+\s+(.+?)\s*$", old, re.M) + re.findall(r"^\s*-?\s*(?:name|id):\s*(\S.*?)\s*$", old, re.M)
     return [i.strip("`'\" ") for i in ids]
 
+XREF = re.compile(r"(?im)^\s*\d+[.)]\s+|(?<!\w)(?:rules?|steps?|sections?|items?|checks?|#)\s*\d+(?:\s*(?:,|and|&|-|to)\s*\d+)*")
+
 def tokens(text):
+    text = XREF.sub(' ', text)
     nums = set(re.findall(r"\b\d+(?:[.,:]\d+)*%?", text))
     named = set(re.findall(r"https?://\S+|`[^`\n]+`|(?:[\w.-]+[/\x5c])+[\w.-]*|\b[\w-]+\.(?:py|md|json|js|sh|yml|yaml|txt)\b", text))
     return nums, {n.strip("`.,);") for n in named}
@@ -56,7 +59,7 @@ def main():
         if not w: continue
         miss = sorted({x for x in w if x not in nwords})
         if len(miss) / len(w) > a.threshold:
-            problems.append(f"CLAUSE FLAG ({len(miss)}/{len(w)} words missing: {', '.join(miss)})\n    old: {c}\n    closest new: {best_match(c, nc)}\n    -> quote the new sentence that carries it, or restore the wording")
+            problems.append(f"{'TITLE (merged heading) ' if re.match(r'[*_]{2}[^*_]+[*_]{2}', c.strip()) else ''}CLAUSE FLAG ({len(miss)}/{len(w)} words missing: {', '.join(miss)})\n    old: {c}\n    closest new: {best_match(c, nc)}\n    -> quote the new sentence that carries it, or restore the wording")
 
     # 2. mapping completeness
     its = items(old)
@@ -74,7 +77,9 @@ def main():
     low_o, low_n = old.lower(), new.lower()
     cnt = lambda t, w: len(re.findall(rf"\b{w}\b", t))
     for w in STRONG:
-        if cnt(low_n, w) < cnt(low_o, w): problems.append(f"DOWNGRADE: '{w}' {cnt(low_o, w)} -> {cnt(low_n, w)}")
+        if cnt(low_n, w) < cnt(low_o, w):
+            lost = [c for c in oc if cnt(c.lower(), w) and not cnt(best_match(c, nc).lower(), w)]
+            problems.append(f"DOWNGRADE: '{w}' {cnt(low_o, w)} -> {cnt(low_n, w)}" + "".join(f"\n    lost in old clause: {c}" for c in lost) + ("" if lost else "\n    (no single clause isolated: word dropped inside a merged clause, check manually)"))
     for w in WEAK:
         if cnt(low_n, w) > cnt(low_o, w): problems.append(f"DOWNGRADE?: weaker word '{w}' {cnt(low_o, w)} -> {cnt(low_n, w)} (must->should, hook->guidance?)")
     for w in ("MUST", "NEVER", "ALWAYS"):
