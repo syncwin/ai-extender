@@ -1,7 +1,7 @@
 ---
 name: aix-prompter
 description: >
-  Use for "write me a prompt", "tighten this prompt", "make this prompt reusable with variables", "system prompt", "export to Prompt Builder". Crafts and templates prompts for any model, checks them against a checklist. Not for building plugins or skills, not for answering the prompt's task.
+  Use for "write me a prompt for...", "turn this into a prompt", "make this prompt tighter", "clean up this prompt", "convert into a fluff-free, non-redundant Markdown prompt", "make this prompt reusable with variables", "prompt template", "system prompt", "improve my prompt", "export this prompt to Prompt Builder". Crafts, tightens, and templates prompts for any AI model or chatbot. Turns a rough instruction into a clear, fluff-free Markdown prompt (with XML tags where they help and {{variables}} for reusable fields), checks it against a validation checklist, and can export it as ready-to-import Prompt Builder JSON. Not for building plugins or skills (use aix) and not for answering the task the prompt describes.
 license: MIT
 metadata:
   displayName: "AI Extender Prompt Builder"

@@ -1,7 +1,7 @@
 ---
 name: aix
 description: >
-  Use whenever someone wants to build, update, audit, version, package or review a Claude plugin, skill, connector, agent, hook, MCP server, add-on or prompt, incl. internal team tools. Also /skill-creator, /create-cowork-plugin. Entry point; routes only.
+  Use whenever someone wants to build, update, audit, version, or package a Claude plugin, skill, connector, agent, hook, MCP server, or add-on, including internal tools for a team or business. Triggers: "build me a plugin", "make me a skill", "add a connector", "create an agent", "turn this workflow into a Claude plugin or skill", "automate our process for my team", "make Claude check every document against our rules", "update my plugin", "audit my extension", "audit this plugin folder", "what's wrong with this plugin or skill", "bump the version", "package this for Cowork", "write me a prompt", "tighten this prompt", "make this prompt reusable with variables", "clean up my plugin", "find duplicate content in my skills", and mentions of /skill-creator, /create-cowork-plugin, /cowork-plugin-customizer. Entry point and router for AI Extender for Claude. Load first; routes only.
 license: MIT
 metadata:
   displayName: "AI Extender for Claude"

@@ -1,7 +1,7 @@
 ---
 name: aix-maintainer
 description: >
-  Use when updating an existing Claude plugin, skill, connector, agent, hook or MCP server: fix, extend, refactor, split or merge, shrink token use, migrate, "bump the version", "add a changelog entry", "customize this Cowork plugin". Governs semver and the changelog.
+  Use for "update my agent so it only reads files", "update my skill", "split or merge my skills", "fix this plugin", "clean up", "this failed in production", "bump the version", "add a changelog entry", "migrate", or "customize this Cowork plugin". Updates existing Claude extensions and governs their versions: fix, extend, or refactor a plugin, skill, connector, agent, hook, or MCP server you already have; de-duplicate and shrink token use; bump semver; keep the changelog.
 license: MIT
 metadata:
   displayName: "AI Extender Maintainer"

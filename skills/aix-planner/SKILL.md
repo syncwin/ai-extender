@@ -1,7 +1,7 @@
 ---
 name: aix-planner
 description: >
-  Use for any new plugin, skill, connector, agent, MCP server, add-on, internal team tool or structural decision, after the router: "turn this workflow into a plugin", "what components do I need". Scopes the request, then designs tree, skill boundaries, plugin.json, router rule.
+  Use, after the router, for any new plugin, skill, connector, agent, MCP server, or add-on; for internal tools for a team or business process; for "turn this workflow into a Claude plugin", "turn this conversation into a plugin or skill"; "what components does my extension need"; and any structural decision. Plans a Claude extension before anything is built: scopes the request (intent, platform target, components, install method, naming, acronym) and designs the structure (directory tree, skill boundaries, plugin.json, router rule).
 license: MIT
 metadata:
   displayName: "AI Extender Planner"

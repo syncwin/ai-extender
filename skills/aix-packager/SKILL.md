@@ -1,7 +1,7 @@
 ---
 name: aix-packager
 description: >
-  Use when a validated Claude extension is ready to ship, install, share or hand over: "make a .plugin for Cowork", "package this as a zip for upload", "push this to GitHub", "prepare a private marketplace". Builds correctly named, versioned download files.
+  Use when an extension is ready to ship, install, share, or hand over: "package my extension as a zip for upload", "make a .plugin for Cowork", "push this to GitHub", "prepare a private marketplace". Packages and delivers a validated Claude extension: Cowork .plugin files, single-skill .zip uploads, plugin folders, and private git marketplaces, with correctly named, versioned download files.
 license: MIT
 metadata:
   displayName: "AI Extender Packager"

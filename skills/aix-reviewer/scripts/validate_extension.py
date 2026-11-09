@@ -128,8 +128,8 @@ def check_skill(sdir, opts, plugin_files):
         if len(d) > 1024: add("error" if opts["target"] == "upload" else "warn", "S005", sm, f"description {len(d)} chars (>1024 API limit)")
         if len(d) + len(fm.get("when_to_use", "")) > 1536: add("warn", "S005", sm, "description+when_to_use >1536 chars: truncated in listing")
         if not re.search(r"\b(use|when|whenever|trigger)", d, re.I): add("warn", "S005", sm, "description lacks a 'when to use' cue")
-        if len(d) > 300: add("warn", "S021", sm, f"description {len(d)} chars (>300 recommended): the listing drops long descriptions first; lead with the trigger and move detail into the body")
-        if not re.search(r"\buse (when|for|whenever)\b", d[:120], re.I): add("warn", "S022", sm, "description should lead with the trigger: put 'Use when...' (or 'Use for...', 'Use whenever...') in the first 120 chars")
+        if len(d) > 300: add("info", "S021", sm, f"description {len(d)} chars (>300): consider shortening if the listing drops it; trigger phrases make a skill fire, so keep them and move other detail into the body")
+        if not re.search(r"\buse\b[^.]{0,25}\b(when|for|whenever)\b", d[:120], re.I): add("warn", "S022", sm, "description should lead with the trigger: put 'Use when...' (or 'Use for...', 'Use whenever...') in the first 120 chars")
     extra = set(fm) - UPLOAD_KEYS
     if extra:
         sev = "error" if opts["target"] == "upload" else "info"

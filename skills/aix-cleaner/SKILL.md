@@ -1,7 +1,7 @@
 ---
 name: aix-cleaner
 description: >
-  Use for "clean up my plugin", "find duplicate content across my skills", "merge overlapping skills" or "shrink my plugin". Script-only inventory, overlap map, merge plan with a keep-unique proof, approval stop, smallest diffs. Dry-run by default; never deletes.
+  Use for "clean up my plugin", "find duplicate content across my skills", "merge overlapping skills", "shrink my plugin without losing anything", "de-duplicate my skills", "deep clean this extension", or "what overlaps in my plugin". Deep clean-up and de-duplication of Claude plugins and skills without losing anything unique: script-only inventory, overlap map, a merge plan with a keep-unique proof, a hard stop for approval, then the smallest diffs and a before/after proof. Dry-run by default; never deletes (moves to an archive folder).
 license: MIT
 metadata:
   displayName: "AI Extender Cleaner"
