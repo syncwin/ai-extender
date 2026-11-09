@@ -1,6 +1,6 @@
 # Standards
 
-Apply to this plugin and everything it creates, except items marked *(this plugin)*. Contents: 1 Names, 5 Shared foundation (5a efficiency, 5b lean build, 5c security, 5d enforcement).
+Apply to this plugin and everything it creates, except items marked *(this plugin)*. Contents: 1 Names, 5 Shared foundation (5a efficiency, 5b lean build, 5c security, 5d enforcement), 7 Distribution.
 
 ## 1. Names
 
@@ -99,3 +99,10 @@ An extension uses the capabilities its work needs because the structure requires
 *(this plugin)* Repo: `syncwin/ai-extender`; issues on GitHub, security reports to `support@syncwin.com`. Connector: Composio (`.mcp.json`, shared address), used for GitHub and for outside apps a build needs; no skill requires it.
 
 For any extension: `.gitignore`, `CHANGELOG.md`, and semver are always maintained. Push, tag, and orphan cleanup run only when the user asks for GitHub or the extension already lives in a repo they want kept in sync, and only through tools present in the session, with the owner and repo the user names. Confirm before the first push to a repo. Procedure: `aix-packager/references/github.md`.
+
+## 7. Distribution (SyncWin standard 2026-11-09; every plugin built or reviewed here)
+
+- **One repo, both formats.** `.claude-plugin/marketplace.json` + plugin for whole-plugin install, and every skill self-contained under `skills/<name>/` so it also ships as its own zip. Release CI attaches `<plugin>.plugin` and one `<skill>.zip` per skill (`aix-packager/scripts/build_skill_zips.py`, `.github/workflows/release-plugin.yml`). Big plugins: small core plus optional add-on plugins in the same marketplace.json.
+- **Install paths (document all in the README):** claude.ai / Cowork / desktop: add the GitHub repo as a marketplace (Customize > Plugins), or upload `<skill>.zip` from the Release (Customize > Skills). Claude Code: `/plugin marketplace add owner/repo` then `/plugin install`, or `npx skills add owner/repo --skill <name>`.
+- **Skills get used:** description trigger-first and <=300 chars (`S021`, `S022`); body <500 lines with the non-negotiable rules in the first ~30 lines (`S008`); <=10 must-rules; no `../` outside the skill folder (`S023`); always-on behaviour goes in a short core block in always-loaded text (profile preferences, project instructions, CLAUDE.md/AGENTS.md), the skill holds the detail.
+- **No required runtime:** hooks work in plain shell, Python/Node only for optional extras that skip silently (`H008`); each skill that runs a script says what Claude does when it cannot run (`aix-developer/references/skills.md`).

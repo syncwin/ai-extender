@@ -120,8 +120,8 @@ def main(argv):
         for fn in ("screen_text.py", "injection_model.json"): (g / fn).write_bytes((src / fn).read_bytes())
         names = ["composio"] if a["composio"] else []
         scope = "|".join(f"mcp__.*[{n[0].upper()}{n[0]}]{re.escape(n[1:])}.*" for n in names) or "mcp__.*"  # no named connector yet: every MCP tool, until one is added
-        hooks["PostToolUse"] = [{"matcher": f"WebFetch|WebSearch|{scope}", "hooks": [{"type": "command", "timeout": 15, "command": "python3",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py", "--hook"]}]}]
+        hooks["PostToolUse"] = [{"matcher": f"WebFetch|WebSearch|{scope}", "hooks": [{"type": "command", "timeout": 15, "command":
+            'for c in python3 python py; do "$c" -c "" >/dev/null 2>&1 && exec "$c" "${CLAUDE_PLUGIN_ROOT}/scripts/guardrail/screen_text.py" --hook; done; exit 0'}]}]
     if a["hooks"] or hooks: (root / "hooks").mkdir(); (root / "hooks" / "hooks.json").write_text(json.dumps({"hooks": hooks}, indent=2) + "\n")
     servers = {"composio": {"type": "http", "url": COMPOSIO_URL}} if a["composio"] else {}
     if a["connectors"] or servers: (root / ".mcp.json").write_text(json.dumps({"mcpServers": servers}, indent=2) + "\n")

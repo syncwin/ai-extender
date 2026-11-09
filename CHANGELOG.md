@@ -7,6 +7,17 @@ Newest first.
 **Added**
 - aix-cleaner no-loss gate: mandatory check before any merge, shorten or de-dup is accepted. Script no_loss_check.py (clause coverage, mapping completeness, strength downgrades, side-by-side file, per-clause pairs for an independent semantic review), reference no-loss-gate.md, rules in SKILL.md (preserve over compress, mandatory fresh-context semantic review, report table), self-tests with a lossy and a clean fixture pair.
 
+## 1.5.0: Distribution standard
+
+**Added**
+- Reviewer warnings for the SyncWin distribution standard: S021 description over 300 chars, S022 description not trigger-first, S023 skill reading outside its own folder, H008 hook needing python or node with no fallback (S008 already covers a body over 500 lines).
+- aix-packager/scripts/build_skill_zips.py and a release-plugin.yml step that attach one <skill>.zip per skill beside ai-extender.plugin.
+- Distribution rules (standards section 7, skills.md, hooks.md, architecture.md, targets.md, directory-checklist.md) and per-skill install paths in the README.
+
+**Changed**
+- Every skill description is now trigger-first: reordered only, every original trigger phrase kept (S021 over 300 chars is advisory).
+- The plugin's own guardrail hook and the scaffolded hooks run in plain shell with a python3, python, py fallback and exit 0 when none runs.
+
 ## 1.4.0: aix-cleaner
 
 **Added**

@@ -4,7 +4,7 @@
 Builds a fixture plugin with the scaffolder, checks the validator passes it, breaks it in known ways and
 checks each break is caught, packages it in both formats, and exercises the eval aggregator and report.
 """
-import json, os, shutil, subprocess, sys, tempfile, zipfile
+import json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 S = Path(__file__).resolve().parents[2]
@@ -295,7 +295,7 @@ with tempfile.TemporaryDirectory() as td:
     import re as _re
     own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
     hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_ai-extender_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
-    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "aix-reviewer/scripts/screen_text.py").exists() and own["hooks"][0]["command"] == "python3" and own["hooks"][0]["args"][0].endswith("/screen_text.py"), str(hits))
+    check("AI Extender's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "aix-reviewer/scripts/screen_text.py").exists() and "exit 0" in own["hooks"][0]["command"] and "/screen_text.py" in own["hooks"][0]["command"], str(hits))
     q = td / "sync-escape"; shutil.copytree(p, q); (q / ".claude-plugin/shared-files.json").write_text(json.dumps({"files": {"../../outside.md": ["skills/*/references/x.md"], "README.md": ["../escaped.md"]}}))
     r = RUN(S / "aix-maintainer/scripts/sync_shared.py", q); check("sync_shared refuses paths outside the plugin", r.returncode == 1 and r.stdout.count("outside-plugin") >= 2 and not (td / "escaped.md").exists(), r.stdout[-300:])
     r = RUN(S / "aix-developer/scripts/scaffold_extension.py", td / "bad", "--slug", "ok-slug", "--display", "OK", "--roles", "../evil"); check("scaffold rejects role names that leave the folder", r.returncode == 2 and not (td / "evil").exists(), r.stdout[-200:])
@@ -322,7 +322,32 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin reads nothing from the environment (D014)", "D014" not in r.stdout, r.stdout[-400:])
     gh = json.loads((p / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]["hooks"][0] if (p / "hooks/hooks.json").exists() else {}
-    check("scaffolded guardrail hook uses exec form the directory can read", not gh or (gh.get("command") == "python3" and gh.get("args", [""])[0].startswith("${CLAUDE_PLUGIN_ROOT}/")), str(gh))
+    check("scaffolded guardrail hook runs without a required runtime (H008)", not gh or ("exit 0" in gh.get("command", "") and "${CLAUDE_PLUGIN_ROOT}/" in gh.get("command", "")), str(gh))
+    # distribution standard: S021, S022, S008 body size, H008, S023, per-skill zips
+    def warns(label, code, mutate, present=True):
+        q = td / ("w-" + label); shutil.copytree(p, q); mutate(q)
+        r = RUN(V, q); check(f"{'warns on' if present else 'quiet on'} {label} ({code})", (code in r.stdout) == present and r.returncode == 0, r.stdout[-300:])
+    warns("clean fixture has no length warning", "S021", lambda q: None, False)
+    warns("clean fixture is trigger-first", "S022", lambda q: None, False)
+    def setdesc(q, text):
+        s = sk(q); s.write_text(re.sub(r"description:.*?(?=\n[a-z-]+:)", "description: " + text, s.read_text(), count=1, flags=re.S))
+    warns("description over 300 chars", "S021", lambda q: setdesc(q, "Use when testing. " + "x" * 300))
+    warns("description not trigger-first", "S022", lambda q: setdesc(q, "Formats things nicely and thoroughly for every user. Triggered when needed."))
+    warns("skill body over 500 lines", "S008", lambda q: sk(q).write_text(sk(q).read_text() + "\nline\n" * 520))
+    def hook(q, cmd, args=None):
+        h = {"type": "command", "command": cmd}
+        if args: h["args"] = args
+        (q / "hooks").mkdir(exist_ok=True); (q / "hooks/hooks.json").write_text(json.dumps({"hooks": {"Stop": [{"hooks": [h]}]}}))
+    warns("hook calling python3 with no fallback", "H008", lambda q: hook(q, "python3", ["${CLAUDE_PLUGIN_ROOT}/x.py"]))
+    warns("hook calling node in shell form with no fallback", "H008", lambda q: hook(q, 'node "${CLAUDE_PLUGIN_ROOT}/x.js"'))
+    warns("hook with a python fallback that exits 0", "H008", lambda q: hook(q, 'for c in python3 python py; do "$c" -c "" >/dev/null 2>&1 && exec "$c" "${CLAUDE_PLUGIN_ROOT}/x.py"; done; exit 0'), False)
+    warns("plain shell hook", "H008", lambda q: hook(q, 'echo done'), False)
+    warns("skill reference outside its folder", "S023", lambda q: sk(q).write_text(sk(q).read_text() + "\nSee `../other-skill/references/x.md`.\n"))
+    warns("a reference back into its own folder", "S023", lambda q: ((q / "skills/ab-developer/references").mkdir(exist_ok=True), (q / "skills/ab-developer/references/y.md").write_text("Back to [skill](../SKILL.md).\n")), False)
+    r = RUN(S / "aix-packager/scripts/build_skill_zips.py", p, "--out", td / "sz")
+    zs = sorted((td / "sz").glob("*.zip"))
+    names = lambda z: zipfile.ZipFile(z).namelist()
+    check("build_skill_zips makes one standalone zip per skill", r.returncode == 0 and len(zs) == len(list((p / "skills").iterdir())) and all((z.stem + "/SKILL.md") in names(z) and all(n.startswith(z.stem + "/") for n in names(z)) for z in zs), r.stdout + r.stderr)
     D = ("--target", "directory", "--strict")
     broken("connector reading an environment variable", "D014", lambda q: (q / ".mcp.json").write_text('{"mcpServers":{"x":{"type":"http","url":"https://api.example.com/mcp","headers":{"X-Region":"${REGION}"}}}}'), D)
     broken("script reading the environment", "D014", lambda q: (q / "skills/ab-developer/run.py").write_text("import os\nlevel = os.environ.get('LOG_LEVEL')\n"), D)

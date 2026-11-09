@@ -43,6 +43,8 @@ claude plugin install ai-extender@syncwin
 
 **Cowork or claude.ai**: download the `.plugin` file from the [latest release](https://github.com/syncwin/ai-extender/releases/latest) and upload it as a custom plugin. Once the plugin is listed in Anthropic's directory, you can add it from there instead.
 
+**One skill only**: every skill is self-contained and attached to each release as `<skill>.zip` (for example `aix-reviewer.zip`). On claude.ai, Cowork or desktop, upload it under Customize > Skills. In Claude Code, run `npx skills add syncwin/ai-extender --skill aix-reviewer`. Whole plugin on claude.ai, Cowork or desktop: Customize > Plugins > add the GitHub repo as a marketplace.
+
 ## Companion prompt
 
 Every extension AI Extender builds comes with a companion prompt: a JSON file for [Prompt Builder](https://promptbuilder.syncwin.com/), a Chrome extension that keeps prompts as fill-in forms and inserts them into Claude. Import it under Settings > Import ([help](https://promptbuilder.eniston.com/)). Fill in the form, and the prompt starts the right skill with everything it needs. The source file lives in the extension's `prompts/` folder; packaging delivers it as a separate file next to the package and never puts it inside the package, because it belongs to Prompt Builder, not to Claude.

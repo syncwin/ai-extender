@@ -12,6 +12,8 @@ Target choice and the review step come first (packager SKILL.md steps 1 and 2).
 
 Routes, release prep, directory, organization rollout: `distribution-routes.md`.
 
+**Per-skill zips.** One repo serves both formats: `python ${CLAUDE_SKILL_DIR}/scripts/build_skill_zips.py <dir> --out dist` writes `dist/<skill>.zip` (folder as top-level entry) for every `skills/<name>`, for claude.ai Customize > Skills upload and `npx skills add owner/repo --skill <name>`. Release CI attaches these beside the `.plugin`. A skill that fails `S023` (reads outside its folder) cannot ship alone: fix before release.
+
 claude.ai and Cowork "Upload plugin" takes a zip of the plugin folder (≤200 MB, ≤5,000 files); the `.plugin` file is built the same way (zip, plugin root as archive root).
 
 ## Build
