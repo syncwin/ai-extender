@@ -88,7 +88,7 @@ with tempfile.TemporaryDirectory() as td:
     NL = CL / "no_loss_check.py"; nf = CL / "fixtures"
     r = RUN("-B", NL, "--old", nf / "old.md", "--new", nf / "new_lossy.md"); check("no-loss gate fails dropped clause and must->should", r.returncode == 1 and "CLAUSE FLAG" in r.stdout and "DOWNGRADE" in r.stdout, r.stdout)
     r = RUN("-B", NL, "--old", nf / "old.md", "--new", nf / "new_clean.md"); check("no-loss gate passes a clean pair", r.returncode == 0, r.stdout)
-    r = RUN("-B", NL, "--old", nf / "rules_old.md", "--new", nf / "rules_new.md"); check("no-loss gate has no list-number or rule-reference false positives", "number/threshold" not in r.stdout and "TITLE (merged heading)" in r.stdout, r.stdout[-400:])
+    r = RUN("-B", NL, "--old", S.parent / "evals/no-loss-rules/rules_old.md", "--new", S.parent / "evals/no-loss-rules/rules_new.md"); check("no-loss gate has no list-number or rule-reference false positives", "number/threshold" not in r.stdout and "TITLE (merged heading)" in r.stdout, r.stdout[-400:])
     good_wf = "export const meta = { name: 'a', description: 'b' }\nconst r = await agent('x')\nreturn r\n"
     r = RUN(V, mk("wf-ok", {"workflows/a.js": good_wf})); check("accepts valid workflow", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("wf-import", {"workflows/a.js": good_wf + "import x from 'y'\n"})); check("rejects workflow import", r.returncode == 1 and "W003" in r.stdout, r.stdout[-200:])
