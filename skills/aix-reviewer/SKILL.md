@@ -1,16 +1,11 @@
 ---
 name: aix-reviewer
 description: >
-  Quality gate and auditor for Claude extensions. Validates structure, frontmatter, naming, trigger quality,
-  metadata, security, and licensing before anything ships, and audits existing plugins, skills, connectors, agents, and
-  hooks by problem type. Use for any audit or review of a plugin, skill, or agent folder, even a small one, and load
-  it before reading the files: "audit my plugin before I ship it", "audit the notes plugin folder and tell me what's
-  wrong", "review this skill", "check my extension", "validate", "is this ready to release", "simulate triggers",
-  or before any packaging step.
+  Use for any audit or review of a Claude plugin, skill or agent folder, even a small one, before reading its files: "audit my plugin", "review this skill", "validate", "is this ready to release", "simulate triggers"; also before any packaging step. Validates structure, triggers, security, licensing.
 license: MIT
 metadata:
   displayName: "AI Extender Reviewer"
-  version: 1.4.0
+  version: 1.5.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -21,9 +16,9 @@ metadata:
 ## Run
 
 1. `python ${CLAUDE_SKILL_DIR}/scripts/validate_extension.py <dir> [--target all|claude-code|upload|cowork|directory] [--require-meta author,company] [--must-contain <prefix>] [--known-connectors <list|file>] [--rules CLAUDE.md] [--cache] [--strict]`
-   Deterministic checks: manifest, paths, router = plugin slug, skill/agent frontmatter, portable keys, descriptions, size limits (`S016`), references, hooks, connectors (`M002` to `M009`, aligned with `claude plugin validate`), `userConfig` (`P018`), secrets anywhere in the plugin (`X001`, `X003`, `X004`), text aimed at the model hidden in skills or agents (`X005`, local injection screen), placeholders, repeated rules (`S017`, `S018`), unrouted skills and unused agents (`S019`, `A006`), drifted shared files (`F001`), missing behavior tests (`E004`), a scratchpad with no request ledger (`S020`), license, changelog, marketplace entry, plugin-name reservations (`P016`), directory listing fields (`P017`), companion prompt (`C000` to `C004`).
+   Deterministic checks: manifest, paths, router = plugin slug, skill/agent frontmatter, portable keys, descriptions, size limits (`S016`), distribution rules (`S008`, `S021` to `S023`, `H008`), references, hooks, connectors (`M002` to `M009`, aligned with `claude plugin validate`), `userConfig` (`P018`), secrets anywhere in the plugin (`X001`, `X003`, `X004`), text aimed at the model hidden in skills or agents (`X005`, local injection screen), placeholders, repeated rules (`S017`, `S018`), unrouted skills and unused agents (`S019`, `A006`), drifted shared files (`F001`), missing behavior tests (`E004`), a scratchpad with no request ledger (`S020`), license, changelog, marketplace entry, plugin-name reservations (`P016`), directory listing fields (`P017`), companion prompt (`C000` to `C004`).
    Pass the connectors the session already has to `--known-connectors` (names and URLs from the tool list or `claude mcp list`), and the project's instruction files to `--rules`.
-2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (113 checks).
+2. Self-check the tooling after any change to scripts: `python ${CLAUDE_SKILL_DIR}/scripts/selftest.py` (151 checks).
 3. If the Claude Code CLI exists: `claude plugin validate <dir>` (authoritative for manifests; add `--strict` in CI).
 4. Judgment checks the script can't make (below).
 5. Reuse results for files unchanged since the last run (`--cache`).

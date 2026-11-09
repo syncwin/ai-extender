@@ -1,14 +1,11 @@
 ---
 name: aix-developer
 description: >
-  Builds the components of a Claude extension: skills, connectors (MCP config), agents, hooks, commands, MCP servers,
-  LSP servers, output styles, and add-ons. Use for "make me a skill that formats commit messages", "build the planned skill",
-  "add a connector for Notion to this plugin", "make an agent", "write a hook that blocks edits to .env", "build an MCP server",
-  "hook this up to X", "extend this plugin", or "test this skill". Drafts SKILL.md, .mcp.json, agent files, and evals.
+  Use when building the components of a Claude extension: a skill, connector (MCP config), agent, hook, command, MCP server, LSP server, output style or add-on; "make me a skill", "add a connector", "write a hook", "build an MCP server", "test this skill". Drafts SKILL.md, .mcp.json, agents, evals.
 license: MIT
 metadata:
   displayName: "AI Extender Developer"
-  version: 1.4.0
+  version: 1.5.0
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
@@ -32,7 +29,7 @@ Build only what the plan confirmed. No approved plan in context: hand to `ai-ext
 | Local MCP bundle (`.mcpb`) | `references/mcpb-bundles.md` |
 | Skills outside plugins (`.claude/skills`, claude.ai, API) and their limits | `references/upload-and-api.md` |
 | Testing and description tuning | `references/testing.md` (`scripts/aggregate_results.py`; agents `ai-extender:claude-grader`, `ai-extender:claude-comparator`) |
-| Companion prompt (Prompt Builder JSON) | `aix/references/companion-prompt.md`; `../aix-packager/scripts/companion_prompt.py --help` |
+| Companion prompt (Prompt Builder JSON) | `aix/references/companion-prompt.md`; the `aix-packager` skill script `companion_prompt.py --help` |
 | New project skeleton | `scripts/scaffold_extension.py --help` (also writes a default companion prompt) |
 | MCP server skeleton (Node/Python) | `scripts/scaffold_mcp_server.py --help` |
 | Eval review page | `scripts/eval_report.py --help` |

@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 1.5.0: Distribution standard
+
+**Added**
+- Reviewer warnings for the SyncWin distribution standard: S021 description over 300 chars, S022 description not trigger-first, S023 skill reading outside its own folder, H008 hook needing python or node with no fallback (S008 already covers a body over 500 lines).
+- aix-packager/scripts/build_skill_zips.py and a release-plugin.yml step that attach one <skill>.zip per skill beside ai-extender.plugin.
+- Distribution rules (standards section 7, skills.md, hooks.md, architecture.md, targets.md, directory-checklist.md) and per-skill install paths in the README.
+
+**Changed**
+- Every skill description is now trigger-first and 300 chars or fewer.
+- The plugin's own guardrail hook and the scaffolded hooks run in plain shell with a python3, python, py fallback and exit 0 when none runs.
+
 ## 1.4.0: aix-cleaner
 
 **Added**

@@ -128,6 +128,8 @@ def check_skill(sdir, opts, plugin_files):
         if len(d) > 1024: add("error" if opts["target"] == "upload" else "warn", "S005", sm, f"description {len(d)} chars (>1024 API limit)")
         if len(d) + len(fm.get("when_to_use", "")) > 1536: add("warn", "S005", sm, "description+when_to_use >1536 chars: truncated in listing")
         if not re.search(r"\b(use|when|whenever|trigger)", d, re.I): add("warn", "S005", sm, "description lacks a 'when to use' cue")
+        if len(d) > 300: add("warn", "S021", sm, f"description {len(d)} chars (>300 recommended): the listing drops long descriptions first; lead with the trigger and move detail into the body")
+        if not re.search(r"\buse (when|for|whenever)\b", d[:120], re.I): add("warn", "S022", sm, "description should lead with the trigger: put 'Use when...' (or 'Use for...', 'Use whenever...') in the first 120 chars")
     extra = set(fm) - UPLOAD_KEYS
     if extra:
         sev = "error" if opts["target"] == "upload" else "info"
@@ -155,6 +157,13 @@ def check_skill(sdir, opts, plugin_files):
             if f.suffix == ".md" and screen: screen_md(f, c)
             if f.suffix == ".md" and f != sm and (len(c.splitlines()) > 300 or len(c) > 40_000):
                 add("warn", "S016", f, f"{len(c.splitlines())} lines, {len(c) // 1000} KB: split into topic files that load on demand")
+    for f in sdir.rglob("*"):
+        if f.is_file() and not f.is_symlink() and f.suffix in (".md", ".json", ".sh") and "node_modules" not in f.parts:
+            for tok in set(re.findall(r"(?<![\w.])(?:\.\./)+[\w.\-][\w./\-]*", read(f) or "")):
+                try: inside = (f.parent / tok).resolve().is_relative_to(sdir.resolve())
+                except (OSError, ValueError): inside = False
+                if not inside:
+                    add("warn", "S023", f, f"references '{tok}' outside the skill folder: a skill shipped as its own zip loses it; copy the file into the skill or point to it by name"); break
     refs = sdir / "references"
     if refs.exists():
         for f in refs.glob("*.md"):
@@ -203,6 +212,10 @@ def check_hooks(f):
                 c = h.get("command", "")
                 if h.get("type") == "command" and "args" not in h and "${CLAUDE_PLUGIN_ROOT}" in c and '"${CLAUDE_PLUGIN_ROOT}' not in c and '\\"${CLAUDE_PLUGIN_ROOT}' not in c:
                     add("warn", "H004", f, f"{ev}: unquoted ${{CLAUDE_PLUGIN_ROOT}} in shell form; use exec form (args)")
+                if h.get("type") == "command":
+                    full = c + " " + " ".join(str(a) for a in h.get("args", []) or [])
+                    if re.search(r"(^|[\s;&|(\"'/])(python3?|py|node)(\s|$)", full) and not re.search(r"\bexit\s+0\b|\|\|\s*(true|:)(\s|$|;)", full):
+                        add("warn", "H008", f, f"{ev}: hook needs python/node with no fallback: it fails where the runtime is missing (Windows Store python3 stub); use plain shell, or try python3, python, py in a loop and 'exit 0' when none runs")
                 if "${user_config." in c and "args" not in h: add("error", "H005", f, f"{ev}: ${{user_config.*}} not allowed in shell-form command")
                 if SECRET.search(json.dumps(h)): add("error", "X001", f, f"{ev}: literal secret")
 
