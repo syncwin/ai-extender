@@ -5,7 +5,7 @@ description: >
 license: MIT
 metadata:
   displayName: "AI Extender Prompt Builder"
-  version: 1.6.0
+  version: 1.6.1
   author: "@wasimness"
   company: SyncWin
   plugin: ai-extender
