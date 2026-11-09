@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 1.6.1: Update
+
+**Changed**
+- Fix: the directory validator ignores __pycache__ folders (never part of a plugin), so a leftover .pyc no longer fails the signed release.
+
 ## 1.6.0: aix-cleaner no-loss gate
 
 **Added**

@@ -381,7 +381,7 @@ def check_directory(root, m, name):
         words = len(re.sub(r"```.*?```", " ", read(rd) or "", flags=re.S).split())
         if words < 40: add("error", "D002", rd, f"README has {words} words outside code blocks (>=40 required)")
     if not (root / "LICENSE").exists() and not m.get("license"): add("error", "D003", root, "no LICENSE file and no license in plugin.json")
-    files = [p for p in root.rglob("*") if ".git" not in p.relative_to(root).parts]
+    files = [p for p in root.rglob("*") if not {".git", "__pycache__"} & set(p.relative_to(root).parts)]
     seen = {}
     for p in files:
         rel = p.relative_to(root)
