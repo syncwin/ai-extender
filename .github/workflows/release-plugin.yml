@@ -1,6 +1,7 @@
 name: Release plugin
 
-# Builds ai-extender.plugin from the plugin.json version and attaches it to the GitHub release.
+# Builds ai-extender.plugin from the plugin.json version, plus one <skill>.zip per skill (skills/<name> -> dist/<name>.zip),
+# and attaches them all to the GitHub release.
 # Release (v* tag): https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin
 # Next (push to the next branch): rolling pre-release tagged "next",
 #   https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin
@@ -58,6 +59,8 @@ jobs:
               g.write("version=" + version + "\n")
           print("built", out, "version", version)
           PY
+      - name: Build one zip per skill
+        run: python3 skills/aix-packager/scripts/build_skill_zips.py . --out dist
       - name: Check the tag matches the plugin version
         if: github.ref_type == 'tag'
         env:
@@ -71,9 +74,9 @@ jobs:
         run: |
           tag="v$VERSION"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "dist/$ASSET" --clobber
+            gh release upload "$tag" "dist/$ASSET" dist/*.zip --clobber
           else
-            gh release create "$tag" "dist/$ASSET" --title "$NAME $tag" --generate-notes --target "$GITHUB_SHA"               || gh release upload "$tag" "dist/$ASSET" --clobber
+            gh release create "$tag" "dist/$ASSET" dist/*.zip --title "$NAME $tag" --generate-notes --target "$GITHUB_SHA"               || gh release upload "$tag" "dist/$ASSET" dist/*.zip --clobber
           fi
       - name: Update the rolling next pre-release
         if: github.ref_type == 'branch'
@@ -82,4 +85,4 @@ jobs:
           VERSION: ${{ steps.build.outputs.version }}
         run: |
           gh release delete next --cleanup-tag --yes || true
-          gh release create next "dist/$ASSET" --prerelease --target "$GITHUB_SHA"             --title "$NAME next (v$VERSION)"             --notes "Rolling pre-release built from the next branch at $GITHUB_SHA. Not for production; the stable package is on the latest v* release."
+          gh release create next "dist/$ASSET" dist/*.zip --prerelease --target "$GITHUB_SHA"             --title "$NAME next (v$VERSION)"             --notes "Rolling pre-release built from the next branch at $GITHUB_SHA. Not for production; the stable package is on the latest v* release."

@@ -4,7 +4,7 @@ Tell Claude what you want. Use your own words, and AI Extender turns that into a
 
 **Download:** [ai-extender.plugin](https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin) (latest release) or the [rolling next build](https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin)
 
-**Version** 1.4.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 1.5.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -42,6 +42,8 @@ claude plugin install ai-extender@syncwin
 ```
 
 **Cowork or claude.ai**: download the `.plugin` file from the [latest release](https://github.com/syncwin/ai-extender/releases/latest) and upload it as a custom plugin. Once the plugin is listed in Anthropic's directory, you can add it from there instead.
+
+**One skill only**: every skill is self-contained and attached to each release as `<skill>.zip` (for example `aix-reviewer.zip`). On claude.ai, Cowork or desktop, upload it under Customize > Skills. In Claude Code, run `npx skills add syncwin/ai-extender --skill aix-reviewer`. Whole plugin on claude.ai, Cowork or desktop: Customize > Plugins > add the GitHub repo as a marketplace.
 
 ## Companion prompt
 

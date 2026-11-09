@@ -5,11 +5,13 @@
 ```
 <plugin-slug>/
 ├── .claude-plugin/plugin.json     # manifest (marketplace.json here too if private marketplace)
-├── skills/<role-slug>/SKILL.md    # router = <plugin-slug>; + references/ scripts/ assets/
+├── skills/<role-slug>/SKILL.md    # router = <plugin-slug>; + references/ scripts/ assets/; each skill self-contained (standards §7)
 ├── agents/*.md   hooks/hooks.json   .mcp.json   commands/ (legacy only)
 ├── prompts/<title-slug>.json      # Prompt Builder companion prompt (always)
 ├── README.md  CHANGELOG.md  LICENSE
 ```
+
+Plan for both install paths (standards §7): the repo is a marketplace and each skill folder stands alone as a zip, so no skill reads another skill's files; a large plugin is split into a small core plus optional add-on plugins listed in the same `marketplace.json`.
 
 Everything except `plugin.json`/`marketplace.json` sits at plugin root, never inside `.claude-plugin/`. A manifest is optional but always written here. Kebab-case names. No empty folders. No `bin/` if Cowork/claude.ai is a target. A root `CLAUDE.md` is not loaded: instructions belong in skills.
 

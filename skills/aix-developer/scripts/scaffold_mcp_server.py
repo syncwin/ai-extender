@@ -76,7 +76,7 @@ def main(argv):
         req = "${CLAUDE_PLUGIN_ROOT}/servers/%s/requirements.txt" % a["name"]
         seen = "${CLAUDE_PLUGIN_DATA}/%s-requirements.txt" % a["name"]
         entry = {"command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/servers/%s/server.py" % a["name"]], "env": {"PYTHONPATH": lib}}
-        hook = {"type": "command", "command": f'diff -q "{req}" "{seen}" >/dev/null 2>&1 || (python3 -m pip install --quiet --target "{lib}" -r "{req}" && cp "{req}" "{seen}")'}
+        hook = {"type": "command", "command": f'diff -q "{req}" "{seen}" >/dev/null 2>&1 || (python3 -m pip install --quiet --target "{lib}" -r "{req}" && cp "{req}" "{seen}"); exit 0'}
         hf = root / "hooks" / "hooks.json"
         hcfg = json.loads(hf.read_text()) if hf.exists() else {}
         hcfg.setdefault("hooks", {}).setdefault("SessionStart", []).append({"hooks": [hook]})

@@ -6,11 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/skills/aix-reviewer/scripts/screen_text.py",
-              "--hook"
-            ],
+            "command": "for c in python3 python py; do \"$c\" -c \"\" >/dev/null 2>&1 && exec \"$c\" \"${CLAUDE_PLUGIN_ROOT}/skills/aix-reviewer/scripts/screen_text.py\" --hook; done; exit 0",
             "timeout": 15
           }
         ]

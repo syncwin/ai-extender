@@ -12,7 +12,8 @@ Verified 2026-10-03 (claude.com/docs/plugins/pre-submission-checklist and /submi
 
 ## 2. Blocks
 
-- Plugin folder contains `.claude-plugin/plugin.json`; one plugin per submission; every file a hook, script, or component path uses lives inside the plugin folder.
+- Plugin folder contains `.claude-plugin/plugin.json`; one plugin per submission; every file a hook, script, or component path uses lives inside the plugin folder, and every skill stays inside its own folder (`S023`) so it can ship alone as a zip.
+- Release layout (SyncWin standard, standards §7): `marketplace.json` + plugin, each skill self-contained, release assets `<plugin>.plugin` plus one `<skill>.zip` per skill; skill descriptions trigger-first and <=300 chars (`S021`, `S022`), bodies <500 lines (`S008`), hooks need no runtime (`H008`).
 - Regular files only: no symlinks, submodules, or LFS pointers; no `.DS_Store`, `Thumbs.db`, `desktop.ini`, `__MACOSX`; file names valid on Windows and macOS (no colon, trailing dot or space, device names, case-only differences); no `export-ignore`, `export-subst`, or content-rewriting `filter` in `.gitattributes`.
 - Name: lowercase ASCII letters/digits/hyphens, <=64, not a reserved word alone (`claude`, `anthropic`, `official`, `plugin`, `mcp`, `test`), not taken, not presenting itself as official. `displayName` and `author.name` in one writing system, no look-alike or invisible characters. Component keys spelled exactly and not under `experimental`.
 - README >=40 words outside code blocks; LICENSE file or `license` in `plugin.json`.
