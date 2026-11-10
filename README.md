@@ -142,7 +142,7 @@ Everything this plugin creates is treated as a public repository, even when you 
 Each release `.plugin` is built from its tagged commit on GitHub's runners and signed with a build-provenance attestation, and the release lists its SHA-256 checksums. To check a download before you install it:
 
 ```
-gh attestation verify "AI.Add-on.Builder.v1.0.0.plugin" --repo syncwin/aiaddon
+gh attestation verify "AI.Add-on.Builder.v0.1.0.plugin" --repo syncwin/aiaddon
 sha256sum -c SHA256SUMS
 ```
 
@@ -158,7 +158,7 @@ Every change also runs CodeQL, a secret scan, the injection screen, and the full
 
 ## Status
 
-Version 1.0.0, released after AI Add-on Builder audited itself from a real install. Every push to `main` and every pull request runs the 117 self-tests, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
+Version 0.1.0 (renamed from ai-extender 1.6.1; repo now syncwin/aiaddon). Every push to `main` and every pull request runs the 180 self-tests and 43 router cases, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
 
 ## Contributing and credits
 
