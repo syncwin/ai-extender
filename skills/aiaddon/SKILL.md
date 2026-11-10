@@ -76,10 +76,11 @@ Cowork if the session says so, or `ls -d /mnt/user-data/outputs mnt/.plugins mnt
 
 ## 3a. Routing table (exact slugs; first matching row wins)
 
-Read top to bottom; a row matches when any of its trigger phrases appears in the request as whole words (case-insensitive). The first matching row picks the skill; `Then` lists the follow-on stages (section 3 holds the full chains). `scripts` check this table against `evals/router/cases.json` (`aiaddon-review/scripts/route_check.py`), and the validator checks that every slug here is a real `skills/` folder and every skill is reachable (`P024` to `P028`).
+Read top to bottom; a row matches when any of its trigger phrases appears in the request as whole words (case-insensitive) and none of its `!` exclusion phrases does. The first matching row picks the skill; `Then` lists the follow-on stages (section 3 holds the full chains). `scripts` check this table against `evals/router/cases.json` (`aiaddon-review/scripts/route_check.py`), and the validator checks that every slug here is a real `skills/` folder and every skill is reachable (`P024` to `P028`).
 
 | Order | Trigger phrases | Skill | Then |
 |---|---|---|---|
+| 0 | build me; make me; create; i want claude; turn this into; i need a; !my plugin; !my skill; !my extension; !my agent file; !this plugin; !this skill; !this extension; !existing; !i already have | `aiaddon-plan` | `aiaddon-build`, `aiaddon-review`, `aiaddon-package` |
 | 1 | a prompt; this prompt; my prompt; prompt template; system prompt; prompt builder; tighten; reusable with variables | `aiaddon-prompt` | (none) |
 | 2 | clean up; deep clean; duplicate; duplicates; de-dup; dedupe; overlap; overlapping; shrink | `aiaddon-clean` | `aiaddon-review`, `aiaddon-maintain` |
 | 3 | update my; update the; bump; version; changelog; fix my; fix this; migrate; split my; merge my; customize; refactor; i already have; to my plugin; to this plugin; failed in production | `aiaddon-maintain` | `aiaddon-review`, `aiaddon-package` |
@@ -87,6 +88,8 @@ Read top to bottom; a row matches when any of its trigger phrases appears in the
 | 5 | package; zip; .plugin; marketplace; push to github; push this to github; github; install guide; hand over; upload | `aiaddon-package` | (none) |
 | 6 | build the plan; build the planned; approved plan; scaffold; test this skill | `aiaddon-build` | `aiaddon-review`, `aiaddon-package` |
 | 7 | build me; make me; create; turn this; turn my; automate; for my team; our process; i need a; i want claude; write a hook; write an agent; build something; new plugin; new skill; new connector; new agent; add-on; addon | `aiaddon-plan` | `aiaddon-build`, `aiaddon-review`, `aiaddon-package` |
+
+**Creation first:** a creation request (build me, make me, create, i want claude, turn this into, i need a) goes to `aiaddon-plan` first, then `aiaddon-build`, even when the request also mentions packaging, uploading, publishing, auditing, duplicates or a prompt; those words describe what the new extension does or where it ships, not the stage to run now. The exception is a request whose target is an existing extension (my plugin, my skill, this plugin, this skill, existing, i already have): row 0 does not match and the rows below decide.
 
 **Tie-break rules** (the row order encodes them): a prompt itself (not a skill or plugin) -> `aiaddon-prompt`; duplicates or shrinking -> `aiaddon-clean`; something that already exists and must change -> `aiaddon-maintain`; a check, audit or "ready to ship" -> `aiaddon-review`, and shipping always passes review first, then `aiaddon-package`; a file to hand over -> `aiaddon-package`; an approved plan -> `aiaddon-build`; anything new (a plugin, skill, connector, agent, hook, MCP server, internal tool, or a converted workflow) -> `aiaddon-plan` first, then `aiaddon-build`.
 

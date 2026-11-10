@@ -3,7 +3,7 @@
 
 Usage: route_check.py <plugin-dir> [--cases evals/router/cases.json] [--json]
 Reads the routing table in the router skill (skills/<plugin>/SKILL.md, the table under the heading "Routing table":
-`| Order | Trigger phrases | Skill | Then |`, phrases separated by `;`, matched as whole words, first matching row wins),
+`| Order | Trigger phrases | Skill | Then |`, phrases separated by `;`, matched as whole words, first matching row wins; a phrase starting with `!` excludes the row when it appears),
 routes every case prompt, and compares with the expected slug (`ask` = no row matches: the router asks its one closed
 question). Exit 0 when every case routes as expected, 1 on a mismatch or a missing table, 2 on usage.
 """
@@ -29,9 +29,10 @@ def parse_table(text):
 def route(rows, prompt):
     """Slug the table picks for the prompt, or 'ask' when no row matches."""
     q = prompt.lower().replace("’", "'")
+    has = lambda ph: re.search(r"(?<![\w])" + re.escape(ph) + r"(?![\w])", q)
     for _, phrases, slug, _ in rows:
-        for ph in phrases:
-            if re.search(r"(?<![\w])" + re.escape(ph) + r"(?![\w])", q): return slug
+        if any(has(ph[1:]) for ph in phrases if ph.startswith("!")): continue  # an exclusion phrase cancels the row
+        if any(has(ph) for ph in phrases if not ph.startswith("!")): return slug
     return "ask"
 
 def check(root, cases_path=None):

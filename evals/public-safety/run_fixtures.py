@@ -18,6 +18,12 @@ FAKE = {
     "@@OPENAI@@": "sk-" + "proj-" + "Qz7" * 10,
     "@@AWS@@": "AKIA" + "IOSFODNN7EXAMPLQ",
     "@@USERPATH@@": "C:" + "\\Users\\" + "jdoe42\\projects",
+    "@@HF@@": "hf" + "_" + "Qk3" * 12,
+    "@@STRIPE@@": "sk" + "_live_" + "Mn5" * 8,
+    "@@URLCRED@@": "postgres" + "://" + "admin" + ":" + "S3cretPw99" + "@db.example-host.net/app",
+    "@@JWT@@": "ey" + "J" + "hbGciOiJIUzI1NiIs" + "." + "ey" + "J" + "zdWIiOiIxMjM0NTY3" + "." + "SflKxwRJSMeKKF2QT4fw",
+    "@@SLACKHOOK@@": "https://hooks.slack" + ".com/services/" + "T01ABCDEF/" + "B02GHIJKL/" + "Xy7" * 6,
+    "@@DRIVEPATH@@": "D:" + "\\Clients\\Acme\\briefs\\q3.docx",
     "@@PASSWORD@@": "pass" + "word=" + "Tr0ub4dor3xyz",
 }
 
@@ -47,6 +53,10 @@ with tempfile.TemporaryDirectory() as td:
     materialize(HERE / "fixtures" / "clean", clean); materialize(HERE / "fixtures" / "leaky", leaky)
     rc, out = run(clean); check("clean fixture passes the scan", rc == 0, out[-300:])
     rc, out = run(leaky)
+    rcj, js = run(leaky, "--json")
+    import json as _json
+    codes = {r["code"] for r in _json.loads(js)}
+    check("new rules fire: Hugging Face, Stripe, JWT, Slack webhook, URL credentials, drive path", {"huggingface-token", "stripe-key", "jwt", "slack-webhook", "url-credentials", "drive-path"} <= codes, str(sorted(codes)))
     check("fixture with fake keys fails the scan", rc == 1 and all(x in out for x in ("known key format", "absolute local user path", "password")), out[-500:])
     check("report masks the values", not any(v in out for v in FAKE.values()), out[-300:])
     # allowlist: an exact public contact passes, a key never does

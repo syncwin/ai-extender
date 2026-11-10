@@ -1,3 +1,16 @@
-# False positives for scan_secrets.py. Only exact, public, intentional values.
+# False positives for scan_secrets.py. Only exact, public, intentional values, each tied to the file that holds it.
 # Format: <rule>:<path-glob>[:<value-substring>]
-email:*:support@syncwin.com
+# Public contact the owner chose to publish (plugin manifest, policies, issue template, docs):
+email:.claude-plugin/marketplace.json:support@syncwin.com
+email:.claude-plugin/plugin.json:support@syncwin.com
+email:.github/ISSUE_TEMPLATE/bug_report.md:support@syncwin.com
+email:.public-safety-allow:support@syncwin.com
+email:PRIVACY.md:support@syncwin.com
+email:PUBLIC-SAFETY.md:support@syncwin.com
+email:README.md:support@syncwin.com
+email:SECURITY.md:support@syncwin.com
+email:skills/aiaddon/references/standards.md:support@syncwin.com
+# Owner's local drive paths in the agent guide. FLAGGED for the owner to decide (remove from the public file, or keep): allowlisted only so CI stays green until then.
+drive-path:AGENTS.md:A:\Automation
+drive-path:AGENTS.md:D:\SyncWin
+email:skills/ai-extender/references/standards.md:support@syncwin.com

@@ -15,7 +15,7 @@ Besides keys it finds provider tokens (GitHub, OpenAI, Anthropic, AWS, Slack, Go
 password assignments, high-entropy strings, personal e-mails (not noreply or placeholder), absolute user paths, internal
 hosts, and private files (.env, key files, logs, memory or progress notes). Past leaks: references/public-safety.md.
 """
-import json, sys, zipfile
+import hashlib, json, sys, zipfile
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -29,7 +29,20 @@ MAX = 2_000_000
 
 def wanted(name): return Path(name).suffix in TEXT_SUFFIX or Path(name).name.startswith(".env")
 
-def own_source(path): return Path(path).name in SELF and Path(path).parent.name == "scripts"
+OWN_DIR = Path(__file__).resolve().parent
+OWN_HASH = {n: hashlib.sha256((OWN_DIR / n).read_bytes()).hexdigest() for n in SELF if (OWN_DIR / n).is_file()}
+
+def own_source(path, data=None):
+    """True only for this plugin's own scanner sources: the file in this very folder, or one whose bytes match them.
+    A user plugin's file with the same name is never exempt."""
+    p = Path(path)
+    if p.name not in OWN_HASH: return False
+    try:
+        if data is None and p.is_file():
+            if p.resolve().parent == OWN_DIR: return True
+            data = p.read_bytes()
+    except OSError: return False
+    return data is not None and hashlib.sha256(data).hexdigest() == OWN_HASH[p.name]
 
 def scan_dir(d):
     for f in sorted(d.rglob("*")):
@@ -46,9 +59,11 @@ def scan_zip(z):
     try:
         with zipfile.ZipFile(z) as zf:
             for n in zf.namelist():
-                if n.endswith("/") or set(n.split("/")) & SKIP or own_source(n) or not wanted(n): continue
+                if n.endswith("/") or set(n.split("/")) & SKIP or not wanted(n): continue
                 if zf.getinfo(n).file_size > MAX: continue
-                for no, code, masked in find_secrets(zf.read(n).decode("utf-8", "replace")): yield (f"{z}!{n}", no, code, masked)
+                data = zf.read(n)
+                if own_source(n, data): continue
+                for no, code, masked in find_secrets(data.decode("utf-8", "replace")): yield (f"{z}!{n}", no, code, masked)
     except (OSError, zipfile.BadZipFile): return
 
 def engine_rows(paths, arts, allow, hist):
@@ -64,7 +79,7 @@ def engine_rows(paths, arts, allow, hist):
             try: take(ps.scan_zip_bytes(p.read_bytes(), str(p), rules))
             except OSError: pass
         elif p.is_dir():
-            take((r for r in ps.scan_tree(p, rules) if not own_source(r["file"])), p)
+            take((r for r in ps.scan_tree(p, rules) if not own_source(p / r["file"])), p)
             if hist: take(ps.scan_history(p, rules), p)
     if arts:
         base = paths[0] if paths and paths[0].is_dir() else Path(".")

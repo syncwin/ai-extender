@@ -35,6 +35,9 @@ The GitHub repository will be renamed from `syncwin/ai-extender` to `syncwin/aia
 - CI: job `public-safety` (full history, working tree and built skill zips) on every push and pull request; push CI also runs on `next`; router check added to the checks job and to the release workflows; release workflows scan the built packages. README notes enabling GitHub secret scanning and push protection.
 - Fixture tests in the self-test: a fixture with a fake key fails the scan (tree, history, zip), a clean fixture passes; naming and router violations are caught.
 
+- Router creation-first rule: a creation request (build me, make me, create, i want claude, turn this into, i need a) routes to `aiaddon-plan` even when it mentions packaging, uploading, publishing, auditing, duplicates or a prompt, unless the target is an existing extension (`!` exclusion phrases in the routing table, mirrored in `route_check.py`); 43 router evals.
+- Scan rules for Hugging Face tokens, Stripe keys, JWTs, Slack webhooks, credentials in URLs and absolute drive paths outside the Users folders, with run-time fixtures. The scanner exempts only this plugin's own sources (same folder or identical bytes), never a same-named file in a user plugin; `build_skill_zips.py` refuses when the scanner is missing.
+
 **Removed**
 - Retired note: keep plugin versions 1.0.0 and 1.1.0 (owner, 2026-11-10), removed from `AGENTS.md` together with its marketplace-entry sentence.
 

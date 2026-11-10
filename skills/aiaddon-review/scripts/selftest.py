@@ -385,6 +385,18 @@ with tempfile.TemporaryDirectory() as td:
     if FX.exists():
         r = RUN(FX); check("public-safety fixtures: fake key fails, clean repo passes, history and zip scanned", r.returncode == 0, r.stdout[-400:])
 
+    # --- scanner exemptions are for this plugin's own sources only; build_skill_zips never fails open
+    q = td / "own"; mk(q, "skills/x/scripts/selftest.py", "TOKEN = '" + fake + "'\n"); mk(q, "skills/x/scripts/scan_secrets.py", "TOKEN = '" + fake + "'\n")
+    r = RUN(SS, q); check("a user plugin's file named like a scanner source is still scanned", r.returncode == 1 and "selftest.py" in r.stdout and "scan_secrets.py" in r.stdout, r.stdout[-300:])
+    zq = td / "own.zip"
+    with zipfile.ZipFile(zq, "w") as zf: zf.writestr("skills/x/scripts/selftest.py", "TOKEN = '" + fake + "'\n")
+    r = RUN(SS, zq); check("the same name inside a zip is still scanned", r.returncode == 1, r.stdout[-300:])
+    q = td / "own-copy"; mk(q, "README.md", "ok\n"); shutil.copy(S / "aiaddon-review/scripts/selftest.py", q / "selftest.py")
+    r = RUN(SS, q); check("a byte-identical copy of this plugin's own selftest is exempt", r.returncode == 0, r.stdout[-300:])
+    nz = td / "nz-skills"; shutil.copytree(S, nz); (nz / "aiaddon-review/scripts/scan_secrets.py").unlink()
+    r = RUN(nz / "aiaddon-package/scripts/build_skill_zips.py", p, "--out", td / "nz-out")
+    check("build_skill_zips refuses and removes the zip when the scanner is missing", r.returncode == 1 and "REFUSED" in r.stdout and not list((td / "nz-out").glob("*.zip")), r.stdout[-300:])
+
 failed = [n for n, ok in results if not ok]
 print(f"\n{len(results) - len(failed)}/{len(results)} passed")
 sys.exit(1 if failed else 0)

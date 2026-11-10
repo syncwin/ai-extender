@@ -30,8 +30,16 @@ KEY_RULES = [
     ("google-key", "Google API key", re.compile(r"\bAIza[0-9A-Za-z_\-]{35}\b")),
     ("google-oauth", "Google OAuth token", re.compile(r"\bya29\.[0-9A-Za-z_\-]{20,}")),
     ("private-key", "private key block", re.compile(r"-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----")),
+    ("huggingface-token", "Hugging Face token", re.compile(r"\bhf_[A-Za-z0-9]{30,}")),
+    ("stripe-key", "Stripe secret key", re.compile(r"\b[sr]k_(?:live|test)_[A-Za-z0-9]{16,}")),
+    ("jwt", "JSON Web Token", re.compile(r"\beyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}")),
+    ("slack-webhook", "Slack webhook URL", re.compile(r"hooks\.slack\.com/services/T[A-Z0-9]{6,}/B[A-Z0-9]{6,}/[A-Za-z0-9]{16,}")),
     ("bearer", "Bearer token", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/\-]{20,}=*")),
 ]
+URL_CRED = re.compile(r"\b[a-z][a-z0-9+.\-]*://([^/\s:@\"'`<>]+):([^/\s@\"'`<>]{3,})@[\w.\-]+")
+URL_CRED_OK = re.compile(r"(?i)^(user|username|name|you|your|pass|password|pwd|secret|token|xxx+|\*+|\$\{.*|%.*|<.*|\{\{.*)$")
+DRIVE_PATH = re.compile(r"(?<![\w/\\.])([A-Za-z]):[\\/]{1,2}([A-Za-z0-9_.\- ]+)[\\/]")
+DRIVE_OK = re.compile(r"(?i)^(windows|program files( \(x86\))?|programdata|temp|tmp|path|to|your.*|folder|dir|directory|project|repo|example.*|some.*|my.*|users|<.*|\$.*|%.*|\{.*|\.\.\.)$")
 PLACEHOLDER = re.compile(r"(?i)(env|config|process|getenv|example|your|placeholder|xxxx|\*\*\*|changeme|dummy|redacted|sample|user_config|plugin_root|none|null|false|true|string|secret_value|<|>|\$\{|\$\(|%\w+%|\{\{)")
 ASSIGN = re.compile(r"""(?i)\b([\w-]*?(?:api[_-]?key|apikey|secret|token|passw(?:or)?d|passwd|pwd|access[_-]?key|private[_-]?key))["']?\s*[:=]\s*["']?([^\s"'`<>,;(){}\[\]]{6,})""")
 BASIC = re.compile(r"""(?i)Authorization["']?\s*:\s*["']Basic\s+([A-Za-z0-9+/=]{16,})""")
@@ -115,6 +123,8 @@ def scan_line(line):
             if len(v) >= 6 and not v.startswith(("$", "%")): return "password", "password assignment", g.group(1) + "=" + mask(v)
         elif re.search(r"\d", v) and re.search(r"[A-Za-z]", v) and len(set(v)) > 8:
             return "key-assignment", "key-like value", g.group(1) + "=" + mask(v)
+    for m in URL_CRED.finditer(line):
+        if not (URL_CRED_OK.match(m.group(1)) or URL_CRED_OK.match(m.group(2)) or PLACEHOLDER.search(m.group(2))): return "url-credentials", "credentials inside a URL", m.group(0).split("://")[0] + "://" + m.group(1)[:2] + "***:***@"
     for m in EMAIL.finditer(line):
         local, dom = m.group(1), m.group(2)
         if local.lower() in EMAIL_LOCAL_OK or EMAIL_DOMAIN_OK.search(dom) or EMAIL_NOREPLY.search(local) or dom.lower().endswith((".md", ".json", ".py", ".yml", ".yaml", ".txt", ".js")): continue
@@ -122,6 +132,8 @@ def scan_line(line):
     for rx in USER_PATH:
         for m in rx.finditer(line):
             if not USER_OK.match(m.group(1)): return "user-path", "absolute local user path", m.group(0)[:3] + "..." + m.group(1)[:2] + "***"
+    for m in DRIVE_PATH.finditer(line):
+        if not DRIVE_OK.match(m.group(2).strip()): return "drive-path", "absolute local drive path", m.group(1) + ":\\..." + m.group(2)[:2] + "***"
     m = INTERNAL_HOST.search(line)
     if m: return "internal-host", "internal URL or host", mask(m.group(0))
     for m in TOKENISH.finditer(line):

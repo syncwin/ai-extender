@@ -136,6 +136,42 @@
     {
       "prompt": "my skill",
       "expected": "ask"
+    },
+    {
+      "prompt": "build me a plugin and package it for Cowork",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "make me a skill I can upload to claude.ai",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "build me a plugin that checks my invoices for duplicates",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I want Claude to publish my blog posts to WordPress",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "make me a skill to write a prompt for my agent",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "create a skill that audits my contracts before I sign them",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I want Claude to review pull requests every morning",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "build me a plugin that cleans up duplicate leads in my CRM",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "create a changelog entry for my plugin",
+      "expected": "aiaddon-maintain"
     }
   ]
 }
