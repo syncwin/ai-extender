@@ -14,3 +14,5 @@ email:skills/aiaddon/references/standards.md:support@syncwin.com
 drive-path:AGENTS.md:A:\Automation
 drive-path:AGENTS.md:D:\SyncWin
 email:skills/ai-extender/references/standards.md:support@syncwin.com
+# Same document inside the per-skill zip built for the router skill:
+email:aiaddon/references/standards.md:support@syncwin.com
