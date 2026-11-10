@@ -3,10 +3,10 @@
 
 Usage: scaffold_extension.py <out-dir> --slug my-thing --display "My Thing"
          [--description "..."] [--author "@name"] [--company "Co"] [--email a@b.c] [--url https://..]
-         [--license MIT] [--roles plan,build] [--prefix <slug>] [--agents] [--hooks] [--connectors]
+         [--license MIT] [--roles plan,build] [--prefix <slug>]  (acronym|none before 0.1.0) [--agents] [--hooks] [--connectors]
          [--no-composio] [--no-guardrail]
 Creates <out-dir>/<slug>/ with: plugin.json (version 0.0.1), router skill named <slug>, one stub skill per
---roles entry (<slug>-<action>: the naming standard prefixes every skill except the router with the plugin name, and refuses role nouns such as
+--roles entry (<prefix>-<role> before 0.1.0, or bare <role> without --prefix; now <slug>-<action>: the naming standard prefixes every skill except the router with the plugin name, and refuses role nouns such as
 reviewer or planner; --prefix, when given, must equal the slug), a router with a Routing table, tie-break rules, default and loading rule plus
 evals/router/cases.json, scratchpad reference, README, CHANGELOG, LICENSE (MIT), .gitignore (with the public-safety preset), .env.example (names only),
 PUBLIC-SAFETY.md, and .public-safety-allow (the author's chosen contact, when --email is given),

@@ -46,6 +46,7 @@ jobs:
         run: |
           python skills/aiaddon-review/scripts/selftest.py
           python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+          python skills/aiaddon-review/scripts/scan_secrets.py .
           python skills/aiaddon-review/scripts/scan_secrets.py . --history
           python skills/aiaddon-review/scripts/route_check.py .
           python skills/aiaddon-review/scripts/screen_text.py .

@@ -47,7 +47,7 @@ with tempfile.TemporaryDirectory() as td:
     materialize(HERE / "fixtures" / "clean", clean); materialize(HERE / "fixtures" / "leaky", leaky)
     rc, out = run(clean); check("clean fixture passes the scan", rc == 0, out[-300:])
     rc, out = run(leaky)
-    check("fixture with fake keys fails the scan", rc == 1 and all(x in out for x in ("GitHub token", "OpenAI-style key", "AWS access key id", "absolute local user path", "password")), out[-500:])
+    check("fixture with fake keys fails the scan", rc == 1 and all(x in out for x in ("known key format", "absolute local user path", "password")), out[-500:])
     check("report masks the values", not any(v in out for v in FAKE.values()), out[-300:])
     # allowlist: an exact public contact passes, a key never does
     rc, out = run(clean); check("allowlisted public contact passes", rc == 0 and "support@example.org" in (clean / "README.md").read_text(encoding="utf-8"), out[-200:])

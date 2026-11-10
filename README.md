@@ -72,7 +72,7 @@ Nothing else leaves your machine. Apart from the Composio connector and the guar
 
 ## Skills and agents
 
-Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases to exact skill, tie-break rules, one closed question when unclear) and loads the chosen skill itself; it never answers the task.  It reads your request and calls the right role, so most people never call the others directly.
+Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases to exact skill, tie-break rules, one closed question when unclear) and loads the chosen skill itself; it never answers the task.  It reads your request and calls the right skill, so most people never call the others directly.
 
 | Skill | What it does |
 |---|---|
@@ -104,13 +104,29 @@ Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases
 
 **Migrating:** every command changed (breaking), so the version restarts at 0.1.0 under the new name and the changelog below is the ai-extender history. Uninstall the old plugin and install the new one: `claude plugin uninstall ai-extender@syncwin`, then `claude plugin marketplace add syncwin/aiaddon` and `claude plugin install aiaddon@syncwin`. In Cowork or claude.ai, remove the old custom plugin and upload the new `aiaddon.plugin`; single-skill zips are now `aiaddon-*.zip`. Update any saved prompts that call `/ai-extender:aix...` to `/aiaddon:aiaddon...`. The GitHub repository will be renamed from `syncwin/ai-extender` to `syncwin/aiaddon`; old URLs redirect, and links in this repo already use the new name.
 
+**Past rename, kept as history (ai-extender 1.3.0; every one of these names changed again at 0.1.0, see the table above):**
+
+**Renamed in 1.3.0:**
+
+| Old name | New name |
+|---|---|
+| `ai-extender` (router skill) | `aix` |
+| `claude-planner` | `aix-planner` |
+| `claude-developer` | `aix-developer` |
+| `claude-reviewer` | `aix-reviewer` |
+| `claude-maintainer` | `aix-maintainer` |
+| `claude-packager` | `aix-packager` |
+| `prompt-builder` | `aix-prompter` |
+
+The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `claude-grader` keep their names.
+
 Agents: `aiaddon:aiaddon-grade` grades test runs against their assertions, and `aiaddon:aiaddon-compare` compares two outputs blind.
 
 | Connector | Used by | For | Without it |
 |---|---|---|---|
 | Composio (`https://connect.composio.dev/mcp`) | `aiaddon:aiaddon-package`, and any role when a build needs an outside app | Pushing, tagging, and releasing on GitHub; reaching other apps a build depends on | Skills work as usual; GitHub goes through your own GitHub connector or `gh` |
 
-**Naming.** Router skill = plugin name (`aiaddon`); every other skill and agent is prefixed `aiaddon-` and named for an action (`aiaddon-review`, not a role noun). The validator enforces this for every extension it builds. Other platform layers could sit beside this one later (`skills/aiaddon/references/platforms.md`).
+**Naming.** Router skill = plugin name (`aiaddon`); every other skill and agent is prefixed `aiaddon-` and named for an action (`aiaddon-review`, not a role noun). The validator enforces this for every extension it builds. Before 0.1.0 the skills used the short prefix `aix-` (router `aix`) and the two agents kept `claude-` names. Other platform layers could sit beside this one later (`skills/aiaddon/references/platforms.md`).
 
 ## Public safety
 

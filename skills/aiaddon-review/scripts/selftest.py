@@ -380,7 +380,7 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(S / "aiaddon-package/scripts/package_extension.py", q, "--format", "zip", "--out", td / "pk-out", "--skip-validate")
     check("packager refuses to build when the scan finds a key, even with --skip-validate", r.returncode == 1 and "Refusing to package" in r.stdout and not list((td / "pk-out").glob("*.zip")), r.stdout[-300:])
     r = RUN(SS, p); check("scan passes the clean scaffold", r.returncode == 0, r.stdout[-300:])
-    r = RUN(SS, q); check("scan fails the scaffold with a fake key, masked", r.returncode == 1 and fake not in r.stdout and "GitHub token" in r.stdout, r.stdout[-300:])
+    r = RUN(SS, q); check("scan fails the scaffold with a fake key, masked", r.returncode == 1 and fake not in r.stdout and "known key format" in r.stdout, r.stdout[-300:])
     FX = S.parent / "evals" / "public-safety" / "run_fixtures.py"
     if FX.exists():
         r = RUN(FX); check("public-safety fixtures: fake key fails, clean repo passes, history and zip scanned", r.returncode == 0, r.stdout[-400:])

@@ -22,7 +22,7 @@ ALLOW_FILE = ".public-safety-allow"
 
 # (rule id, label, regex). First match on a line wins: one finding per line.
 KEY_RULES = [
-    ("github-token", "GitHub token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,})")),
+    ("github-token", "GitHub token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})")),
     ("anthropic-key", "Anthropic key", re.compile(r"\bsk-ant-[A-Za-z0-9_\-]{20,}")),
     ("openai-key", "OpenAI-style key", re.compile(r"\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_\-]{20,}")),
     ("aws-key", "AWS access key id", re.compile(r"\b(?:AKIA|ASIA|AGPA|AIDA|AROA)[0-9A-Z]{16}\b")),
@@ -193,7 +193,7 @@ def scan_tree(root, rules, include_artifacts=True):
         names = []
         for f in sorted(root.rglob("*")):
             rel = f.relative_to(root)
-            if set(rel.parts) & SKIP_DIRS or not f.is_file() or f.is_symlink(): continue
+            if set(rel.parts) & (SKIP_DIRS | {"dist"}) or not f.is_file() or f.is_symlink(): continue  # built packages are scanned with --artifacts
             names.append(rel.as_posix())
     for rel in names:
         f = root / rel

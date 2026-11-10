@@ -35,6 +35,9 @@ The GitHub repository will be renamed from `syncwin/ai-extender` to `syncwin/aia
 - CI: job `public-safety` (full history, working tree and built skill zips) on every push and pull request; push CI also runs on `next`; router check added to the checks job and to the release workflows; release workflows scan the built packages. README notes enabling GitHub secret scanning and push protection.
 - Fixture tests in the self-test: a fixture with a fake key fails the scan (tree, history, zip), a clean fixture passes; naming and router violations are caught.
 
+**Removed**
+- Retired note: keep plugin versions 1.0.0 and 1.1.0 (owner, 2026-11-10), removed from `AGENTS.md` together with its marketplace-entry sentence.
+
 **Changed**
 - Renamed everything listed above (folders, frontmatter names, cross-links, scripts, validator, self-test, evals, CI, release asset names, README, docs). Display names read "AI Add-on Builder". Standards section 1 (Names) now states the naming standard; the older "role or designation" and "acronym prefix never the plugin slug" guidance is replaced by it (the acronym, if the user wants one, becomes the plugin name).
 - Version reset to 0.1.0 across `plugin.json`, every skill and agent `metadata.version`, README and release names.

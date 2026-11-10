@@ -3,7 +3,8 @@
 
 Usage: build_skill_zips.py <plugin-dir> [--out dist] [--only name,name]
 Each zip holds only that skill's own folder, ready for claude.ai Customize > Skills upload or `npx skills add`.
-Skips symlinks and junk files the same way package_extension.py does. Exit 1 if a skill has no SKILL.md, or if the secret and private-data scan finds anything inside a produced zip (the zip is removed).
+Skips symlinks and junk files the same way package_extension.py does. Exit 1 if a skill has no SKILL.md.
+Also exit 1 if the secret and private-data scan finds anything inside a produced zip (the zip is removed).
 """
 import subprocess, sys, zipfile
 from pathlib import Path
