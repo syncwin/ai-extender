@@ -1,16 +1,18 @@
-# ai-extender agent guide
+# aiaddon agent guide
 
-AI Extender for Claude: plans, builds, checks and packages Claude skills, plugins, connectors and agents.
+AI Add-on Builder: plans, builds, checks and packages Claude skills, plugins, connectors and agents.
 
-**Structure:** `skills/aix` (router) and `aix-planner|developer|maintainer|reviewer|packager|prompter|cleaner`, `agents/` (comparator, grader), `hooks/hooks.json`, `evals/`, `.github/` (CI).
+**Structure:** `skills/aiaddon` (router) and `aiaddon-plan|build|maintain|review|package|prompt|clean`, `agents/` (`aiaddon-compare`, `aiaddon-grade`), `hooks/hooks.json`, `evals/`, `.github/` (CI).
 
 ## Commands
-- Self-test (must pass): `python skills/aix-reviewer/scripts/selftest.py`
-- Strict validation (must pass): `python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
-- Secret scan: `python skills/aix-reviewer/scripts/scan_secrets.py`
-- Version bump: `skills/aix-maintainer/scripts/bump_version.py`; package: `skills/aix-packager/scripts/package_extension.py`
+- Self-test (must pass): `python skills/aiaddon-review/scripts/selftest.py`
+- Strict validation (must pass): `python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
+- Secret scan: `python skills/aiaddon-review/scripts/scan_secrets.py`
+- Secret and private-data scan (blocking; tree, full history, packages): `python skills/aiaddon-review/scripts/scan_secrets.py . --history`; false positives only in `.public-safety-allow`
+- Router check (every eval prompt routes to its expected skill): `python skills/aiaddon-review/scripts/route_check.py .`
+- Version bump: `skills/aiaddon-maintain/scripts/bump_version.py`; package: `skills/aiaddon-package/scripts/package_extension.py`
 - Validate: `claude plugin validate . --strict`
-- Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python A:\Automation\plugin-evals\regen_evals.py <plugin> <router> <fixture ids>`. Write results outside the repo (`D:\SyncWin\AI Outputs\<plugin>\eval-results`); the packager includes repo files.
+- Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python <owner-tools>/plugin-evals/regen_evals.py <plugin> <router> <fixture ids>` (owner's local tools folder, not in this repo). Write results outside the repo (`<owner-outputs>/<plugin>/eval-results`, a local folder outside the repo); the packager includes repo files.
 
 ## Workflow
 1. Read the skill or script you change, plus its neighbours.
@@ -26,7 +28,9 @@ AI Extender for Claude: plans, builds, checks and packages Claude skills, plugin
 - Never commit secrets. Never pick names or slugs without user confirmation.
 - Pin any GitHub Action to a full commit SHA with the version in a comment; give each job least permissions.
 - A platform fact needs its official page and the date checked. Keep private data (keys, client names, internal URLs) out of every file.
-- Plugin versions 1.0.0 and 1.1.0 are both kept (user decision, 4 Nov). The public-review `syncwin` marketplace entry is not changed.
+- Naming standard (validator `P019` to `P023`): router skill name == plugin name; every other skill, agent and command is prefixed `<plugin>-`; action-style slugs (`-review`, not `-reviewer`). Router standard (`P024` to `P028`): routing table, tie-breaks, default question, Skill-tool loading, router evals.
+- Public safety (`X008` to `X013`): every extension is public; `.gitignore` preset, `PUBLIC-SAFETY.md`, `.env.example`; never auto force-push, history rewrites need the owner's explicit OK (`skills/aiaddon-review/references/public-safety.md`).
+- Renamed from ai-extender at 0.1.0 (version reset); the changelog below that entry is ai-extender history.
 
 ## Model routing
 Opus plans, decides, writes self-contained briefs with a report word limit, and reviews every result. Haiku for search, reading and mechanical edits. Sonnet for coding, tests and multi-step work. Do 1-2 tool calls inline.

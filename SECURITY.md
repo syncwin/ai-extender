@@ -4,7 +4,7 @@
 
 Report privately, never in a public issue:
 
-- **GitHub:** [Report a vulnerability](https://github.com/syncwin/ai-extender/security/advisories/new) (private vulnerability reporting).
+- **GitHub:** [Report a vulnerability](https://github.com/syncwin/aiaddon/security/advisories/new) (private vulnerability reporting).
 - **Email:** support@syncwin.com, with what you found and the steps to reproduce it.
 
 What happens next: we acknowledge within five working days, confirm or decline within ten, and agree a disclosure date with you (normally within 90 days, sooner for an issue under active attack). Fixes ship as a release with a GitHub security advisory and a changelog entry, and we credit you unless you ask us not to.
@@ -18,7 +18,7 @@ What happens next: we acknowledge within five working days, confirm or decline w
 
 ## What the plugin does on your machine
 
-AI Extender for Claude is Markdown instructions plus Python 3 scripts that use only the standard library. Nothing is downloaded or installed when it runs.
+AI Add-on Builder is Markdown instructions plus Python 3 scripts that use only the standard library. Nothing is downloaded or installed when it runs.
 
 - **Scripts** make no network requests. They read and write only the folders you point them at (plus a temporary folder while packaging), refuse paths that resolve outside those folders, skip symbolic links, and call other scripts in this plugin through `subprocess` with fixed argument lists.
 - **Guardrail hook** (Claude Code and Cowork): after a web fetch, web search, or Composio call, and no other tool, it screens that tool's output on your machine with a 67 KB local model and warns Claude if the text tries to give it instructions. Its launcher is one fixed shell line that picks `python3` or `python`; no tool output or user text reaches the shell. It never blocks work, sends nothing, and exits quietly on any error.
@@ -32,7 +32,7 @@ The README section "What it runs, reads, and sends" lists every case in plain wo
 
 - **Build provenance:** the release `.plugin` is built from the tagged commit on GitHub's runners and signed with a provenance attestation. Verify a download:
   ```
-  gh attestation verify "AI.Extender.for.Claude.v1.0.0.plugin" --repo syncwin/ai-extender
+  gh attestation verify "AI.Add-on.Builder.v1.0.0.plugin" --repo syncwin/aiaddon
   sha256sum -c SHA256SUMS
   ```
 - **Every push and pull request** runs 113 self-tests (one pass as a non-root user), the directory validator in strict mode, a secret scan, the injection screen, the trigger simulation, and CodeQL (`security-extended`) on the Python and the workflows. OpenSSF Scorecard runs weekly.
