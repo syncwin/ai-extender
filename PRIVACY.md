@@ -1,6 +1,6 @@
 # Privacy Policy
 
-AI Extender for Claude, published by SyncWin. Effective 2026-10-12.
+AI Add-on Builder, published by SyncWin. Effective 2026-10-12.
 
 ## What we collect
 
@@ -10,7 +10,7 @@ Nothing. The plugin has no server, no analytics, no telemetry, and no account. S
 
 - **Instructions and scripts** run inside your own Claude session and on your own machine. The scripts make no network requests and only read and write the folders you point them at.
 - **The guardrail hook** reads the output of web fetches, web searches, and Composio calls on your machine to screen it for prompt injection, then discards it. Nothing is stored or sent.
-- **One opt-in local file:** `validate_extension.py --cache` keeps its last result in `~/.cache/ai-extender/`. `scan_secrets.py` reads only the folders you name and shows any key it finds masked. Neither sends anything.
+- **One opt-in local file:** `validate_extension.py --cache` keeps its last result in `~/.cache/aiaddon/`. `scan_secrets.py` reads only the folders you name and shows any key it finds masked. Neither sends anything.
 
 ## Services you choose to use
 

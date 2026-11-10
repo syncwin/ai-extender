@@ -1,0 +1,177 @@
+{
+  "_note": "Router cases: expected = the first skill the router table (skills/aiaddon/SKILL.md, section 3a) must pick, or 'ask' for the closed clarifying question. Checked by aiaddon-review/scripts/route_check.py.",
+  "cases": [
+    {
+      "prompt": "write me a prompt that turns complaint emails into calm replies",
+      "expected": "aiaddon-prompt"
+    },
+    {
+      "prompt": "tighten this prompt and remove the fluff",
+      "expected": "aiaddon-prompt"
+    },
+    {
+      "prompt": "make this prompt reusable with variables and export it to Prompt Builder",
+      "expected": "aiaddon-prompt"
+    },
+    {
+      "prompt": "clean up my plugin and merge the duplicate content in my skills without losing anything",
+      "expected": "aiaddon-clean"
+    },
+    {
+      "prompt": "my plugin skills repeat each other, find the overlap and shrink it safely",
+      "expected": "aiaddon-clean"
+    },
+    {
+      "prompt": "find duplicate content in my skills",
+      "expected": "aiaddon-clean"
+    },
+    {
+      "prompt": "bump the version of my skill and update the changelog",
+      "expected": "aiaddon-maintain"
+    },
+    {
+      "prompt": "update my agent so it only reads files",
+      "expected": "aiaddon-maintain"
+    },
+    {
+      "prompt": "add a connector for Notion to my plugin",
+      "expected": "aiaddon-maintain"
+    },
+    {
+      "prompt": "split my giant skill into smaller ones",
+      "expected": "aiaddon-maintain"
+    },
+    {
+      "prompt": "fix this plugin, it failed in production",
+      "expected": "aiaddon-maintain"
+    },
+    {
+      "prompt": "audit my plugin before I ship it",
+      "expected": "aiaddon-review"
+    },
+    {
+      "prompt": "can you review my SKILL.md description, it never triggers",
+      "expected": "aiaddon-review"
+    },
+    {
+      "prompt": "is this ready to release",
+      "expected": "aiaddon-review"
+    },
+    {
+      "prompt": "ship my plugin to my team through a private marketplace",
+      "expected": "aiaddon-review"
+    },
+    {
+      "prompt": "package my extension as a zip for upload",
+      "expected": "aiaddon-package"
+    },
+    {
+      "prompt": "package this for Cowork",
+      "expected": "aiaddon-package"
+    },
+    {
+      "prompt": "make a .plugin for Cowork",
+      "expected": "aiaddon-package"
+    },
+    {
+      "prompt": "push this to GitHub",
+      "expected": "aiaddon-package"
+    },
+    {
+      "prompt": "build the planned skill",
+      "expected": "aiaddon-build"
+    },
+    {
+      "prompt": "scaffold the extension we agreed on",
+      "expected": "aiaddon-build"
+    },
+    {
+      "prompt": "test this skill against its test inputs",
+      "expected": "aiaddon-build"
+    },
+    {
+      "prompt": "make me a skill that formats commit messages",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "turn this workflow into a Claude plugin",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I want Claude to check every client proposal against our pricing rules",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "build something so my sales team gets the same onboarding checklist every time",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I need a plugin that bundles three skills and a Slack connector",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "write a hook that blocks edits to .env",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "create an agent that reads files only",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "make it better",
+      "expected": "ask"
+    },
+    {
+      "prompt": "help me with my plugin",
+      "expected": "ask"
+    },
+    {
+      "prompt": "can you look at this folder",
+      "expected": "ask"
+    },
+    {
+      "prompt": "what should I do next",
+      "expected": "ask"
+    },
+    {
+      "prompt": "my skill",
+      "expected": "ask"
+    },
+    {
+      "prompt": "build me a plugin and package it for Cowork",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "make me a skill I can upload to claude.ai",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "build me a plugin that checks my invoices for duplicates",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I want Claude to publish my blog posts to WordPress",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "make me a skill to write a prompt for my agent",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "create a skill that audits my contracts before I sign them",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "I want Claude to review pull requests every morning",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "build me a plugin that cleans up duplicate leads in my CRM",
+      "expected": "aiaddon-plan"
+    },
+    {
+      "prompt": "create a changelog entry for my plugin",
+      "expected": "aiaddon-maintain"
+    }
+  ]
+}
