@@ -10,9 +10,9 @@ email:PUBLIC-SAFETY.md:support@syncwin.com
 email:README.md:support@syncwin.com
 email:SECURITY.md:support@syncwin.com
 email:skills/aiaddon/references/standards.md:support@syncwin.com
-# Owner's local drive paths in the agent guide. FLAGGED for the owner to decide (remove from the public file, or keep): allowlisted only so CI stays green until then.
+# Same document inside the per-skill zip built for the router skill:
+email:aiaddon/references/standards.md:support@syncwin.com
+# Git history only (owner decision 2026-11-10: removed from the tree, no history rewrite; no credential involved):
 drive-path:AGENTS.md:A:\Automation
 drive-path:AGENTS.md:D:\SyncWin
 email:skills/ai-extender/references/standards.md:support@syncwin.com
-# Same document inside the per-skill zip built for the router skill:
-email:aiaddon/references/standards.md:support@syncwin.com

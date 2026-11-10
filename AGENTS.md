@@ -12,7 +12,7 @@ AI Add-on Builder: plans, builds, checks and packages Claude skills, plugins, co
 - Router check (every eval prompt routes to its expected skill): `python skills/aiaddon-review/scripts/route_check.py .`
 - Version bump: `skills/aiaddon-maintain/scripts/bump_version.py`; package: `skills/aiaddon-package/scripts/package_extension.py`
 - Validate: `claude plugin validate . --strict`
-- Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python A:\Automation\plugin-evals\regen_evals.py <plugin> <router> <fixture ids>`. Write results outside the repo (`D:\SyncWin\AI Outputs\<plugin>\eval-results`); the packager includes repo files.
+- Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python <owner-tools>/plugin-evals/regen_evals.py <plugin> <router> <fixture ids>` (owner's local tools folder, not in this repo). Write results outside the repo (`<owner-outputs>/<plugin>/eval-results`, a local folder outside the repo); the packager includes repo files.
 
 ## Workflow
 1. Read the skill or script you change, plus its neighbours.

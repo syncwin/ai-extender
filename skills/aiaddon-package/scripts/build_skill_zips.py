@@ -27,9 +27,8 @@ def main(argv):
             for p, rel in files(s): z.write(p, (Path(s.name) / rel).as_posix())
         scan = Path(__file__).resolve().parents[2] / "aiaddon-review" / "scripts" / "scan_secrets.py"  # blocking: scans inside the produced zip
         if not scan.is_file(): dest.unlink(); print(f"REFUSED {s.name}: aiaddon-review/scripts/scan_secrets.py not found, so the zip cannot be scanned (removed)"); bad = 1; continue
-        if scan.is_file():
-            r = subprocess.run([sys.executable, str(scan), str(dest)], capture_output=True, text=True)
-            if r.returncode != 0: print(r.stdout + r.stderr); dest.unlink(); print(f"REFUSED {s.name}: secret or private data inside the zip (removed)"); bad = 1; continue
+        r = subprocess.run([sys.executable, str(scan), str(dest)], capture_output=True, text=True)
+        if r.returncode != 0: print(r.stdout + r.stderr); dest.unlink(); print(f"REFUSED {s.name}: secret or private data inside the zip (removed)"); bad = 1; continue
         with zipfile.ZipFile(dest) as z: n = len(z.namelist())
         print(f"built {dest} ({n} files)")
     return bad
