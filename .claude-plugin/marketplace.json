@@ -9,9 +9,9 @@
   },
   "plugins": [
     {
-      "name": "ai-extender",
-      "displayName": "AI Extender for Claude",
-      "description": "Describe what you want Claude to do, in your own words. AI Extender plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
+      "name": "aiaddon",
+      "displayName": "AI Add-on Builder",
+      "description": "Describe what you want Claude to do, in your own words. AI Add-on Builder plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
       "source": "./",
       "category": "developer-tools"
     }

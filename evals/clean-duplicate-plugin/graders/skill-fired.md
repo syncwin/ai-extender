@@ -1,5 +1,5 @@
 ---
 type: tool_used
 tool: Skill
-input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(aix|aix-cleaner)"'
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(aiaddon|aiaddon-clean)"'
 ---

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, next]
   pull_request:
 
 permissions:
@@ -32,15 +32,36 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
-        run: python skills/aix-reviewer/scripts/selftest.py
+        run: python skills/aiaddon-review/scripts/selftest.py
       - name: Validate for the Claude plugin directory
-        run: python skills/aix-reviewer/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+        run: python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
-        run: python skills/aix-reviewer/scripts/scan_secrets.py .
+        run: python skills/aiaddon-review/scripts/scan_secrets.py .
       - name: Screen docs for prompt injection
-        run: python skills/aix-reviewer/scripts/screen_text.py .
+        run: python skills/aiaddon-review/scripts/screen_text.py .
+      - name: Check the router against its evals
+        run: python skills/aiaddon-review/scripts/route_check.py .
       - name: Simulate skill triggers
-        run: python skills/aix-reviewer/scripts/simulate.py . triggers
+        run: python skills/aiaddon-review/scripts/simulate.py . triggers
       - name: Self-test as a non-root user
         if: matrix.python == '3.13'
-        run: test "$(id -u)" != 0 && python skills/aix-reviewer/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
+        run: test "$(id -u)" != 0 && python skills/aiaddon-review/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
+
+  public-safety:
+    name: Public safety (secrets and private data)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # full history: a key deleted last week is still in it
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Scan the working tree and the full git history (blocking)
+        run: python skills/aiaddon-review/scripts/scan_secrets.py . --history
+      - name: Scan built packages, when present (blocking)
+        run: |
+          python skills/aiaddon-package/scripts/build_skill_zips.py . --out "$RUNNER_TEMP/skill-zips"
+          python skills/aiaddon-review/scripts/scan_secrets.py . --artifacts "$RUNNER_TEMP/skill-zips"

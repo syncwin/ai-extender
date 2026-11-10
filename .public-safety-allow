@@ -1,0 +1,3 @@
+# False positives for scan_secrets.py. Only exact, public, intentional values.
+# Format: <rule>:<path-glob>[:<value-substring>]
+email:*:support@syncwin.com

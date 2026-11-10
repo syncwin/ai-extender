@@ -1,10 +1,10 @@
 name: Release plugin
 
-# Builds ai-extender.plugin from the plugin.json version, plus one <skill>.zip per skill (skills/<name> -> dist/<name>.zip),
+# Builds aiaddon.plugin from the plugin.json version, plus one <skill>.zip per skill (skills/<name> -> dist/<name>.zip),
 # and attaches them all to the GitHub release.
-# Release (v* tag): https://github.com/syncwin/ai-extender/releases/latest/download/ai-extender.plugin
+# Release (v* tag): https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin
 # Next (push to the next branch): rolling pre-release tagged "next",
-#   https://github.com/syncwin/ai-extender/releases/download/next/ai-extender.plugin
+#   https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin
 # The existing release.yml still attaches the signed, dotted-name package to v* releases.
 on:
   push:
@@ -21,12 +21,12 @@ concurrency:
 
 jobs:
   release:
-    name: Build and attach ai-extender.plugin
+    name: Build and attach aiaddon.plugin
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      NAME: "AI Extender for Claude"
-      ASSET: ai-extender.plugin
+      NAME: "AI Add-on Builder"
+      ASSET: aiaddon.plugin
       ROOT: .
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,7 +60,9 @@ jobs:
           print("built", out, "version", version)
           PY
       - name: Build one zip per skill
-        run: python3 skills/aix-packager/scripts/build_skill_zips.py . --out dist
+        run: python3 skills/aiaddon-package/scripts/build_skill_zips.py . --out dist
+      - name: Scan the built packages for secrets and private data (blocking)
+        run: python3 skills/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
       - name: Check the tag matches the plugin version
         if: github.ref_type == 'tag'
         env:

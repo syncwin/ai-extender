@@ -2,6 +2,43 @@
 
 Newest first.
 
+## 0.1.0 - aiaddon (renamed from ai-extender 1.6.1)
+
+**Version reset.** The plugin is now `aiaddon` (display name "AI Add-on Builder") and its version restarts at 0.1.0. Every entry below this one is the history of the ai-extender plugin, kept unchanged; its version numbers (1.6.1 and older) belong to ai-extender. Release tags restart at `v0.1.0`; the older `v1.x` tags stay as ai-extender history, so nothing in the repo or the release workflows compares a new version against them.
+
+**Breaking: every command changed.** Reinstall the plugin (uninstall `ai-extender`, install `aiaddon`; steps in the README).
+
+| Old name (ai-extender 1.6.1) | New name |
+|---|---|
+| plugin `ai-extender`, "AI Extender for Claude" | plugin `aiaddon`, "AI Add-on Builder" |
+| router skill `aix` (`/ai-extender:aix`) | `aiaddon` (`/aiaddon:aiaddon`) |
+| `aix-planner` | `aiaddon-plan` |
+| `aix-developer` | `aiaddon-build` |
+| `aix-maintainer` | `aiaddon-maintain` |
+| `aix-packager` | `aiaddon-package` |
+| `aix-reviewer` | `aiaddon-review` |
+| `aix-cleaner` | `aiaddon-clean` |
+| `aix-prompter` | `aiaddon-prompt` |
+| agent `claude-comparator` | `aiaddon-compare` |
+| agent `claude-grader` | `aiaddon-grade` |
+| release assets `ai-extender.plugin`, `aix-*.zip`, `ai-extender-for-claude.json` | `aiaddon.plugin`, `aiaddon-*.zip`, `ai-add-on-builder.json` |
+
+The GitHub repository will be renamed from `syncwin/ai-extender` to `syncwin/aiaddon` by the owner later; old URLs redirect, and links in this repo already use the new name.
+
+**Added**
+- Naming standard, encoded in the plan, build and review skills and enforced by the validator for every extension it creates: the router skill's name equals the plugin name; every other skill, agent and command is prefixed `<plugin>-`; slugs are skill or action style, never a role noun (`-review`, not `-reviewer`). New checks `P019` (router), `P020` (skills), `P021` (agents), `P022` (commands), `P023` (role nouns). The scaffolder prefixes with the plugin name and refuses role nouns.
+- Router standard: the router skill has an explicit routing table (phrases to exact slug, `| Order | Trigger phrases | Skill | Then |`), tie-break rules, a default (one closed question, never answers the task) and a loading rule (Skill tool with `<plugin>:<skill>`, else the skill's `SKILL.md` by relative path). `evals/router/cases.json` (34 prompts here: at least 2 per skill plus 5 ambiguous) is checked by the new `route_check.py`. New validator checks `P024` (routed slug is not a skill), `P025` (skill unreachable from the router), `P026` (router standard text missing), `P027` (a router eval routes wrong), `P028` (no routing table or no router evals). Section 3a of the router skill.
+- Public/private safety in the existing skills (no new skill): `aiaddon-review/references/public-safety.md` (classification, required `.gitignore` preset, `PUBLIC-SAFETY.md` template, the scan, past leak remediation, GitHub switches), referenced from the router and the plan, build, maintain, package, clean and review skills. Plans carry the public/private split and a threat model line; scaffolds include the `.gitignore` preset, `.env.example` (names only), `PUBLIC-SAFETY.md` and `.public-safety-allow` for the author's chosen contact.
+- Secret and private-data scan, pure Python standard library: `scan_secrets.py` now covers the working tree (files git would publish), full git history (`--history`, `git log --all -p`) and built artifacts (`--artifacts`, and inside every zip and `.plugin`, nested too), with an allowlist (`.public-safety-allow`). Patterns: GitHub, OpenAI, Anthropic, AWS, Slack and Google keys, private keys, Bearer tokens, password and key assignments, high-entropy strings, e-mails other than noreply or placeholders, absolute user paths (Windows, macOS, Linux), internal hosts, private file names. Every finding is blocking. Engine: `public_safety.py`. New validator checks `X008` (tree), `X009` (`.gitignore` preset), `X010` (`PUBLIC-SAFETY.md`), `X011` (`.env.example`), `X012` (history), `X013` (built packages); `--no-history` skips `X012`.
+- Packager: refuses to build or release when the scan finds anything (never bypassed by `--skip-validate`) and scans inside the produced zip or `.plugin`; `build_skill_zips.py` scans each zip and removes one that fails.
+- Past leak remediation workflow in the maintain and clean skills: detect, tell the user, rotate or revoke the credential first, rewrite history with `git filter-repo` or BFG, force-push only after explicit user OK (never automatic), re-create affected releases and tags (note forks), ask GitHub Support to purge cached views and PR refs, re-scan to prove zero traces.
+- CI: job `public-safety` (full history, working tree and built skill zips) on every push and pull request; push CI also runs on `next`; router check added to the checks job and to the release workflows; release workflows scan the built packages. README notes enabling GitHub secret scanning and push protection.
+- Fixture tests in the self-test: a fixture with a fake key fails the scan (tree, history, zip), a clean fixture passes; naming and router violations are caught.
+
+**Changed**
+- Renamed everything listed above (folders, frontmatter names, cross-links, scripts, validator, self-test, evals, CI, release asset names, README, docs). Display names read "AI Add-on Builder". Standards section 1 (Names) now states the naming standard; the older "role or designation" and "acronym prefix never the plugin slug" guidance is replaced by it (the acronym, if the user wants one, becomes the plugin name).
+- Version reset to 0.1.0 across `plugin.json`, every skill and agent `metadata.version`, README and release names.
+
 ## 1.6.1: Update
 
 **Changed**
