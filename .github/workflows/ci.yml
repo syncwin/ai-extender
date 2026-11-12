@@ -93,6 +93,10 @@ jobs:
         run: |
           # The validator imports its neighbours (route check, public safety, screen), so extract the whole folder.
           git archive HEAD dev/aiaddon-review/scripts | tar -x -C "$RUNNER_TEMP"
+          # The maintainer allowlist (public support address) is needed to validate but is never shipped:
+          # it is restored in the working tree only, the index (what gets pushed) stays without it.
+          git show HEAD:.public-safety-allow > .public-safety-allow
+          trap 'rm -f .public-safety-allow' EXIT
           python "$RUNNER_TEMP/dev/aiaddon-review/scripts/validate_extension.py" . --strict --target directory --require-meta author,company
           python "$RUNNER_TEMP/dev/aiaddon-review/scripts/scan_secrets.py" .
       - name: Push the release branch
