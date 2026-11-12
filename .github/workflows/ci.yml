@@ -91,10 +91,10 @@ jobs:
           rm -rf dev evals .github .claude IMPROVEMENTS.md .public-safety-allow assets/icon.svg
       - name: Validate the shipped tree for the directory (blocking)
         run: |
-          git show HEAD:dev/aiaddon-review/scripts/validate_extension.py > "$RUNNER_TEMP/validate_extension.py"
-          git show HEAD:dev/aiaddon-review/scripts/scan_secrets.py > "$RUNNER_TEMP/scan_secrets.py"
-          python "$RUNNER_TEMP/validate_extension.py" . --strict --target directory --require-meta author,company
-          python "$RUNNER_TEMP/scan_secrets.py" .
+          # The validator imports its neighbours (route check, public safety, screen), so extract the whole folder.
+          git archive HEAD dev/aiaddon-review/scripts | tar -x -C "$RUNNER_TEMP"
+          python "$RUNNER_TEMP/dev/aiaddon-review/scripts/validate_extension.py" . --strict --target directory --require-meta author,company
+          python "$RUNNER_TEMP/dev/aiaddon-review/scripts/scan_secrets.py" .
       - name: Push the release branch
         env:
           GIT_AUTHOR_NAME: github-actions[bot]
