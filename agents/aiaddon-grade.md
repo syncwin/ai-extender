@@ -2,7 +2,6 @@
 name: aiaddon-grade
 description: Grades one extension test run against its assertions and writes grading.json. Use after an eval run finishes, when each assertion needs a pass/fail with quoted evidence.
 model: inherit
-color: green
 tools: Read, Grep, Glob, Write
 ---
 

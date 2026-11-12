@@ -4,7 +4,7 @@ Tell Claude what you want. Use your own words, and AI Add-on Builder turns that 
 
 **Download:** [aiaddon.plugin](https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin) (asset of the latest GitHub release) or the [rolling next build](https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin)
 
-**Version** 0.2.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 0.2.1 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 

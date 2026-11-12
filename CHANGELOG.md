@@ -2,6 +2,16 @@
 
 Newest first.
 
+## 0.2.1: Final directory review
+
+**Fixed**
+- The package targets reference no longer mentions the removed `--cache` flag; it points to the validate-extension recipe.
+- The route-check recipe says a missing `evals/` folder on an installed copy means the check is skipped, not failed.
+- aiaddon-maintain no longer lists "clean up" as a trigger, which belongs to aiaddon-clean.
+
+**Removed**
+- The `color` key from both agents, so agent frontmatter holds only name, description, model and tools (directory frontmatter rule).
+
 ## 0.2.0: Directory compliance
 
 ### Added

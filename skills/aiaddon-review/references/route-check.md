@@ -108,7 +108,7 @@ Notes:
 1. Read `.claude-plugin/plugin.json` (Read) for the plugin name. If missing, use the folder name.
 2. Check `skills/<name>/SKILL.md` (Glob). If missing, record row 1 and go to step 9.
 3. Read it. Find the routing table and read the rows (section 3). If none, record row 2 and go to step 9.
-4. Read the cases file (default `evals/router/cases.json`, or the one given). If missing, record row 3 and go to step 9. The file is JSON: `{"cases": [{"prompt": "...", "expected": "<skill slug or ask>"}]}`. Ignore a leading BOM.
+4. Read the cases file (default `evals/router/cases.json`, or the one given). If missing, record row 3 and go to step 9. An installed copy has no `evals/` folder (it is not shipped), so a missing default cases file there means the check is skipped, not failed: say so in the report. The file is JSON: `{"cases": [{"prompt": "...", "expected": "<skill slug or ask>"}]}`. Ignore a leading BOM.
 5. For each case, in order, route the prompt by hand using section 3. Record row 4 for each mismatch.
 6. Glob `skills/*/` to list skill folders. Remove the router. For each remaining folder, in sorted order, count its cases and record row 5 when under 2.
 7. If no case has `expected` equal to `ask`, record row 6.
