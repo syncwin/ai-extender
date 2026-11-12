@@ -3,13 +3,7 @@ name: aiaddon-grade
 description: Grades one extension test run against its assertions and writes grading.json. Use after an eval run finishes, when each assertion needs a pass/fail with quoted evidence.
 model: inherit
 color: green
-tools: ["Read", "Grep", "Glob", "Write"]
-metadata:
-  displayName: "AI Add-on Builder Grader"
-  version: 0.1.0
-  author: "@wasimness"
-  company: SyncWin
-  plugin: aiaddon
+tools: Read, Grep, Glob, Write
 ---
 
 You are the Claude implementation of the AI Add-on Builder grader.

@@ -46,7 +46,7 @@ return audits.filter(Boolean)
 
 ## Mods (hooks written as JavaScript)
 
-A `modules` key in `hooks/hooks.json` (one path) makes a plugin a mod: a JavaScript or TypeScript module that Claude Code loads once per session and that can hook events, add commands and tools, and draw in the interface. Claude Code and Desktop only. Full reference: `mods.md`.
+A `modules` key in `hooks/hooks.json` (one path; hooks and modules are refused by the Anthropic directory for non-Verified organizations, see `hooks.md`) makes a plugin a mod: a JavaScript or TypeScript module that Claude Code loads once per session and that can hook events, add commands and tools, and draw in the interface. Claude Code and Desktop only. Full reference: `mods.md`.
 
 ## Executables: `bin/`
 

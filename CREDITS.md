@@ -9,7 +9,7 @@ Studied, then rewritten:
 - Anthropic's `plugin-dev` and `mcp-server-dev` plugins: their scope only (what plugin, hook, and MCP authoring should cover).
 - [Ponytail](https://github.com/DietrichGebert/ponytail), an open-source Claude skill: the lean-implementation principle.
 
-Training data for the injection screen (`aiaddon-review/scripts/injection_model.json`, weights learned here; no data or model files are redistributed):
+Training data for the injection screen (`dev/aiaddon-review/scripts/injection_model.json`, maintainer tooling; the shipped screen is the recipe `aiaddon-review/references/screen-text.md`, weights learned here; no data or model files are redistributed):
 
 - [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections), Apache-2.0.
 - [jackhhao/jailbreak-classification](https://huggingface.co/datasets/jackhhao/jailbreak-classification), Apache-2.0.

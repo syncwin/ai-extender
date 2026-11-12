@@ -2,6 +2,23 @@
 
 Newest first.
 
+## 0.2.0: Directory compliance
+
+**Added**
+- Router hard rules: a public-safety gate (nothing secret or private in anything aiaddon builds, edits or publishes) and a compliance rule (plain warning plus the official safe method when a request would break Claude rules).
+- Validator rules for the plugin directory: hooks, refused file types and non-text frontmatter are caught before submission.
+- CI rebuilds a `release` branch from `main` after the checks pass (no force-push); the directory submission tracks it.
+
+**Changed**
+- Breaking for maintainers: the 25 scripts are now Markdown recipes in `skills/*/references/`, followed with built-in tools. The Python and the old hook moved unchanged to `dev/` (maintainers only, never shipped).
+- The nested `metadata` block is removed from all skills and agents; agent `tools` are plain text.
+- New plugins scaffolded by aiaddon follow the directory rules by default.
+- Recipe passages the injection screen flagged are reworded as neutral steps or put in code blocks; meaning unchanged.
+
+**Fixed**
+- The validator no longer scans other checkouts under `.claude/worktrees`.
+- The install simulator applies the repo's `.public-safety-allow` and forgives only the evals/prompts checks for folders that packages exclude by design.
+
 ## 0.1.0 - aiaddon (renamed from ai-extender 1.6.1)
 
 **Version reset.** The plugin is now `aiaddon` (display name "AI Add-on Builder") and its version restarts at 0.1.0. Every entry below this one is the history of the ai-extender plugin, kept unchanged; its version numbers (1.6.1 and older) belong to ai-extender. Release tags restart at `v0.1.0`; the older `v1.x` tags stay as ai-extender history, so nothing in the repo or the release workflows compares a new version against them.
@@ -145,7 +162,7 @@ The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `c
 
 **Added**
 - Distribution routes: one repo and one marketplace per product; pick the marketplace name once (distinctive, `<company>-<plugin>`); what a rename does to existing installs; where users add a marketplace on claude.ai, desktop and mobile versus Claude Code, and why not both; uploaded `.plugin` files never update; how updates arrive and how to prove a repo with an isolated `CLAUDE_CONFIG_DIR` install.
-- Release prep: `displayName` in `plugin.json` and the marketplace entry, an `icon` (`./assets/icon.png`), and a README that lists every `/<plugin>:<skill>` command.
+- Release prep: `displayName` in `plugin.json` and the marketplace entry, an `icon` (the square PNG under `./assets/`), and a README that lists every `/<plugin>:<skill>` command.
 - Directory route: push nothing to the default branch while a submission is in review; use a separate branch and merge after.
 - Standards: names an extension generates on users' projects (such as class prefixes) never hardcode the author's company; ask once, record, neutral default.
 
@@ -157,7 +174,7 @@ The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `c
 
 ## Next branch: Icon and listing name (was 1.0.1 on next)
 
-- Plugin icon (`assets/icon.png`, `assets/icon.svg`), set in `plugin.json`.
+- Plugin icon (a PNG and an SVG under `assets/`), set in `plugin.json`.
 - The marketplace entry shows the display name "AI Extender for Claude".
 
 ## 1.0.0: First public release

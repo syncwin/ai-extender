@@ -8,7 +8,7 @@ Packaging junk (.git, dist, __pycache__, node_modules, .venv, .DS_Store, *.pyc) 
 import hashlib, json, sys, zipfile
 from pathlib import Path
 
-SKIP = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist"}
+SKIP = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "dev"}
 
 def keep(rel):
     parts = rel.split("/")

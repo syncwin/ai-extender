@@ -37,4 +37,4 @@ If a row has no landing place, the action is not allowed until it has one. Lines
 
 ## Approval
 
-Ask once: "Apply this plan?" Nothing changes before a clear yes. After applying, run `prove.py`; paste its PASS line.
+Ask once: "Apply this plan?" Nothing changes before a clear yes. After applying, follow `references/prove.md`; paste its PASS line.

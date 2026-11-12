@@ -20,9 +20,9 @@ Verified 2026-10-02 (code.claude.com/docs/en/plugins/publish, plugin-evals, plug
 
 1. **Permanent kebab-case name**: users install by `name@marketplace`; a renamed plugin is a different plugin. Use `displayName` for the label.
 2. **Version policy**: with `version` set in `plugin.json`, pushing commits without bumping it leaves users on the old copy (`already at the latest version`). Bump every release, or omit `version` in a git marketplace to use the commit SHA. Set `version` in `plugin.json` only, never also in the marketplace entry: Claude uses `plugin.json` and `validate` reports the mismatch.
-3. `claude plugin validate --strict ./plugin` (clean = "Validation passed"; `--strict` fails on warnings; drop it only if you omit `version`). Our `validate_extension.py` runs first.
+3. `claude plugin validate --strict ./plugin` (clean = "Validation passed"; `--strict` fails on warnings; drop it only if you omit `version`). The validate-extension recipe (`aiaddon-review/references/validate-extension.md`) runs first.
 4. Install from a local marketplace and start a session: `claude plugin marketplace add ./mkt` → `claude plugin install <name>@<mkt>`.
-5. Metadata users see: `description`, `author`, `homepage` (must parse as a URL), `repository`, `displayName` (in `plugin.json` and the marketplace entry), `icon` (`./assets/icon.png`, square, 512 px; keep the SVG beside it; with no image library, render the SVG with a headless browser screenshot), README. The README lists every command as `/<plugin>:<skill>`, because the plugin page shows the README and users look there for how to start it.
+5. Metadata users see: `description`, `author`, `homepage` (must parse as a URL), `repository`, `displayName` (in `plugin.json` and the marketplace entry), `icon` (the PNG under `./assets/`, square, 512 px; keep the SVG beside it; with no image library, render the SVG with a headless browser screenshot), README. The README lists every command as `/<plugin>:<skill>`, because the plugin page shows the README and users look there for how to start it.
 6. Run evals if present: `claude plugin eval` (`aiaddon-build/references/testing.md`).
 
 ## 3. Own marketplace
@@ -36,7 +36,7 @@ Verified 2026-10-02 (code.claude.com/docs/en/plugins/publish, plugin-evals, plug
 
 ## 4. Anthropic's directory (public; only on the user's explicit release instruction, see `release.md`)
 
-While a submission is in review, push nothing to the default branch: keep changes on a separate branch (for example `next`) and merge after the review, so reviewers see a stable repo. Submit from the developer portal (claude.ai/directory/manage); needs a paid plan (Pro/Max own account; Team/Enterprise Owner or a custom role with the Directory permission). The portal applies extra directory rules the CLI doesn't check, and derives supported surfaces from the component table (`components-extra.md`). Checklist, results, and submission steps: `directory-checklist.md` (verified 2026-10-03); run `validate_extension.py --target directory` first. Re-fetch claude.com/docs/plugins/submit and /pre-submission-checklist at submission time, since limits change.
+While a submission is in review, push nothing to the default branch: keep changes on a separate branch (for example `next`) and merge after the review, so reviewers see a stable repo. Submit from the developer portal (claude.ai/directory/manage); needs a paid plan (Pro/Max own account; Team/Enterprise Owner or a custom role with the Directory permission). The portal applies extra directory rules the CLI doesn't check, and derives supported surfaces from the component table (`components-extra.md`). Checklist, results, and submission steps: `directory-checklist.md` (verified 2026-10-03); follow the validate-extension recipe (target directory) first. Re-fetch claude.com/docs/plugins/submit and /pre-submission-checklist at submission time, since limits change.
 
 ## 5. Versions, tags, renames
 

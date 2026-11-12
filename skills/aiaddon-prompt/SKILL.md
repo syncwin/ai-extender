@@ -3,12 +3,6 @@ name: aiaddon-prompt
 description: >
   Use for "write me a prompt for...", "turn this into a prompt", "make this prompt tighter", "clean up this prompt", "convert into a fluff-free, non-redundant Markdown prompt", "make this prompt reusable with variables", "prompt template", "system prompt", "improve my prompt", "export this prompt to Prompt Builder". Crafts, tightens, and templates prompts for any AI model or chatbot. Turns a rough instruction into a clear, fluff-free Markdown prompt (with XML tags where they help and {{variables}} for reusable fields), checks it against a validation checklist, and can export it as ready-to-import Prompt Builder JSON. Not for building plugins or skills (use aiaddon) and not for answering the task the prompt describes.
 license: MIT
-metadata:
-  displayName: "AI Add-on Builder Prompt Builder"
-  version: 0.1.0
-  author: "@wasimness"
-  company: SyncWin
-  plugin: aiaddon
 ---
 
 # Prompt Builder
@@ -61,11 +55,11 @@ Method is platform-neutral. Model-specific tips are in `references/platform-tips
 
 - Destructive or irreversible actions require confirmation.
 
-- ASCII only: no smart quotes, em or en dashes, arrows, check marks, bullets, or ellipsis characters. Write `-`, `"`, `->`, `[x]`, `...`. When a file is available, run `scripts/ascii_check.py <file> --fix`; it normalizes the common ones and fails on any other non-ASCII character. Without a script, check by eye.
+- ASCII only: no smart quotes, em or en dashes, arrows, check marks, bullets, or ellipsis characters. Write `-`, `"`, `->`, `[x]`, `...`. Follow `references/ascii-check.md` (with the fix step when a file is available); it normalizes the common ones and fails on any other non-ASCII character.
 
 ## Reusable and exportable prompts
 
-For Template mode, or when the user wants the prompt in Prompt Builder: choose variables (rules in `aiaddon/references/companion-prompt.md` section 3: type `Text`, `Textarea`, `Radio`, `Checkbox`, or `Predefined`; label, placeholder, context, `required` only for essentials), write a spec `{"title","description","content","variables"}`, then run `scripts/export_prompt.py <spec.json> --out <dir>` (it normalizes to ASCII and refuses anything left). It reuses the packager's `companion_prompt.py` schema and checker, so the file imports into Prompt Builder (Settings > Import) unchanged. Without Python, show the spec and say the export did not run.
+For Template mode, or when the user wants the prompt in Prompt Builder: choose variables (rules in the aiaddon-package skill's `references/companion-prompt.md`: type `Text`, `Textarea`, `Radio`, `Checkbox`, or `Predefined`; label, placeholder, context, `required` only for essentials), write a spec `{"title","description","content","variables"}`, then follow `references/export-prompt.md` (it normalizes to ASCII and refuses anything left). It uses the schema and checks in `companion-prompt.md`, so the file imports into Prompt Builder (Settings > Import) unchanged.
 
 ## Rules
 

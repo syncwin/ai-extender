@@ -44,16 +44,16 @@ jobs:
           test "$TAG" = "v$v" || { echo "tag $TAG does not match plugin version $v"; exit 1; }
       - name: Run every check
         run: |
-          python skills/aiaddon-review/scripts/selftest.py
-          python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
-          python skills/aiaddon-review/scripts/scan_secrets.py .
-          python skills/aiaddon-review/scripts/scan_secrets.py . --history
-          python skills/aiaddon-review/scripts/route_check.py .
-          python skills/aiaddon-review/scripts/screen_text.py .
+          python dev/aiaddon-review/scripts/selftest.py
+          python dev/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+          python dev/aiaddon-review/scripts/scan_secrets.py .
+          python dev/aiaddon-review/scripts/scan_secrets.py . --history
+          python dev/aiaddon-review/scripts/route_check.py .
+          python dev/aiaddon-review/scripts/screen_text.py .
       - name: Build the package
         id: build
         run: |
-          python skills/aiaddon-package/scripts/package_extension.py . --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
+          python dev/aiaddon-package/scripts/package_extension.py . --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
           cd dist
           orig=$(ls -- *.plugin | head -1)
           asset="${orig// /.}"
@@ -63,7 +63,7 @@ jobs:
           echo "asset=$asset" >> "$GITHUB_OUTPUT"
           echo "label=$orig" >> "$GITHUB_OUTPUT"
       - name: Scan the built package for secrets and private data (blocking)
-        run: python skills/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
+        run: python dev/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
