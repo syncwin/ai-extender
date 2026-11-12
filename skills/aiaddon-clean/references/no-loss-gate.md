@@ -2,8 +2,8 @@
 
 Run before any merge is accepted (SKILL.md lists the rules).
 
-## Script
-`no_loss_check.py --old FILE --new FILE [--threshold 0.15] [--map-yaml FILE] [--sxs OUT] [--pairs OUT]`; exit 1 on any problem.
+## Recipe
+Follow `references/no-loss-check.md` (inputs `--old FILE --new FILE [--threshold 0.15] [--map-yaml FILE] [--sxs OUT] [--pairs OUT]`); any problem means FAIL.
 - Clauses: sentences, `;` parts and each `Why:` part. Significant words drop stopwords and words of 2 chars or fewer.
 - Mapping: old items are headings and `name:`/`id:` values. The map file lists `was: [item, item]` per new item; each old item must appear exactly once.
 - Downgrades: strong words (must, never, always, only, hook, ...) fewer than before, weaker words (should, may, guidance, ...) more than before, dropped capitalised MUST/NEVER/ALWAYS, fewer examples, missing numbers, tools, paths or URLs.

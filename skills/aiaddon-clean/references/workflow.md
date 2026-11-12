@@ -20,12 +20,12 @@ Open only the line ranges the report names. Decide per finding: identical, near,
 
 - One action at a time, smallest diff, in the order of the plan.
 - Prefer a pointer ("see `references/x.md`") over deleting the only explanation; keep the surviving copy where it is loaded.
-- Moves use `archive.py` (dry-run first, then `--apply`). It keeps the relative path, refuses paths outside the root and never overwrites.
+- Moves follow `references/archive.md` (dry-run first, then `--apply`). It keeps the relative path, refuses paths outside the root and never overwrites.
 - Do not touch version fields or the changelog here; hand off to `aiaddon-maintain`.
 
 ## Proof
 
-`prove.py <before> <after> --archive <dir>` compares every normalized line of the untouched before tree with the after tree plus the archive. Any missing line is printed as `LOST file:line: text` and the run fails. A reworded line counts as lost: if rewording is wanted, keep the original line in the plan's proof table as `reworded to ...` and apply it by hand after review, or keep both.
+The proof recipe (`references/prove.md`, inputs `<before> <after> --archive <dir>`) compares every normalized line of the untouched before tree with the after tree plus the archive. Any missing line is printed as `LOST file:line: text` and the run fails. A reworded line counts as lost: if rewording is wanted, keep the original line in the plan's proof table as `reworded to ...` and apply it by hand after review, or keep both.
 
 Also report the inventory totals before and after (files, bytes, unique lines, duplicate paragraphs) and the evals and reviewer results before and after.
 

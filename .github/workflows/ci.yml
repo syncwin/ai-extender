@@ -32,20 +32,20 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
-        run: python skills/aiaddon-review/scripts/selftest.py
+        run: python dev/aiaddon-review/scripts/selftest.py
       - name: Validate for the Claude plugin directory
-        run: python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+        run: python dev/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
-        run: python skills/aiaddon-review/scripts/scan_secrets.py .
+        run: python dev/aiaddon-review/scripts/scan_secrets.py .
       - name: Screen docs for prompt injection
-        run: python skills/aiaddon-review/scripts/screen_text.py .
+        run: python dev/aiaddon-review/scripts/screen_text.py .
       - name: Check the router against its evals
-        run: python skills/aiaddon-review/scripts/route_check.py .
+        run: python dev/aiaddon-review/scripts/route_check.py .
       - name: Simulate skill triggers
-        run: python skills/aiaddon-review/scripts/simulate.py . triggers
+        run: python dev/aiaddon-review/scripts/simulate.py . triggers
       - name: Self-test as a non-root user
         if: matrix.python == '3.13'
-        run: test "$(id -u)" != 0 && python skills/aiaddon-review/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
+        run: test "$(id -u)" != 0 && python dev/aiaddon-review/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
 
   public-safety:
     name: Public safety (secrets and private data)
@@ -60,8 +60,51 @@ jobs:
         with:
           python-version: "3.13"
       - name: Scan the working tree and the full git history (blocking)
-        run: python skills/aiaddon-review/scripts/scan_secrets.py . --history
+        run: python dev/aiaddon-review/scripts/scan_secrets.py . --history
       - name: Scan built packages, when present (blocking)
         run: |
-          python skills/aiaddon-package/scripts/build_skill_zips.py . --out "$RUNNER_TEMP/skill-zips"
-          python skills/aiaddon-review/scripts/scan_secrets.py . --artifacts "$RUNNER_TEMP/skill-zips"
+          python dev/aiaddon-package/scripts/build_skill_zips.py . --out "$RUNNER_TEMP/skill-zips"
+          python dev/aiaddon-review/scripts/scan_secrets.py . --artifacts "$RUNNER_TEMP/skill-zips"
+
+  release-branch:
+    # Publishes the shipped plugin (repo minus maintainer-only files) to the `release` branch,
+    # which the Anthropic directory submission tracks. Same plugin content as main; no hooks,
+    # scripts or non-text files (directory policy for non-Verified organizations).
+    name: Update the release branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, public-safety]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Build the shipped tree
+        run: |
+          git rm -r -q --cached --ignore-unmatch dev evals .github .claude IMPROVEMENTS.md .public-safety-allow assets/icon.svg
+          git clean -fdxq
+          rm -rf dev evals .github .claude IMPROVEMENTS.md .public-safety-allow assets/icon.svg
+      - name: Validate the shipped tree for the directory (blocking)
+        run: |
+          git show HEAD:dev/aiaddon-review/scripts/validate_extension.py > "$RUNNER_TEMP/validate_extension.py"
+          git show HEAD:dev/aiaddon-review/scripts/scan_secrets.py > "$RUNNER_TEMP/scan_secrets.py"
+          python "$RUNNER_TEMP/validate_extension.py" . --strict --target directory --require-meta author,company
+          python "$RUNNER_TEMP/scan_secrets.py" .
+      - name: Push the release branch
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          # Fast-forward only (no force-push): a new commit on top of the current release branch.
+          tree=$(git write-tree)
+          parent=$(git rev-parse -q --verify origin/release || true)
+          if [ -n "$parent" ] && [ "$(git rev-parse "$parent^{tree}")" = "$tree" ]; then echo "release branch already up to date"; exit 0; fi
+          commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} -m "release: shipped plugin from ${GITHUB_SHA::7}")
+          git push origin "$commit:refs/heads/release"

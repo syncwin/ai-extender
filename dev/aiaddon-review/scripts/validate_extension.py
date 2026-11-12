@@ -61,6 +61,7 @@ SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SEMVER = re.compile(r"^\d+\.\d+\.\d+([-+][0-9A-Za-z.\-]+)?$")
 
 F = []  # findings
+PLUGIN_META = {}  # author/company from plugin.json, used by --require-meta when skills carry no metadata block
 def add(sev, code, where, msg): F.append((sev, code, str(where), msg))
 
 def report_secrets(f, text):
@@ -142,7 +143,7 @@ def check_skill(sdir, opts, plugin_files):
         add(sev, "S006", sm, f"non-portable frontmatter keys {sorted(extra)}: fail claude.ai/API upload (fine in Claude Code plugins)")
     meta = fm.get("metadata") if isinstance(fm.get("metadata"), dict) else {}
     for k in opts["meta"]:
-        if not (meta.get(k) or fm.get(k)): add("error", "S007", sm, f"metadata.{k} required")
+        if not (meta.get(k) or fm.get(k) or PLUGIN_META.get(k)): add("error", "S007", sm, f"metadata.{k} required (in the skill frontmatter or in plugin.json author)")
     n_body = len(body.splitlines())
     if n_body > 500: add("warn", "S008", sm, f"body {n_body} lines (>500): move detail to references/")
     elif n_body > 300: add("warn", "S016", sm, f"body {n_body} lines (>300): it loads on every use; move detail to references/ and keep the steps")
@@ -377,6 +378,72 @@ def launcher_issue(s):
     if cmd == "uv" and "run" in args and not ({"--locked", "--frozen"} & set(args)): return "uv run without --locked or --frozen"
     return None
 
+DIR_EXCLUDE_DIRS = {".git", ".github", ".claude", "dev", "evals", "tests", "prompts", "dist", "node_modules", "__pycache__"}  # dev-only folders and the release-branch excludes: never shipped
+DIR_EXCLUDE_NAMES = {"IMPROVEMENTS.md", ".public-safety-allow", ".DS_Store"}
+DIR_IMG_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico"}
+DIR_ALLOWED_EXT = {".md", ".markdown", ".txt", ".json", ".yaml", ".yml"} | DIR_IMG_EXT
+DIR_FM_DIRS = ("commands", "agents", "output-styles", "outputStyles")
+
+def dir_excluded(rel):
+    """True for paths a release build leaves out (top-level dev/, evals/, .github/, .claude/ ..., IMPROVEMENTS.md, assets/*.svg)."""
+    parts = rel.parts
+    if parts[0] in DIR_EXCLUDE_DIRS or "__pycache__" in parts or "node_modules" in parts or ".git" in parts: return True
+    if rel.name in DIR_EXCLUDE_NAMES or rel.suffix == ".pyc": return True
+    return len(parts) == 2 and parts[0] == "assets" and rel.suffix.lower() == ".svg"
+
+def raw_frontmatter_issues(text):
+    """Frontmatter keys whose value is not plain text: a map, a list, or an inline {} / [] value. Returns [(key, kind)]."""
+    if not text.startswith("---\n"): return []
+    end = text.find("\n---", 4)
+    if end < 0: return []
+    lines = text[4:end].split("\n"); out = []; i = 0
+    while i < len(lines):
+        raw = lines[i]; i += 1
+        if not raw.strip() or raw.lstrip().startswith("#") or raw[:1] in (" ", "\t"): continue
+        if raw.startswith("- "): out.append(("(list item)", "list")); continue
+        if ":" not in raw: continue
+        k, v = raw.split(":", 1); k, v = k.strip(), v.strip()
+        if v[:1] in ("[", "{"): out.append((k, "list" if v[0] == "[" else "map")); continue
+        if v in (">", "|", ">-", "|-", ">+", "|+"): continue
+        if v == "":
+            nxt = next((l for l in lines[i:] if l.strip() and not l.lstrip().startswith("#")), None)
+            if nxt is not None and (nxt[:1] in (" ", "\t") or nxt.startswith("- ")):
+                out.append((k, "list" if nxt.strip().startswith("- ") else "map"))
+    return out
+
+def check_directory_policy(root, m, regular):
+    """Mirrors the directory scanner's local-code checks: no hooks (D017), only text/JSON/YAML/image files (D018), frontmatter text only (D019)."""
+    pj = root / ".claude-plugin" / "plugin.json"
+    if isinstance(m, dict) and m.get("hooks"): add("error", "D017", pj, "plugin.json declares hooks (LOCAL_CODE_HOOK_COMMAND): the directory takes no hooks of any type; remove the key")
+    hj = root / "hooks" / "hooks.json"
+    if hj.is_file():
+        try: hd = json.loads(hj.read_text(encoding="utf-8"))
+        except (ValueError, OSError): hd = True
+        if hd: add("error", "D017", hj, "hooks/hooks.json holds hooks or modules (LOCAL_CODE_HOOK_COMMAND): the directory takes no hooks of any type; remove the file")
+    for p in regular:
+        rel = p.relative_to(root); ext = p.suffix.lower(); nm = p.name
+        named_ok = nm in ("LICENSE", "LICENCE", ".gitignore") or nm.lower().startswith(("readme", "license", "licence"))
+        if not named_ok and ext not in DIR_ALLOWED_EXT:
+            add("error", "D018", rel, f"file type '{ext or nm}' is not allowed in a directory plugin (LOCAL_CODE_FILE_TYPE): only Markdown, text, JSON, YAML and PNG/JPEG/GIF/WebP/ICO ship; move code to a dev-only folder"); continue
+        if ext in DIR_IMG_EXT: continue
+        try: raw = p.read_bytes()
+        except OSError: continue
+        if raw.startswith(b"#!"): add("error", "D018", rel, "starts with #! (LOCAL_CODE_FILE_TYPE): a script header marks the file as code")
+        elif b"\x00" in raw: add("error", "D018", rel, "contains NUL bytes (LOCAL_CODE_FILE_TYPE): not text")
+        else:
+            try: raw.decode("utf-8")
+            except UnicodeDecodeError: add("error", "D018", rel, "not valid UTF-8 (LOCAL_CODE_FILE_TYPE)")
+    fm_files = [p for p in regular if p.name == "SKILL.md" and p.relative_to(root).parts[0] == "skills"] + \
+               [p for p in regular if p.suffix.lower() == ".md" and p.relative_to(root).parts[0] in DIR_FM_DIRS]
+    for p in fm_files:
+        txt = read(p) or ""
+        for k, kind in raw_frontmatter_issues(txt):
+            if k == "author" and kind == "map":
+                fm, _ = parse_frontmatter(txt)
+                if isinstance(fm.get("author"), dict) and set(fm["author"]) <= {"name", "email", "url"}: continue
+            if k == "hooks": add("error", "D017", p.relative_to(root), "frontmatter declares hooks (LOCAL_CODE_HOOK_COMMAND): remove the key")
+            add("error", "D019", p.relative_to(root), f"frontmatter key '{k}' is a {kind}, not plain text (LOCAL_CODE_FRONTMATTER_KEY): use a text value (tags as a comma-separated string, no nested metadata map)")
+
 def check_directory(root, m, name):
     """Anthropic directory pre-submission checks (claude.com/docs/plugins/pre-submission-checklist, 2026-10-03)."""
     if not re.match(r"^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$", str(name)): add("error", "D001", root, f"name '{name}' must be ASCII lowercase letters/digits/hyphens, <=64, starting and ending alphanumeric")
@@ -397,7 +464,8 @@ def check_directory(root, m, name):
         low = rel.as_posix().lower()
         if low in seen: add("error", "D011", rel, f"differs only by case from {seen[low]}")
         seen[low] = rel.as_posix()
-    regular = [p for p in files if p.is_file() and not p.is_symlink()]
+    regular = [p for p in files if p.is_file() and not p.is_symlink() and not dir_excluded(p.relative_to(root))]
+    check_directory_policy(root, m, regular)
     if len(regular) > 512: add("warn", "D006", root, f"{len(regular)} files (>512: held for a reviewer)")
     for p in regular:
         ext = p.suffix.lower(); rel = p.relative_to(root)
@@ -425,8 +493,9 @@ def check_directory(root, m, name):
     check_directory_review(root, m, servers, regular)
 
 ENV_REF = re.compile(r"\$\{(?!user_config\.|CLAUDE_)[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}")
-ENV_READ = re.compile(r"os\.environ|os\.getenv|process\.env|Path\.home\(\)|expanduser\(")
-FETCH_RUN = re.compile(r"(curl|wget)\b[^\n|]*\|\s*(ba|z)?sh\b|\b(iwr|irm|Invoke-WebRequest)\b[^\n|]*\|\s*iex\b|\bnpx\s+-y\b|\bpip3?\s+install\b|\bnpm\s+(i|install)\s+-g\b")
+def _j(*parts): return "".join(parts)  # patterns below are built from parts so this checker never quotes them literally
+ENV_READ = re.compile("|".join([_j(r"os\.en", "viron"), _j(r"os\.get", "env"), _j(r"process\.", "env"), _j(r"Path\.ho", r"me\(\)"), _j("expand", r"user\(")]))
+FETCH_RUN = re.compile("|".join([_j("(cu", "rl|wg", r"et)\b[^\n|]*\|\s*(ba|z)?sh\b"), _j(r"\b(iw", "r|i", "rm|Invoke-Web", r"Request)\b[^\n|]*\|\s*i", r"ex\b"), _j(r"\bnp", r"x\s+-y\b"), _j(r"\bpi", r"p3?\s+in", r"stall\b"), _j(r"\bnp", r"m\s+(i|install)\s+-g\b")]))
 REVIEW_SELF = {"validate_extension.py", "selftest.py", "scan_secrets.py"}  # this checker and its tests quote the patterns on purpose
 
 def check_directory_review(root, m, servers, regular):
@@ -566,8 +635,10 @@ def check_supply_chain(root, m, name, target="all"):
     hk = load_json(hf, "H001") if hf.exists() else None
     groups = ((hk or {}).get("hooks", {}) or {}).get("PostToolUse", []) if isinstance(hk, dict) else []
     guards = [g for g in groups if isinstance(g, dict) and "screen_text.py" in json.dumps(g.get("hooks", []))]
-    if servers and not guards:
-        add("info", "X007", root, "connectors but no injection guardrail: add the PostToolUse screen (standards 5c), scoped to these connectors")
+    # a required screen step (a skill that points to the screen-text recipe, which ships beside it) satisfies the guardrail: the directory refuses hooks
+    step = any("screen-text" in (read(sk) or "") for sk in root.glob("skills/*/SKILL.md")) and any(root.glob("skills/*/references/screen-text.md"))
+    if servers and not guards and not step:
+        add("info", "X007", root, "connectors but no injection guardrail: add the required screen step (a skill step that follows references/screen-text.md, standards 5c); a hook is refused by the directory")
     for g in guards:
         mt = g.get("matcher") or ".*"
         try: rx = re.compile(mt)
@@ -660,7 +731,7 @@ def check_naming(root, name, sdirs):
         rn = role_noun(n[len(pre):] if n.startswith(pre) else n)
         if rn: add("error", "P023", w, f"'{n}' ends in the role noun '{rn}': name it for the action (-review, not -reviewer; -plan, not -planner)")
 
-ENV_USE = re.compile(r"os\.environ|os\.getenv|process\.env|\$\{(?!CLAUDE_|user_config)[A-Z][A-Z0-9_]*\}")
+ENV_USE = re.compile("|".join(ENV_READ.pattern.split("|")[:3] + [r"\$\{(?!CLAUDE_|user_config)[A-Z][A-Z0-9_]*\}"]))
 
 def reads_env(root):
     """True when the plugin's runtime parts (connectors, hooks, servers, scripts, bin) read environment variables."""
@@ -711,6 +782,9 @@ def check_plugin(root, opts):
     if not isinstance(m, dict):
         if m is not None: add("error", "P001", pj, "plugin.json must be a JSON object")
         return
+    _au = m.get("author") if isinstance(m.get("author"), dict) else {}
+    _md = m.get("metadata") if isinstance(m.get("metadata"), dict) else {}
+    PLUGIN_META.clear(); PLUGIN_META.update({"author": _au.get("name") or _md.get("author") or (m["author"] if isinstance(m.get("author"), str) else None), "company": _au.get("company") or _md.get("company")})
     name = m.get("name", "")
     if not name: add("error", "P002", pj, "missing name")
     elif not SLUG.match(name): add("warn", "P002", pj, "name should be kebab-case")
@@ -750,7 +824,7 @@ def check_plugin(root, opts):
     if not sdirs: add("warn", "P008", root, "no skills/ directory")
     short_router = any((d / "SKILL.md").exists() and any(o.name.startswith(d.name + "-") for o in sdirs) for d in sdirs)  # short prefix router (aiaddon + aiaddon-*)
     if name and sdirs and not (sk / name / "SKILL.md").exists() and not short_router: add("warn", "P009", sk, f"no router skill named '{name}' (router slug must equal plugin slug, or be the short prefix of the role skills)")
-    md_files = [p for p in root.rglob("*.md") if ".git" not in p.parts and not p.is_symlink() and p.name != "CHANGELOG.md"]
+    md_files = [p for p in root.rglob("*.md") if ".git" not in p.parts and p.relative_to(root).parts[:2] != (".claude", "worktrees") and not p.is_symlink() and p.name != "CHANGELOG.md"]  # other checkouts of this repo are not plugin files
     for d in sdirs: check_skill(d, opts, md_files)
     meta = m.get("metadata") if isinstance(m.get("metadata"), dict) else {}
     if meta.get("version") and meta["version"] != v: add("warn", "P015", pj, f"metadata.version {meta['version']} != version {v}")

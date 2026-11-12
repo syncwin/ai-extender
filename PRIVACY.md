@@ -8,9 +8,9 @@ Nothing. The plugin has no server, no analytics, no telemetry, and no account. S
 
 ## What runs, and where
 
-- **Instructions and scripts** run inside your own Claude session and on your own machine. The scripts make no network requests and only read and write the folders you point them at.
-- **The guardrail hook** reads the output of web fetches, web searches, and Composio calls on your machine to screen it for prompt injection, then discards it. Nothing is stored or sent.
-- **One opt-in local file:** `validate_extension.py --cache` keeps its last result in `~/.cache/aiaddon/`. `scan_secrets.py` reads only the folders you name and shows any key it finds masked. Neither sends anything.
+- **Instructions** run inside your own Claude session. The plugin ships Markdown only: no scripts and no hooks. Claude follows the recipes with its own read, search and write tools and standard OS or git commands, only in the folders you point it at.
+- **The injection screen** is a manual step (`skills/aiaddon-review/references/screen-text.md`): after each web fetch, web search or connector call, Claude screens that output for prompt injection and treats flagged text as data. Nothing is stored or sent.
+- **Secret scan:** the scan-secrets recipe reads only the folders you name and shows any key it finds masked. It stores and sends nothing.
 
 ## Services you choose to use
 

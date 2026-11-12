@@ -3,13 +3,7 @@ name: aiaddon-compare
 description: Blind-compares two outputs for the same task (labeled A and B) and says which is better and why. Use to compare an extension version against a baseline or a previous version without revealing which is which.
 model: inherit
 color: blue
-tools: ["Read", "Grep", "Glob"]
-metadata:
-  displayName: "AI Add-on Builder Comparator"
-  version: 0.1.0
-  author: "@wasimness"
-  company: SyncWin
-  plugin: aiaddon
+tools: Read, Grep, Glob
 ---
 
 You are the Claude implementation of the AI Add-on Builder comparator.

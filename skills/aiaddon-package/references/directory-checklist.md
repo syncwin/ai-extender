@@ -1,6 +1,6 @@
 # Directory Pre-submission Checklist
 
-Verified 2026-10-03 (claude.com/docs/plugins/pre-submission-checklist and /submit). Only on the user's explicit public-release instruction (`release.md`). Automate with `python ${CLAUDE_SKILL_DIR}/../aiaddon-review/scripts/validate_extension.py <dir> --target directory --strict`; the portal's Validate button runs the authoritative version, then a security scan runs on every new commit.
+Verified 2026-10-03 (claude.com/docs/plugins/pre-submission-checklist and /submit). Only on the user's explicit public-release instruction (`release.md`). Check with the recipe `aiaddon-review/references/validate-extension.md` (target directory, strict); the portal's Validate button runs the authoritative version, then a security scan runs on every new commit.
 
 ## Contents
 
@@ -20,7 +20,7 @@ Verified 2026-10-03 (claude.com/docs/plugins/pre-submission-checklist and /submi
 - Package launchers (`npx`, `bunx`, `pnpm dlx`, `yarn dlx`, `uvx`, `pipx run`, `uv run`) pinned to an exact version (`pkg@1.2.3`, `pkg==1.2.3`); `uv run` with `--locked` or `--frozen`; no `.npmrc`, `bunfig.toml`, `uv.toml` beside a launcher.
 - No real credentials anywhere; ask through `userConfig` with `sensitive: true` and refer to `${user_config.KEY}`. No HTTP hook sending a credential read from the environment.
 - `.mcp.json` valid; remote servers `type` http/sse/ws with an absolute `https://` or `wss://` URL (or a `${user_config.KEY}` reference, or `""`); no `.mcpb`/`.dxt` fetched from a URL.
-- `hooks/hooks.json` valid with a top-level `hooks` object, known events and types, `https://` on HTTP hooks; valid YAML front matter with `description` as one text value; exact folder and file spelling (`hooks/`, `skills/`, `SKILL.md`).
+- Non-Verified organizations: no hooks of any type (no `hooks/` folder, no `hooks` in the manifest), no non-text files (for example `.py`, `.js`, executables), and text-only frontmatter values. If a hooks file is present anyway it must be valid (top-level `hooks` object, known events and types, `https://` on HTTP hooks); valid YAML front matter with `description` as one text value; exact folder and file spelling (`hooks/`, `skills/`, `SKILL.md`).
 - Repository size: <50 MiB archived, <256 MiB unpacked, <10,000 entries, every plugin file <5 MiB (otherwise validation stops).
 
 ## 3. Held for a reviewer

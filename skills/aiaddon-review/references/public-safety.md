@@ -1,6 +1,6 @@
 # Public Safety
 
-Every extension this plugin creates, changes, reviews, packages or cleans is treated as a public repository, even when the user never says so. Nothing private may reach git, a package, a release or a listing. This is enforced by scripts, not by memory: `scan_secrets.py`, `validate_extension.py` (`X008` to `X013`) and the CI job.
+Every extension this plugin creates, changes, reviews, packages or cleans is treated as a public repository, even when the user never says so. Nothing private may reach git, a package, a release or a listing. This is enforced by recipes, not by memory: `scan-secrets.md`, `public-safety-scan.md`, the validate-extension recipe (`X008` to `X013`, `references/validate-extension.md`) and the CI job.
 
 ## Contents
 
@@ -28,7 +28,7 @@ Every plan carries two lines, next to its component list:
 
 ## 3. Required `.gitignore` preset
 
-Every extension has these lines in `.gitignore` from the first commit (the validator checks them, `X009`; `scaffold_extension.py` writes them):
+Every extension has these lines in `.gitignore` from the first commit (the validator checks them, `X009`; `scaffold-extension.md` writes them):
 
 ```
 # --- public-safety preset: private data never reaches git ---
@@ -86,7 +86,7 @@ This repository is public. Only what is listed under "May be public" is publishe
 - [setting name]: `userConfig` (sensitive) or environment variable [NAME], documented in `.env.example`
 
 ## Checks
-- `python <skills>/aiaddon-review/scripts/scan_secrets.py . --history` before every release
+- the scan-secrets and public-safety-scan recipes (`aiaddon-review/references/`) with history, before every release
 - CI runs the same scan on every push and pull request
 - Allowed false positives: `.public-safety-allow`, each with a reason in a comment
 
@@ -98,7 +98,7 @@ Rotate the credential first, then remove it from history (past leak remediation 
 
 ## 5. The scan
 
-`python ${CLAUDE_SKILL_DIR}/scripts/scan_secrets.py <folder> [--history] [--artifacts <dir-or-zip> ...] [--allowlist FILE] [--json]` (pure Python standard library, no installs). It reads files only, masks every value, and exits 1 on any finding. Every finding is blocking: there is no warning level.
+Recipe: `aiaddon-review/references/scan-secrets.md` with inputs `<folder>`, optional history, artifacts (`<dir-or-zip>`), allowlist file. Claude follows it with Read, Glob, Grep and standard git and OS commands; it reads files only, masks every value, and stops on any finding. Every finding is blocking: there is no warning level.
 
 - **Working tree:** files git would publish (tracked plus untracked and not ignored); a plain folder or a package when not a git repo.
 - **Full history (`--history`):** every line ever added on any ref, from `git log --all -p`, and any private file ever committed. A key deleted last week is still found.
@@ -111,7 +111,7 @@ Rotate the credential first, then remove it from history (past leak remediation 
 
 Use when a scan finds a secret or private value already committed, pushed, packaged or released. Do the steps in this order; never skip ahead to rewriting history.
 
-1. **Detect:** run `scan_secrets.py <repo> --history --artifacts dist`; list each finding (rule, file, commit, masked value) and where copies may exist (remote branches, tags, releases, packages, forks, PR refs).
+1. **Detect:** follow `scan-secrets.md` on `<repo>` with history and artifacts `dist`; list each finding (rule, file, commit, masked value) and where copies may exist (remote branches, tags, releases, packages, forks, PR refs).
 2. **Tell the user** plainly, in one short message: what leaked, since when, where it is visible. Do not repeat the value.
 3. **Rotate or revoke the credential first,** at the provider (the user does this; give the link or steps). Treat it as compromised from the moment it was public. For personal data (a private e-mail, a client name) there is nothing to rotate: note the exposure and continue.
 4. **Rewrite history** to remove it from every commit: `git filter-repo --replace-text` (values file kept outside the repo) or `--path <file> --invert-paths`; or BFG Repo-Cleaner. Work on a fresh mirror clone, never the only copy. Back up the repository first.

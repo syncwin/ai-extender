@@ -2,6 +2,10 @@
 
 Build only when no hosted or existing server covers the need. Verify protocol details against modelcontextprotocol.io and Anthropic's connector-building docs before shipping.
 
+## Compliance
+
+A local (stdio) server means shipped code, dependencies and often an install hook, and the Anthropic directory refuses scripts, non-text files and hooks from non-Verified organizations. Tell the user this plainly. It still works for private and GitHub-marketplace installs. Offer the compliant method first: a remote MCP server over HTTP (hosted by the user or a vendor, registered in `.mcp.json` with an `https://` URL), secrets through `userConfig` with `sensitive: true`, and skill or command instructions for everything that needs no server. Build a local server only when the user chooses a private or GitHub-only release, and mark it "not directory-compliant".
+
 ## Decide
 
 | Question | Choice |
@@ -30,7 +34,7 @@ Build only when no hosted or existing server covers the need. Verify protocol de
 
 1. Lean layout: `servers/<name>/` with the entry file and a README section. Dependencies (verified 2026-10-05, code.claude.com/docs/en/plugins/loading and /components):
    - **Node:** list them in a `package.json` at the plugin root and commit its lockfile (`package-lock.json`, `bun.lock`, ...). Claude Code installs root dependencies into each cached version at install and update; the entry file finds them by walking up. A plugin loaded in place from a local folder gets no install: run it yourself. Alternatives: bundle the server into one readable file, or a `SessionStart` hook that installs into `${CLAUDE_PLUGIN_DATA}` with `NODE_PATH` set (works for `require`, not for ES module `import`).
-   - **Python:** no automatic install. Use a `SessionStart` hook that runs `pip install --target "${CLAUDE_PLUGIN_DATA}/python/<name>"` when `requirements.txt` changes, and set `PYTHONPATH` to that folder in the server's `env`. `scripts/scaffold_mcp_server.py` writes both.
+   - **Python:** no automatic install. Use a `SessionStart` hook that runs `pip install --target "${CLAUDE_PLUGIN_DATA}/python/<name>"` when `requirements.txt` changes, and set `PYTHONPATH` to that folder in the server's `env`. `aiaddon-build/references/scaffold-mcp-server.md` writes both. Local servers, hooks and install steps are refused by the Anthropic directory for non-Verified organizations (see Compliance below).
    - Pin exact versions before release. Any install from a registry runs on the user's machine: disclose it in the README. Anthropic's directory holds lockfile installs and hook-run installs for a reviewer (`aiaddon-package/references/directory-checklist.md` §3).
 2. Register in `.mcp.json` using `${CLAUDE_PLUGIN_ROOT}` (see `connectors.md`).
 3. Exercise with the MCP Inspector (`npx @modelcontextprotocol/inspector`) and then a real Claude session; confirm tool names resolve as `mcp__plugin_<plugin>_<server>__<tool>`.

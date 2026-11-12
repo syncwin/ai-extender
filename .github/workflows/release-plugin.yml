@@ -39,7 +39,7 @@ jobs:
           import json, os, zipfile
           root, asset = os.environ["ROOT"], os.environ["ASSET"]
           version = json.load(open(os.path.join(root, ".claude-plugin", "plugin.json"), encoding="utf-8"))["version"]
-          skip_dirs = {".git", ".github", ".claude", "tests", "node_modules", "__pycache__", "evals", "prompts", "dist"}
+          skip_dirs = {".git", ".github", ".claude", "tests", "node_modules", "__pycache__", "evals", "prompts", "dist", "dev"}
           skip_files = {"IMPROVEMENTS.md"}
           os.makedirs("dist", exist_ok=True)
           out = os.path.join(os.getcwd(), "dist", asset)
@@ -60,9 +60,9 @@ jobs:
           print("built", out, "version", version)
           PY
       - name: Build one zip per skill
-        run: python3 skills/aiaddon-package/scripts/build_skill_zips.py . --out dist
+        run: python3 dev/aiaddon-package/scripts/build_skill_zips.py . --out dist
       - name: Scan the built packages for secrets and private data (blocking)
-        run: python3 skills/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
+        run: python3 dev/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
       - name: Check the tag matches the plugin version
         if: github.ref_type == 'tag'
         env:

@@ -107,9 +107,10 @@ with tempfile.TemporaryDirectory() as td:
     r = RUN(V, mk("theme-base", {"themes/t.json": '{"name":"x","base":7}'})); check("rejects non-string theme base", r.returncode == 1 and "T003" in r.stdout, r.stdout[-200:])
     r = RUN(V, mk("dir-short", {"README.md": "# Demo\n\nToo short.\n"}), "--target", "directory"); check("directory: short README blocks", r.returncode == 1 and "D002" in r.stdout, r.stdout[-200:])
     long_readme = "# Demo\n\n" + " ".join(["word"] * 60) + "\n"
-    r = RUN(V, mk("dir-ok", {"README.md": long_readme}), "--target", "directory"); check("directory: clean fixture passes", r.returncode == 0, r.stdout[-300:])
+    nohook = lambda q: (shutil.rmtree(q / "hooks", ignore_errors=True), shutil.rmtree(q / "scripts", ignore_errors=True), shutil.rmtree(q / "servers", ignore_errors=True), (q / ".env.example").unlink(missing_ok=True), [g.unlink() for g in q.rglob(".gitkeep")], q)[-1]  # the directory ships no hooks, scripts or .env.example (D017, D018)
+    r = RUN(V, nohook(mk("dir-ok", {"README.md": long_readme})), "--target", "directory"); check("directory: clean fixture passes", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("dir-npx", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"command":"npx","args":["-y","some-pkg@latest"]}}}'}), "--target", "directory"); check("directory: unpinned npx blocks", r.returncode == 1 and "D007" in r.stdout, r.stdout[-200:])
-    r = RUN(V, mk("dir-pinned", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"command":"npx","args":["-y","some-pkg@1.2.3"]}}}'}), "--target", "directory"); check("directory: pinned npx passes", r.returncode == 0, r.stdout[-300:])
+    r = RUN(V, nohook(mk("dir-pinned", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"command":"npx","args":["-y","some-pkg@1.2.3"]}}}'})), "--target", "directory"); check("directory: pinned npx passes", r.returncode == 0, r.stdout[-300:])
     r = RUN(V, mk("dir-sys", {"README.md": long_readme, ".DS_Store": "x"}), "--target", "directory"); check("directory: system file blocks", r.returncode == 1 and "D004" in r.stdout, r.stdout[-200:])
     r = RUN(V, mk("dir-http", {"README.md": long_readme, ".mcp.json": '{"mcpServers":{"x":{"type":"http","url":"http://example.com/mcp"}}}'}), "--target", "directory"); check("directory: non-https MCP url blocks", r.returncode == 1 and "D009" in r.stdout, r.stdout[-200:])
 
@@ -235,7 +236,7 @@ with tempfile.TemporaryDirectory() as td:
     q = td / "bv"; shutil.copytree(p, q)
     r = RUN(BV, q, "--summary", "Added: a new check\nFixed: a typo", "--title", "Checks")
     m = json.loads((q / ".claude-plugin/plugin.json").read_text())
-    check("bump_version moves every version field and writes the entry", r.returncode == 0 and m["version"] == "0.1.0" and m["metadata"]["version"] == "0.1.0" and "version: 0.1.0" in sk(q).read_text() and "## 0.1.0: Checks" in (q / "CHANGELOG.md").read_text(), r.stdout[-300:])
+    check("bump_version moves every version field and writes the entry", r.returncode == 0 and m["version"] == "0.1.0" and "## 0.1.0: Checks" in (q / "CHANGELOG.md").read_text(), r.stdout[-300:])
     r = RUN(BV, q, "--level", "keep", "--summary", "Fixed: one more"); cl = (q / "CHANGELOG.md").read_text()
     check("bump_version keep adds to the current entry without a bump", r.returncode == 0 and json.loads((q / ".claude-plugin/plugin.json").read_text())["version"] == "0.1.0" and cl.index("- one more") < cl.index("## 0.0.1"), cl[:300])
     SS = S / "aiaddon-review/scripts/scan_secrets.py"
@@ -293,9 +294,19 @@ with tempfile.TemporaryDirectory() as td:
         check("read-only source is staged, not written", r.returncode == 0 and not (q2 / "prompts").exists() and any(n.startswith("notes-helper/") for n in names) and not any("/prompts/" in n for n in names) and any((td / "o7").glob("*.json")) and "read-only" in r.stdout, r.stdout[-300:])
     os.chmod(q2, 0o755)
     import re as _re
-    own = json.loads((S.parent / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
+    own = json.loads((S / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
     hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_aiaddon_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
-    check("AI Add-on Builder's own guardrail hook fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "aiaddon-review/scripts/screen_text.py").exists() and "exit 0" in own["hooks"][0]["command"] and "/screen_text.py" in own["hooks"][0]["command"], str(hits))
+    check("reference guardrail hook (dev/hooks) fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "aiaddon-review/scripts/screen_text.py").exists() and "exit 0" in own["hooks"][0]["command"] and "/screen_text.py" in own["hooks"][0]["command"], str(hits))
+    root = S.parent; pj = json.loads((root / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+    check("the plugin ships no hooks (no hooks/ folder, no hooks key in plugin.json)", not (root / "hooks").exists() and "hooks" not in pj, str(sorted(pj)))
+    check("no scripts ship inside skills/ (they live in dev/)", not [x for x in (root / "skills").rglob("*") if x.is_file() and x.suffix in (".py", ".sh", ".js", ".mjs", ".ts")], str([str(x) for x in (root / "skills").rglob("*.py")][:5]))
+    gone = []
+    for sc in sorted(S.glob("*/scripts/*.py")):
+        stem = {"public_safety": "public-safety-scan"}.get(sc.stem, sc.stem.replace("_", "-"))
+        if not (root / "skills" / sc.parents[1].name / "references" / (stem + ".md")).is_file(): gone.append(f"{sc.parents[1].name}/{sc.name}")
+    check("each former script has its recipe in skills/<skill>/references/", not gone, ", ".join(gone))
+    _pk = _re.search(r"EXCLUDE_DIRS = \{([^}]*)\}", (S / "aiaddon-package/scripts/package_extension.py").read_text())
+    check("dev-only folders are excluded from the shipped set by the packager", bool(_pk) and all(f'"{d}"' in _pk.group(1) for d in ("dev", "evals", ".github", ".claude")), _pk.group(1) if _pk else "no EXCLUDE_DIRS")
     q = td / "sync-escape"; shutil.copytree(p, q); (q / ".claude-plugin/shared-files.json").write_text(json.dumps({"files": {"../../outside.md": ["skills/*/references/x.md"], "README.md": ["../escaped.md"]}}))
     r = RUN(S / "aiaddon-maintain/scripts/sync_shared.py", q); check("sync_shared refuses paths outside the plugin", r.returncode == 1 and r.stdout.count("outside-plugin") >= 2 and not (td / "escaped.md").exists(), r.stdout[-300:])
     r = RUN(S / "aiaddon-build/scripts/scaffold_extension.py", td / "bad", "--slug", "ok-slug", "--display", "OK", "--roles", "../evil"); check("scaffold rejects role names that leave the folder", r.returncode == 2 and not (td / "evil").exists(), r.stdout[-200:])
@@ -351,6 +362,20 @@ with tempfile.TemporaryDirectory() as td:
     D = ("--target", "directory", "--strict")
     broken("connector reading an environment variable", "D014", lambda q: (q / ".mcp.json").write_text('{"mcpServers":{"x":{"type":"http","url":"https://api.example.com/mcp","headers":{"X-Region":"${REGION}"}}}}'), D)
     broken("script reading the environment", "D014", lambda q: (q / "skills/ab-demo-build/run.py").write_text("import os\nlevel = os.environ.get('LOG_LEVEL')\n"), D)
+    broken("hook in hooks/hooks.json", "D017", lambda q: ((q / "hooks").mkdir(exist_ok=True), (q / "hooks/hooks.json").write_text('{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"exit 0"}]}]}}')), D)
+    broken("hooks key in plugin.json", "D017", lambda q: (q / ".claude-plugin/plugin.json").write_text(json.dumps({**json.loads((q / ".claude-plugin/plugin.json").read_text()), "hooks": "./hooks/hooks.json"})), D)
+    broken("script file in a directory plugin", "D018", lambda q: (q / "skills/ab-demo-build/run.py").write_text("print('x')\n"), D)
+    broken("shebang in a text file", "D018", lambda q: ((q / "skills/ab-demo-build/references").mkdir(exist_ok=True), (q / "skills/ab-demo-build/references/sh.md").write_text("#!/bin/sh\necho x\n")), D)
+    broken("NUL byte in a text file", "D018", lambda q: ((q / "skills/ab-demo-build/references").mkdir(exist_ok=True), (q / "skills/ab-demo-build/references/nul.md").write_bytes(b"ok" + bytes(1) + b"ok\n")), D)
+    broken("nested metadata map in skill frontmatter", "D019", lambda q: sk(q).write_text(sk(q).read_text().replace("\n---\n", "\nmetadata:\n  version: 1\n---\n", 1)), D)
+    broken("list value in skill frontmatter", "D019", lambda q: sk(q).write_text(sk(q).read_text().replace("\n---\n", "\ntags: [a, b]\n---\n", 1)), D)
+    def _quiet(label, mutate):
+        q = td / ("dq-" + label); shutil.copytree(td / "nc" / "nc-demo", q); [g.unlink() for g in q.rglob(".gitkeep")]; (q / ".env.example").unlink(missing_ok=True); mutate(q); r = RUN(V, q, *D); check(f"directory policy ignores {label}", not any(c in r.stdout for c in ("D017", "D018", "D019")), r.stdout[-300:])
+    _quiet("dev-only folders and files", lambda q: ((q / "dev").mkdir(), (q / "dev/t.py").write_text("#!/usr/bin/env python3\nprint(1)\n"), (q / "IMPROVEMENTS.md").write_text("x\n"), (q / ".public-safety-allow").write_text("x\n")))
+    q = td / "meta-pj"; shutil.copytree(p, q); pj_ = json.loads((q / ".claude-plugin/plugin.json").read_text()); pj_.pop("metadata", None); pj_["author"] = {"name": "@t", "company": "Co"}; (q / ".claude-plugin/plugin.json").write_text(json.dumps(pj_))
+    sk(q).write_text(re.sub(r"\nmetadata:\n(  .*\n)+", "\n", sk(q).read_text())); r = RUN(V, q, "--require-meta", "author,company"); check("--require-meta reads plugin.json author when skills carry no metadata", "S007" not in r.stdout and "P006" not in r.stdout, r.stdout[-300:])
+    pj_["author"] = {"name": "@t"}; (q / ".claude-plugin/plugin.json").write_text(json.dumps(pj_)); r = RUN(V, q, "--require-meta", "author,company"); check("--require-meta still fails when company is nowhere", "S007" in r.stdout or "P006" in r.stdout, r.stdout[-300:])
+    r = RUN(V, p, *D); check("directory target flags the scaffolder's optional guardrail hook and scripts (D017, D018)", "D017" in r.stdout and "D018" in r.stdout, r.stdout[-300:])
 
     # --- naming standard, router standard, public safety (aiaddon 0.1.0)
     mk = lambda q, rel, text: ((q / rel).parent.mkdir(parents=True, exist_ok=True), (q / rel).write_text(text, encoding="utf-8"))

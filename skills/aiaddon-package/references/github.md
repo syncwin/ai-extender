@@ -8,7 +8,7 @@ Runs only when the user asks to publish to GitHub or the extension already lives
 
 ## 1. Publish a plugin or skill repo
 
-1. Validate and package first (`aiaddon:aiaddon-review`, `package_extension.py`).
+1. Validate and package first (`aiaddon:aiaddon-review`, `references/package-extension.md`).
 2. Repo root = plugin root (`.claude-plugin/`, `skills/`, ...). Keep `.gitignore`; never commit `*.plugin`/`*.zip` (attach them to releases).
 3. Set `plugin.json` `repository` and `homepage`. Marketplace entry `source` is `./` when the repo is the marketplace, else `{"source": "github", "repo": "<owner>/<repo>"}` (pin `ref` or `sha` for releases).
 4. Commit with the version and one-line what/why from the changelog. Batch files into a few multi-file commits (use a multi-file commit tool when one exists); an empty repo needs one single-file commit first.

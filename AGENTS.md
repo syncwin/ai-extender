@@ -2,15 +2,15 @@
 
 AI Add-on Builder: plans, builds, checks and packages Claude skills, plugins, connectors and agents.
 
-**Structure:** `skills/aiaddon` (router) and `aiaddon-plan|build|maintain|review|package|prompt|clean`, `agents/` (`aiaddon-compare`, `aiaddon-grade`), `hooks/hooks.json`, `evals/`, `.github/` (CI).
+**Structure:** `skills/aiaddon` (router) and `aiaddon-plan|build|maintain|review|package|prompt|clean`, `agents/` (`aiaddon-compare`, `aiaddon-grade`), `dev/` (Python dev tools and the old hook, not shipped), `evals/`, `.github/` (CI).
 
 ## Commands
-- Self-test (must pass): `python skills/aiaddon-review/scripts/selftest.py`
-- Strict validation (must pass): `python skills/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
-- Secret scan: `python skills/aiaddon-review/scripts/scan_secrets.py`
-- Secret and private-data scan (blocking; tree, full history, packages): `python skills/aiaddon-review/scripts/scan_secrets.py . --history`; false positives only in `.public-safety-allow`
-- Router check (every eval prompt routes to its expected skill): `python skills/aiaddon-review/scripts/route_check.py .`
-- Version bump: `skills/aiaddon-maintain/scripts/bump_version.py`; package: `skills/aiaddon-package/scripts/package_extension.py`
+- Self-test (must pass): `python dev/aiaddon-review/scripts/selftest.py`
+- Strict validation (must pass): `python dev/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company`
+- Secret scan: `python dev/aiaddon-review/scripts/scan_secrets.py`
+- Secret and private-data scan (blocking; tree, full history, packages): `python dev/aiaddon-review/scripts/scan_secrets.py . --history`; false positives only in `.public-safety-allow`
+- Router check (every eval prompt routes to its expected skill): `python dev/aiaddon-review/scripts/route_check.py .`
+- Version bump: `dev/aiaddon-maintain/scripts/bump_version.py`; package: `dev/aiaddon-package/scripts/package_extension.py`
 - Validate: `claude plugin validate . --strict`
 - Evals (real model calls): `claude plugin eval . --trust-plugin --ablation none --scaffold --allow-tools Read Glob Grep Skill -j 4 --no-publish`. Rebuild cases with `python <owner-tools>/plugin-evals/regen_evals.py <plugin> <router> <fixture ids>` (owner's local tools folder, not in this repo). Write results outside the repo (`<owner-outputs>/<plugin>/eval-results`, a local folder outside the repo); the packager includes repo files.
 
@@ -20,9 +20,11 @@ AI Add-on Builder: plans, builds, checks and packages Claude skills, plugins, co
 3. Update `CHANGELOG.md` for behavior changes; log ideas in `IMPROVEMENTS.md`.
 
 ## Rules
+- **Directory compliance:** the shipped plugin (the `release` branch) has no hooks, no scripts or other non-text files, and text-only frontmatter. Features live as recipes in `skills/*/references/`; the Python in `dev/` is maintainer tooling only. Requests that would break Anthropic rules get a plain warning and the official safe method instead.
+- **Never publish secrets or private data** (keys, tokens, passwords, personal contact data, client names, internal URLs, local paths) in this repo or anything it builds; the secret and public-safety scans block every commit, push and release.
 - Run the closest check and the full gate before committing. Never delete or weaken tests or evals. Report failed, skipped or timed-out runs honestly; NOT RUN is never a pass.
 - Follow neighbouring files. Keep each `SKILL.md` under 500 lines; move detail into `references/`.
-- On release, bump `version` in `.claude-plugin/plugin.json` and every skill's `metadata.version` together; add a `CHANGELOG.md` entry per behavior change.
+- On release, bump `version` in `.claude-plugin/plugin.json` (skills carry no `metadata` block: directory policy wants text-only frontmatter); add a `CHANGELOG.md` entry per behavior change.
 - No commits, pushes or PRs unless asked. Work on a branch and open a PR; never push to main.
 - No new dependencies without asking (scripts stay on the Python standard library).
 - Never commit secrets. Never pick names or slugs without user confirmation.
