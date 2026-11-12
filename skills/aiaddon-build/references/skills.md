@@ -16,9 +16,9 @@ Keep to the **portable set** so the skill works in Claude Code, claude.ai upload
 ## Body
 
 - Under 500 lines (`S008`). The body stays in context after load: every line is a recurring cost. State what to do, not narration. Put the non-negotiable rules in the first ~30 lines; a rule at line 400 is followed partially. Keep must-rules to 10 or fewer, each checkable.
-- **Self-contained:** a skill reads nothing outside its own folder (`S023`; no `../`, no sibling skill's files): it must work shipped alone as `<skill>.zip` or via `npx skills add`. Needed by two skills: copy it into each (`sync_shared.py`).
+- **Self-contained:** a skill reads nothing outside its own folder (`S023`; no `../`, no sibling skill's files): it must work shipped alone as `<skill>.zip` or via `npx skills add`. Needed by two skills: copy it into each (`aiaddon-maintain/references/sync-shared.md`).
 - Put detail in `references/`, link each from the body with when to read it. Files >100 lines get a contents list.
-- Deterministic or repeated work goes in `scripts/` (executed, not loaded). If test runs show the agent re-writing the same helper, bundle it.
+- Deterministic or repeated work: write it as a numbered recipe in `references/` that Claude follows with its own tools. A shipped `scripts/` folder (executables, `.py`, `.js`) is refused by the Anthropic directory for non-Verified organizations; it still works for private or GitHub-marketplace installs. Default: no scripts.
 - Explain why behind non-obvious rules; reserve MUST for true hard stops.
 - Reference bundled files with `${CLAUDE_SKILL_DIR}` (skill folder) or `${CLAUDE_PLUGIN_ROOT}` (plugin root). Claude-Code-only features (`!`cmd`` injection, `$ARGUMENTS`, `context: fork`) don't run in claude.ai/API.
 

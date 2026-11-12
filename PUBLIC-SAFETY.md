@@ -3,7 +3,7 @@
 This repository is public. Only what is listed under "May be public" is published.
 
 ## May be public
-- Source code, skills, agents, hooks and scripts
+- Source code, skills, agents and Markdown recipes
 - Documentation, README, CHANGELOG, LICENSE
 - Generic examples with placeholder values, `.env.example` (variable names only)
 - Author contact chosen for publication: support@syncwin.com
@@ -18,7 +18,7 @@ This repository is public. Only what is listed under "May be public" is publishe
 - None: the plugin needs no secrets. Connector sign-ins happen in the user's own account.
 
 ## Checks
-- `python skills/aiaddon-review/scripts/scan_secrets.py . --history` before every release
+- Recipes `skills/aiaddon-review/references/scan-secrets.md` and `public-safety-scan.md` (working tree plus full git history) before every release
 - CI runs the same scan on every push and pull request (`.github/workflows/ci.yml`, job `public-safety`)
 - Allowed false positives: `.public-safety-allow` (the public contact address above)
 

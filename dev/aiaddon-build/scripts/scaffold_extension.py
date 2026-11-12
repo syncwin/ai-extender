@@ -23,6 +23,7 @@ Stubs contain real structure and a scratchpad step: fill the bodies, then run th
 import json, re, subprocess, sys
 sys.dont_write_bytecode = True
 from datetime import date
+import pathlib as _pl; _wt = _pl.Path.write_text; _pl.Path.write_text = lambda self, data, encoding="utf-8", **k: _wt(self, data, encoding=encoding, **k)  # files are always UTF-8, whatever the OS default
 from pathlib import Path
 
 COMPOSIO_URL = "https://connect.composio.dev/mcp"  # shared Composio Connect endpoint; OAuth per user
@@ -64,8 +65,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 """
 
 def frontmatter(name, desc, a, display):
-    meta = ["  version: 0.0.1", f"  displayName: {json.dumps(display)}"] + ([f"  author: {json.dumps(a['author'])}"] if a["author"] else []) + ([f"  company: {json.dumps(a['company'])}"] if a["company"] else [])
-    return f"---\nname: {name}\ndescription: >\n  {desc}\nlicense: {a['license']}\nmetadata:\n" + "\n".join(meta) + "\n---\n\n"
+    # text-only frontmatter (no nested metadata map): version, author and company live in plugin.json
+    return f"---\nname: {name}\ndescription: >\n  {desc}\nlicense: {a['license']}\n---\n\n"
 
 def main(argv):
     a = {"slug": None, "display": None, "description": "", "author": "", "company": "", "email": "", "url": "", "license": "MIT",
@@ -106,7 +107,6 @@ def main(argv):
     manifest = {"name": a["slug"], "displayName": a["display"], "version": "0.0.1", "description": desc, "license": a["license"]}
     if author: manifest["author"] = author
     if a["company"] and author: manifest["author"]["company"] = a["company"]
-    manifest["metadata"] = {k: v for k, v in (("displayName", a["display"]), ("version", "0.0.1"), ("author", a["author"]), ("company", a["company"])) if v}
     (root / ".claude-plugin" / "plugin.json").write_text(json.dumps(manifest, indent=2) + "\n")
     rtable = "\n".join(f"| `{nm(r)}` | {r.title()} |" for r in roles) or "| (none yet) | |"
     titles = {a["slug"]: a["display"], **{nm(r): f"{a['display']} {r.title()}" for r in roles}}

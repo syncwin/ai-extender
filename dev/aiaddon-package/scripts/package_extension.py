@@ -20,9 +20,9 @@ Behavior tests: reports whether evals/ results exist and are newer than the last
 import hashlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
-EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts", "evals", ".claude"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
+EXCLUDE_DIRS = {".git", ".github", "__pycache__", "node_modules", ".venv", "dist", "prompts", "evals", ".claude", "dev"}  # prompts/: the Prompt Builder file ships beside the package, never inside it
 EXCLUDE_SUFFIX = {".plugin", ".zip", ".pyc"}
-EXCLUDE_NAMES = {".DS_Store", "IMPROVEMENTS.md"}
+EXCLUDE_NAMES = {".DS_Store", "IMPROVEMENTS.md", ".public-safety-allow"}
 
 def info(root):
     pj = root / ".claude-plugin" / "plugin.json"

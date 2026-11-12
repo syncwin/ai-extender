@@ -12,7 +12,7 @@ Verified 2026-10-02 (code.claude.com/docs/en/plugin-evals). Triggering and outpu
 |---|---|
 | Claude Code ≥ 2.1.269 available, plugin under test | `claude plugin eval` (graded, with/without baseline, CI exit codes) |
 | claude.ai / Cowork / API, or no CLI | manual loop (§3) with the grader and comparator agents |
-| Quick description sanity check, offline | `aiaddon-review/scripts/simulate.py <dir> triggers` (lexical proxy only) |
+| Quick description sanity check, offline | `aiaddon-review/references/simulate.md` (triggers mode; lexical proxy only) |
 
 Build evals **before** writing extensive instructions: run the tasks without the extension, note the failures, write the minimum that fixes them, re-measure. At least 3 cases; test on every model that will use it.
 
@@ -41,7 +41,7 @@ evals/mocks/<server>/<tool>.md # optional MCP mocks ({{input.x}}, expect:, error
 1. Test set: 2 to 4 realistic prompts (one vague/casual) + a trigger set (~8 should / ~8 should-not, negatives as near-misses). Keep the trigger sets in `evals/evals.json` (`trigger`, `trigger_heldout`).
 2. Per prompt, in parallel, in fresh contexts: **with** the extension and **baseline** (none for new; previous version for edits). Save to `<name>-workspace/iteration-N/<eval-id>/{with,baseline}/` and write `timing.json` (`total_tokens`, `duration_ms`) when each run finishes.
 3. Grade with the `aiaddon:aiaddon-grade` agent (writes `grading.json`: `{"expectations":[{"text","passed","evidence"}]}`); compare outputs blind with `aiaddon:aiaddon-compare`.
-4. `python ${CLAUDE_SKILL_DIR}/scripts/aggregate_results.py <iteration-dir>` → pass rate, tokens, seconds, delta, flags (non-discriminating or failing assertions, high variance). `eval_report.py <iteration-dir>` → `report.html`.
+4. Follow `references/aggregate-results.md` with `<iteration-dir>` → pass rate, tokens, seconds, delta, flags (non-discriminating or failing assertions, high variance). Follow `references/eval-report.md` with `<iteration-dir>` → `report.html`.
 
 ## 4. Trigger tuning
 
@@ -57,4 +57,4 @@ Before packaging, every skill a user can call has been run against its test prom
 
 - `claude plugin eval` (its judge model grades; the default small judge misreads long, table-heavy replies, so pass `--judge-model sonnet` or stronger for rubric graders), or the manual loop with the `aiaddon:aiaddon-grade` agent in a fresh context. The session that wrote the skill never grades its own output.
 - Results newer than the last skill change: the packager reports stale or missing results, and `--require-evals` blocks the build.
-- Then `aiaddon:aiaddon-review` (`validate_extension.py`, `selftest.py` if scripts changed) and `claude plugin validate --strict`.
+- Then `aiaddon:aiaddon-review` (`validate-extension.md`; `selftest.md` if recipes changed) and `claude plugin validate --strict`.

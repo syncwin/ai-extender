@@ -34,7 +34,7 @@ Claude Code skips a plugin connector whose URL (remote) or command and arguments
 
 ```json
 { "mcpServers": {
-  "service-name": { "type": "http", "url": "${SERVICE_URL:-https://api.example.com}/mcp",
+  "service-name": { "type": "http", "url": "${user_config.SERVICE_URL}",
                     "headers": { "Authorization": "Bearer ${user_config.SERVICE_API_KEY}" } },
   "local-tool":   { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/servers/index.js"],
                     "env": { "DB_URL": "${user_config.DB_URL}" } } } }
@@ -42,8 +42,8 @@ Claude Code skips a plugin connector whose URL (remote) or command and arguments
 
 - Server keys: kebab-case. Visible connector name (README): Title Case / exact brand spelling.
 - Paths via `${CLAUDE_PLUGIN_ROOT}`; persistent state via `${CLAUDE_PLUGIN_DATA}`; never absolute paths, never state under the plugin root (it changes on update).
-- Secrets: never literal. Prefer `userConfig` with `"sensitive": true` (secure storage) and reference `${user_config.KEY}` in `.mcp.json`/`env`; otherwise `${VAR}` documented in README. A key already shipped in a file must be rotated, not just moved (`aiaddon-review/scripts/scan_secrets.py`).
-- `${VAR}` / `${VAR:-default}` expand in command, args, env, url, headers. Unset with no default stays literal with a warning.
+- Secrets: never literal. Prefer `userConfig` with `"sensitive": true` (secure storage) and reference `${user_config.KEY}` in `.mcp.json`/`env`; otherwise an environment variable reference (a `$` followed by the variable name in braces) documented in README. A key already shipped in a file must be rotated, not just moved (`aiaddon-review/references/scan-secrets.md`).
+- Environment references (a `$` followed by the variable name in braces, optionally with a `:-` default inside the braces) expand in command, args, env, url, headers. Unset with no default stays literal with a warning.
 - Do not reference Claude/cloud credential env vars (e.g. `ANTHROPIC_API_KEY`, `AWS_*`, `NPM_TOKEN`) in remote `url`/`headers`: they read as empty by design. Copy to a differently named variable.
 - Only declare connectors that something uses.
 

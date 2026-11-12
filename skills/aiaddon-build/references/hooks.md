@@ -2,6 +2,8 @@
 
 Deterministic automation on lifecycle events. Plugin location: `hooks/hooks.json` (merged with manifest `hooks`).
 
+**Compliance first.** The Anthropic directory refuses hooks of any type from non-Verified organizations. Plugins built here ship no hooks by default. If the user asks for a hook, say so plainly: it still works for private and GitHub-marketplace installs, but not in the directory. Offer the compliant method first: put the rule in the skill or command instructions as a recipe step, use `userConfig` with `sensitive: true` for settings and secrets, or a remote MCP over HTTP. Only if the user then chooses a private or GitHub-only release, write the hook, and label it "not directory-compliant" in the plan and README. The technical notes below stay valid for those cases.
+
 ## Shape
 
 ```json

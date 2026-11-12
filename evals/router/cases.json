@@ -1,5 +1,5 @@
 {
-  "_note": "Router cases: expected = the first skill the router table (skills/aiaddon/SKILL.md, section 3a) must pick, or 'ask' for the closed clarifying question. Checked by aiaddon-review/scripts/route_check.py.",
+  "_note": "Router cases: expected = the first skill the router table (skills/aiaddon/SKILL.md, section 3a) must pick, or 'ask' for the closed clarifying question. Checked by dev/aiaddon-review/scripts/route_check.py.",
   "cases": [
     {
       "prompt": "write me a prompt that turns complaint emails into calm replies",

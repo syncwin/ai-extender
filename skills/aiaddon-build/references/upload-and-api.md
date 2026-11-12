@@ -20,7 +20,7 @@ Verified against platform.claude.com Agent Skills docs and code.claude.com Agent
 
 ## Zip for upload
 
-`python ${CLAUDE_SKILL_DIR}/../aiaddon-package/scripts/package_extension.py <skill-dir> --format zip --target upload`. The skill folder is the zip's top-level entry.
+the recipe `aiaddon-package/references/package-extension.md` with `<skill-dir>`, format `zip`, target `upload`. The skill folder is the zip's top-level entry.
 
 ## This builder's naming
 

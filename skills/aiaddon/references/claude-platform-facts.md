@@ -43,7 +43,7 @@ Distilled from official docs. Load only the section needed. Facts drift: re-veri
 - Exec form preferred for paths: {"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/scripts/x.js"]}. ${user_config.*} only in exec form; shell form reads $CLAUDE_PLUGIN_OPTION_<KEY>.
 ## MCP (code.claude.com/docs/en/mcp)
 - Plugin MCP: `.mcp.json` at root or inline `mcpServers`; starts on enable. Transports stdio/http/sse/ws. Substitution in stdio command/args/env; http/sse/ws url/headers/headersHelper.
-- Env expansion `${VAR}` and `${VAR:-default}` in command,args,env,url,headers. Unset var w/o default => warning, literal text. Credential vars (ANTHROPIC_API_KEY, AWS_*, NPM_TOKEN, HTTPS_PROXY...) read as EMPTY in remote url/headers; copy to own-named var.
+- Env expansion (a `$` followed by the variable name in braces, optionally with a `:-` default inside the braces) in command,args,env,url,headers. Unset var w/o default => warning, literal text. Credential vars (ANTHROPIC_API_KEY, AWS_*, NPM_TOKEN, HTTPS_PROXY...) read as EMPTY in remote url/headers; copy to own-named var.
 - Tool names: `mcp__plugin_<plugin>_<server>__<tool>` (non [A-Za-z0-9_-] -> _). Use in allowed-tools, agent tools, hook matchers. Server scoped name `plugin:<plugin>:<server>`.
 - Scopes (non-plugin): local (default), project (.mcp.json, needs approval), user. Official helper: `mcp-server-dev` plugin (claude-plugins-official). Build guides: MCP server guide; Claude connector building docs (auth, testing, Directory submission). Prompt-injection risk from servers fetching external content.
 ## Agent Skills spec / API constraints (platform docs; re-verify)

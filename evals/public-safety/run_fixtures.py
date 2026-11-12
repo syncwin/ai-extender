@@ -12,7 +12,7 @@ import os, subprocess, sys, tempfile, shutil, zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SCAN = HERE.parents[1] / "skills" / "aiaddon-review" / "scripts" / "scan_secrets.py"
+SCAN = HERE.parents[1] / "dev" / "aiaddon-review" / "scripts" / "scan_secrets.py"
 FAKE = {
     "@@GITHUB@@": "gh" + "p_" + "Ab1" * 12,
     "@@OPENAI@@": "sk-" + "proj-" + "Qz7" * 10,

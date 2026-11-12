@@ -12,6 +12,7 @@ Stdout is protocol-only: servers log to stderr.
 """
 import json, re, sys
 from pathlib import Path
+import pathlib as _pl; _wt = _pl.Path.write_text; _pl.Path.write_text = lambda self, data, encoding="utf-8", **k: _wt(self, data, encoding=encoding, **k)  # files are always UTF-8, whatever the OS default
 
 NODE = '''import {{ McpServer }} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {{ StdioServerTransport }} from "@modelcontextprotocol/sdk/server/stdio.js";

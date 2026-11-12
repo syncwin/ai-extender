@@ -3,12 +3,6 @@ name: aiaddon-plan
 description: >
   Use, after the router, for any new plugin, skill, connector, agent, MCP server, or add-on; for internal tools for a team or business process; for "turn this workflow into a Claude plugin", "turn this conversation into a plugin or skill"; "what components does my extension need"; and any structural decision. Plans a Claude extension before anything is built: scopes the request (intent, platform target, components, install method, naming, acronym) and designs the structure (directory tree, skill boundaries, plugin.json, router rule).
 license: MIT
-metadata:
-  displayName: "AI Add-on Builder Planner"
-  version: 0.1.0
-  author: "@wasimness"
-  company: SyncWin
-  plugin: aiaddon
 ---
 
 # AI Add-on Builder Planner

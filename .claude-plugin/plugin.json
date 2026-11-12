@@ -1,7 +1,7 @@
 {
   "name": "aiaddon",
   "displayName": "AI Add-on Builder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Describe what you want Claude to do, in your own words. AI Add-on Builder plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
   "author": {
     "name": "@wasimness",
@@ -31,7 +31,7 @@
   ],
   "metadata": {
     "displayName": "AI Add-on Builder",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "@wasimness",
     "company": "SyncWin",
     "homepage": "https://github.com/syncwin/aiaddon",

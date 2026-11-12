@@ -17,7 +17,7 @@ Run once, when packaging starts: `ls -d /mnt/user-data/outputs mnt/.plugins mnt/
 ## Build and deliver
 
 1. `aiaddon:aiaddon-review` passes with `--target cowork`.
-2. `python ${CLAUDE_SKILL_DIR}/scripts/package_extension.py <plugin-dir> --format plugin --out /mnt/user-data/outputs`
+2. Follow `references/package-extension.md` with format `plugin` and out `/mnt/user-data/outputs`.
    (builds in a temp dir first, because writing straight into outputs can fail on permissions; names the file `<Display Name> v<version>.plugin`).
 3. Present the file. If the user wants it editable later: `aiaddon-maintain/references/updating.md` (customizing).
 

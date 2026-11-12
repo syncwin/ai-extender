@@ -6,7 +6,7 @@
 <plugin-slug>/
 ├── .claude-plugin/plugin.json     # manifest (marketplace.json here too if private marketplace)
 ├── skills/<role-slug>/SKILL.md    # router = <plugin-slug>; + references/ scripts/ assets/; each skill self-contained (standards §7)
-├── agents/*.md   hooks/hooks.json   .mcp.json   commands/ (legacy only)
+├── agents/*.md   hooks/hooks.json (not for directory plugins)   .mcp.json   commands/ (legacy only)
 ├── prompts/<title-slug>.json      # Prompt Builder companion prompt (always)
 ├── README.md  CHANGELOG.md  LICENSE
 ```
