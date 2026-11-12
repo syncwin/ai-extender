@@ -20,7 +20,7 @@ claude.ai and Cowork "Upload plugin" takes a zip of the plugin folder (≤200 MB
 
 Follow `references/package-extension.md` (format plugin|zip, optional out, optional skip validation).
 
-It runs the validator with `--cache` (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path. The archive records a hash of its contents; the next build with identical files reuses it without re-checking. The install guide and release diff come with every build.
+It follows the validate-extension recipe (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path. The archive records a hash of its contents; the next build with identical files reuses it without re-checking. The install guide and release diff come with every build.
 
 ## Private marketplace entry
 
