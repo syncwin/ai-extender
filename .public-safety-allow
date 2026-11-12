@@ -15,4 +15,4 @@ email:aiaddon/references/standards.md:support@syncwin.com
 # Git history only (owner decision 2026-11-10: removed from the tree, no history rewrite; no credential involved):
 drive-path:AGENTS.md:A:\Automation
 drive-path:AGENTS.md:D:\SyncWin
-email:skills/ai-extender/references/standards.md:support@syncwin.com
+email:skills/*/references/standards.md:support@syncwin.com
