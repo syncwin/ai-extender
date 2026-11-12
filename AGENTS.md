@@ -32,7 +32,6 @@ AI Add-on Builder: plans, builds, checks and packages Claude skills, plugins, co
 - A platform fact needs its official page and the date checked. Keep private data (keys, client names, internal URLs) out of every file.
 - Naming standard (validator `P019` to `P023`): router skill name == plugin name; every other skill, agent and command is prefixed `<plugin>-`; action-style slugs (`-review`, not `-reviewer`). Router standard (`P024` to `P028`): routing table, tie-breaks, default question, Skill-tool loading, router evals.
 - Public safety (`X008` to `X013`): every extension is public; `.gitignore` preset, `PUBLIC-SAFETY.md`, `.env.example`; never auto force-push, history rewrites need the owner's explicit OK (`skills/aiaddon-review/references/public-safety.md`).
-- Renamed from ai-extender at 0.1.0 (version reset); the changelog below that entry is ai-extender history.
 
 ## Model routing
 Opus plans, decides, writes self-contained briefs with a report word limit, and reviews every result. Haiku for search, reading and mechanical edits. Sonnet for coding, tests and multi-step work. Do 1-2 tool calls inline.

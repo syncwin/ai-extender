@@ -2,7 +2,7 @@
 
 Tell Claude what you want. Use your own words, and AI Add-on Builder turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Download:** [aiaddon.plugin](https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin) (latest release) or the [rolling next build](https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin)
+**Download:** [aiaddon.plugin](https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin) (asset of the latest GitHub release) or the [rolling next build](https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin)
 
 **Version** 0.2.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
@@ -16,7 +16,7 @@ Tell Claude what you want. Use your own words, and AI Add-on Builder turns that 
 
 Every plugin it builds comes with Composio already declared, so its skills can reach Gmail, Notion, Slack, a CRM, and 1,000+ other apps. Each person signs in with their own Composio account, so nothing personal is stored in the plugin. Plugins that read outside content also get a small injection guardrail. Say so in the plan if you don't want either.
 
-It also updates, audits, versions, and packages extensions you already have. One summary of what changed becomes the changelog entry and every version number, each package comes with install and removal steps for the desktop app, the web, the Code tab, and the terminal, and a release report shows how many files were kept, changed, added, or dropped.
+It also updates, audits, versions, and packages extensions you already have. One summary of what changed becomes the changelog entry and every version number. Each package comes with install and removal steps for the desktop app, the web, the Code tab, and the terminal. A release report shows how many files were kept, changed, added, or dropped.
 
 ## Quick start
 
@@ -72,7 +72,7 @@ Nothing else leaves your machine. Apart from the Composio connector, the plugin 
 
 ## Skills and agents
 
-Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases to exact skill, tie-break rules, one closed question when unclear) and loads the chosen skill itself; it never answers the task.  It reads your request and calls the right skill, so most people never call the others directly.
+Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases to exact skill, tie-break rules, one closed question when unclear) and loads the chosen skill itself; it never answers the task. It reads your request and calls the right skill, so you rarely need to call the others yourself.
 
 | Skill | What it does |
 |---|---|
@@ -85,48 +85,13 @@ Start with `/aiaddon:aiaddon`. The router has an explicit routing table (phrases
 | `aiaddon:aiaddon-clean` | Deep clean-up and de-duplication with a keep-unique proof; dry-run, plan approval, never deletes |
 | `aiaddon:aiaddon-prompt` | Writes, tightens, and templates prompts for any AI model; exports Prompt Builder JSON |
 
-**Renamed from ai-extender (this plugin is now `aiaddon`, version reset to 0.1.0):**
-
-| Old name (ai-extender 1.6.1) | New name |
-|---|---|
-| plugin `ai-extender` ("AI Extender for Claude") | plugin `aiaddon` ("AI Add-on Builder") |
-| `aix` (router skill, `/ai-extender:aix`) | `aiaddon` (`/aiaddon:aiaddon`) |
-| `aix-planner` | `aiaddon-plan` |
-| `aix-developer` | `aiaddon-build` |
-| `aix-maintainer` | `aiaddon-maintain` |
-| `aix-packager` | `aiaddon-package` |
-| `aix-reviewer` | `aiaddon-review` |
-| `aix-cleaner` | `aiaddon-clean` |
-| `aix-prompter` | `aiaddon-prompt` |
-| agent `claude-comparator` | `aiaddon-compare` |
-| agent `claude-grader` | `aiaddon-grade` |
-| release assets `ai-extender.plugin`, `aix-*.zip`, `ai-extender-for-claude.json` | `aiaddon.plugin`, `aiaddon-*.zip`, `ai-add-on-builder.json` |
-
-**Migrating:** every command changed (breaking), so the version restarts at 0.1.0 under the new name and the changelog below is the ai-extender history. Uninstall the old plugin and install the new one: `claude plugin uninstall ai-extender@syncwin`, then `claude plugin marketplace add syncwin/aiaddon` and `claude plugin install aiaddon@syncwin`. In Cowork or claude.ai, remove the old custom plugin and upload the new `aiaddon.plugin`; single-skill zips are now `aiaddon-*.zip`. Update any saved prompts that call `/ai-extender:aix...` to `/aiaddon:aiaddon...`. The GitHub repository will be renamed from `syncwin/ai-extender` to `syncwin/aiaddon`; old URLs redirect, and links in this repo already use the new name.
-
-**Past rename, kept as history (ai-extender 1.3.0; every one of these names changed again at 0.1.0, see the table above):**
-
-**Renamed in 1.3.0:**
-
-| Old name | New name |
-|---|---|
-| `ai-extender` (router skill) | `aix` |
-| `claude-planner` | `aix-planner` |
-| `claude-developer` | `aix-developer` |
-| `claude-reviewer` | `aix-reviewer` |
-| `claude-maintainer` | `aix-maintainer` |
-| `claude-packager` | `aix-packager` |
-| `prompt-builder` | `aix-prompter` |
-
-The plugin id and repo (`ai-extender`) and the agents `claude-comparator` and `claude-grader` keep their names.
-
 Agents: `aiaddon:aiaddon-grade` grades test runs against their assertions, and `aiaddon:aiaddon-compare` compares two outputs blind.
 
 | Connector | Used by | For | Without it |
 |---|---|---|---|
 | Composio (`https://connect.composio.dev/mcp`) | `aiaddon:aiaddon-package`, and any role when a build needs an outside app | Pushing, tagging, and releasing on GitHub; reaching other apps a build depends on | Skills work as usual; GitHub goes through your own GitHub connector or `gh` |
 
-**Naming.** Router skill = plugin name (`aiaddon`); every other skill and agent is prefixed `aiaddon-` and named for an action (`aiaddon-review`, not a role noun). The validator enforces this for every extension it builds. Before 0.1.0 the skills used the short prefix `aix-` (router `aix`) and the two agents kept `claude-` names. Other platform layers could sit beside this one later (`skills/aiaddon/references/platforms.md`).
+**Naming.** Router skill = plugin name (`aiaddon`); every other skill and agent is prefixed `aiaddon-` and named for an action (`aiaddon-review`, not a role noun). The validator enforces this for every extension it builds. Other platform layers could sit beside this one later (`skills/aiaddon/references/platforms.md`).
 
 ## Public safety
 
@@ -142,7 +107,7 @@ Everything this plugin creates is treated as a public repository, even when you 
 Each release `.plugin` is built from its tagged commit on GitHub's runners and signed with a build-provenance attestation, and the release lists its SHA-256 checksums. To check a download before you install it:
 
 ```
-gh attestation verify "AI.Add-on.Builder.v0.1.0.plugin" --repo syncwin/aiaddon
+gh attestation verify "aiaddon.plugin" --repo syncwin/aiaddon
 sha256sum -c SHA256SUMS
 ```
 
@@ -158,7 +123,7 @@ Every change also runs CodeQL, a secret scan, the injection screen, and the full
 
 ## Status
 
-Version 0.1.0 (renamed from ai-extender 1.6.1; repo now syncwin/aiaddon). Maintainer CI (dev tools in `dev/`, not shipped): every push to `main` and every pull request runs the 180 self-tests and 43 router cases, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. Found a mismatch? Please open an issue.
+Version 0.2.0. Maintainer CI (dev tools in `dev/`, not shipped): every push to `main` and every pull request runs the 195 self-tests and 43 router cases, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. If you find a mismatch, please open an issue.
 
 ## Contributing and credits
 
