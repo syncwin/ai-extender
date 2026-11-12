@@ -1,0 +1,40 @@
+# Targets and Formats
+
+Target choice and the review step come first (packager SKILL.md steps 1 and 2).
+
+| Target | Output | Notes |
+|---|---|---|
+| Cowork | `<Display Name> v<ver>.plugin` | `cowork.md` |
+| Single skill upload (claude.ai, API) | `<Display Name> v<ver>.zip`, folder as top-level entry | Portable frontmatter only (validator `--target upload`); name must pass reserved-word rules |
+| Plugin, manual install / share | `<Display Name> v<ver>.zip`, plugin folder as top-level entry (or send the folder) | Anthropic's docs: share a plugin as its directory or a zip |
+| Private git marketplace | repo with `.claude-plugin/marketplace.json` + plugin source | below |
+| Claude Code local test | `claude plugin marketplace add ./dir` then `claude plugin install <name>@<marketplace>`; `claude --plugin-dir <dir>` | `/reload-plugins` applies edits |
+
+Routes, release prep, directory, organization rollout: `distribution-routes.md`.
+
+**Per-skill zips.** One repo serves both formats: `references/build-skill-zips.md` (inputs: plugin dir, `out` default `dist`, optional `only` list) writes `dist/<skill>.zip` (folder as top-level entry) for every `skills/<name>`, for claude.ai Customize > Skills upload and `npx skills add owner/repo --skill <name>`. Release CI attaches these beside the `.plugin`. A skill that fails `S023` (reads outside its folder) cannot ship alone: fix before release.
+
+claude.ai and Cowork "Upload plugin" takes a zip of the plugin folder (≤200 MB, ≤5,000 files); the `.plugin` file is built the same way (zip, plugin root as archive root).
+
+## Build
+
+Follow `references/package-extension.md` (format plugin|zip, optional out, optional skip validation).
+
+It runs the validator with `--cache` (blocks on errors), derives the visible name from `displayName` (plugin) or the skill's title, appends `v<version>`, creates or checks the companion prompt and copies it next to the package, excludes `.git`, `.github`, `dist`, `.venv`, `node_modules`, `__pycache__`, `.DS_Store`, `*.pyc`, and prior archives, and prints the output path. The archive records a hash of its contents; the next build with identical files reuses it without re-checking. The install guide and release diff come with every build.
+
+## Private marketplace entry
+
+- `marketplace.json`: required `name`, `owner.name`, `plugins[]`; each entry `name` (must equal the plugin's manifest name), `source`, optional `description`, `category`.
+- `source`: relative `./path` (no `..`), `github` `{repo}`, `git-subdir`, `url`, `archive`, `npm`, `command`; pin with `ref`/`sha`. Use `./` when the repo is the marketplace; a `github` source when the plugin lives in a separate repo.
+- Test: `claude plugin validate <marketplace-dir>`, add, install, `claude plugin list`.
+- Reserved marketplace names (e.g. `claude-plugins-official`) are refused.
+
+## Final checks
+
+- [ ] Validator ran on the packaged files, not an earlier draft
+- [ ] Version, changelog, manifest, and filename agree
+- [ ] README accurate for the targets actually produced
+- [ ] `LICENSE` matches declared license; `CREDITS.md` present
+- [ ] Companion prompt and install guide delivered next to the package
+- [ ] Behavior tests ran after the last skill change (packager row "Behavior tests")
+- [ ] Scratchpad emitted

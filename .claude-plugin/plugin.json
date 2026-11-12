@@ -1,0 +1,43 @@
+{
+  "name": "aiaddon",
+  "displayName": "AI Add-on Builder",
+  "version": "0.2.0",
+  "description": "Describe what you want Claude to do, in your own words. AI Add-on Builder plans, builds, checks, and packages the skill or plugin for you, including internal tools for your team, and adds a Prompt Builder form that starts it. Works in Claude Code, Cowork, and claude.ai.",
+  "author": {
+    "name": "@wasimness",
+    "company": "SyncWin",
+    "email": "support@syncwin.com",
+    "url": "https://syncwin.com"
+  },
+  "homepage": "https://github.com/syncwin/aiaddon",
+  "repository": "https://github.com/syncwin/aiaddon",
+  "documentationUrl": "https://github.com/syncwin/aiaddon#readme",
+  "supportUrl": "https://github.com/syncwin/aiaddon/issues",
+  "privacyPolicyUrl": "https://github.com/syncwin/aiaddon/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/syncwin/aiaddon/blob/main/LICENSE",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "plugins",
+    "skill-builder",
+    "plugin-builder",
+    "connectors",
+    "agents",
+    "hooks",
+    "mcp",
+    "cowork",
+    "automation",
+    "prompt-builder"
+  ],
+  "metadata": {
+    "displayName": "AI Add-on Builder",
+    "version": "0.2.0",
+    "author": "@wasimness",
+    "company": "SyncWin",
+    "homepage": "https://github.com/syncwin/aiaddon",
+    "repository": "https://github.com/syncwin/aiaddon",
+    "license": "MIT",
+    "companionPrompt": "prompts/ai-add-on-builder.json"
+  },
+  "icon": "./assets/icon.png"
+}
