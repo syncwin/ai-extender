@@ -8,6 +8,7 @@ import json, os, re, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
 S = Path(__file__).resolve().parents[2]
+PLUGIN = S.parent / "adapters" / "claude"  # the shipped plugin; dev/ and evals/ sit at the repo root
 RUN = lambda *a: subprocess.run([sys.executable, *map(str, a)], capture_output=True, text=True)
 V = S / "aiaddon-review/scripts/validate_extension.py"
 results = []
@@ -59,8 +60,8 @@ with tempfile.TemporaryDirectory() as td:
     q = td / "nover"; shutil.copytree(p, q); m = json.loads((q / ".claude-plugin/plugin.json").read_text()); m.pop("version"); (q / ".claude-plugin/plugin.json").write_text(json.dumps(m))
     r = RUN(S / "aiaddon-package/scripts/package_extension.py", q, "--format", "zip", "--skip-validate", "--out", td / "o3"); check("packager defaults missing version", r.returncode == 0 and any("v0.0.1" in x.name for x in (td / "o3").glob("*.zip")), r.stdout + r.stderr)
     r = RUN(S / "aiaddon-review/scripts/simulate.py", p, "install"); check("simulator: install", r.returncode == 0 and "Router skill = plugin name | yes" in r.stdout, r.stdout[-400:])
-    r = RUN(S / "aiaddon-review/scripts/simulate.py", S.parent, "triggers"); check("simulator: builder triggers", r.returncode == 0, r.stdout[-400:])
-    r = RUN(S / "aiaddon-review/scripts/simulate.py", S.parent, "install"); check("simulator: builder install", r.returncode == 0, r.stdout[-400:])
+    r = RUN(S / "aiaddon-review/scripts/simulate.py", PLUGIN, "triggers"); check("simulator: builder triggers", r.returncode == 0, r.stdout[-400:])
+    r = RUN(S / "aiaddon-review/scripts/simulate.py", PLUGIN, "install"); check("simulator: builder install", r.returncode == 0, r.stdout[-400:])
 
     def mk(label, files):
         q = td / ("x-" + label); shutil.copytree(p, q)
@@ -297,7 +298,7 @@ with tempfile.TemporaryDirectory() as td:
     own = json.loads((S / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]; mt = _re.compile(own["matcher"])
     hits = {t: bool(mt.fullmatch(t)) for t in ("WebFetch", "WebSearch", "mcp__plugin_aiaddon_composio__COMPOSIO_SEARCH_TOOLS", "mcp__claude_ai_Composio__X", "Bash", "Write", "Read", "mcp__Gmail__send_message")}
     check("reference guardrail hook (dev/hooks) fires on web and Composio tools only", list(hits.values()) == [True] * 4 + [False] * 4 and (S / "aiaddon-review/scripts/screen_text.py").exists() and "exit 0" in own["hooks"][0]["command"] and "/screen_text.py" in own["hooks"][0]["command"], str(hits))
-    root = S.parent; pj = json.loads((root / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+    root = PLUGIN; pj = json.loads((root / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
     check("the plugin ships no hooks (no hooks/ folder, no hooks key in plugin.json)", not (root / "hooks").exists() and "hooks" not in pj, str(sorted(pj)))
     check("no scripts ship inside skills/ (they live in dev/)", not [x for x in (root / "skills").rglob("*") if x.is_file() and x.suffix in (".py", ".sh", ".js", ".mjs", ".ts")], str([str(x) for x in (root / "skills").rglob("*.py")][:5]))
     gone = []
@@ -329,8 +330,8 @@ with tempfile.TemporaryDirectory() as td:
     (td / "good-report.md").write_text("| # | Original | Corrected |\n|---|---|---|\n| 1 | `description: Helps.` | `description: Summarises notes. Use when the user says summarise my notes.` |\n| 2 | (missing) | `plugin.json`: `{\"name\": \"notes-helper\"}` |\n")
     r1 = RUN(CR, td / "bad-report.md"); r2 = RUN(CR, td / "good-report.md")
     check("report check flags advice in Corrected cells and passes exact text", r1.returncode == 1 and r1.stdout.count("| 3 |") + r1.stdout.count("| 4 |") == 2 and r2.returncode == 0, r1.stdout[-300:] + r2.stdout[-200:])
-    r = RUN(V, S.parent, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
-    r = RUN(V, S.parent, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
+    r = RUN(V, PLUGIN, "--require-meta", "author,company"); check("builder validates itself", r.returncode == 0, r.stdout[-400:])
+    r = RUN(V, PLUGIN, "--target", "directory", "--strict"); check("builder passes directory checks", r.returncode == 0, r.stdout[-400:])
     r = RUN(V, p, "--target", "directory", "--strict"); check("scaffolded plugin reads nothing from the environment (D014)", "D014" not in r.stdout, r.stdout[-400:])
     gh = json.loads((p / "hooks/hooks.json").read_text())["hooks"]["PostToolUse"][0]["hooks"][0] if (p / "hooks/hooks.json").exists() else {}
     check("scaffolded guardrail hook runs without a required runtime (H008)", not gh or ("exit 0" in gh.get("command", "") and "${CLAUDE_PLUGIN_ROOT}/" in gh.get("command", "")), str(gh))
@@ -392,7 +393,7 @@ with tempfile.TemporaryDirectory() as td:
     broken("router with no routing table", "P028", lambda q: (q / "skills/ab-demo/SKILL.md").write_text((q / "skills/ab-demo/SKILL.md").read_text().replace("## Routing table", "## Notes")))
     RC = S / "aiaddon-review/scripts/route_check.py"
     r = RUN(RC, p); check("route_check passes the scaffolded router", r.returncode == 0 and "PASS" in r.stdout, r.stdout[-300:])
-    r = RUN(RC, S.parent); check("route_check passes this plugin's router evals", r.returncode == 0 and "PASS" in r.stdout, r.stdout[-300:])
+    r = RUN(RC, PLUGIN); check("route_check passes this plugin's router evals", r.returncode == 0 and "PASS" in r.stdout, r.stdout[-300:])
     q = td / "rc-bad"; shutil.copytree(p, q); (q / "evals/router/cases.json").write_text(json.dumps({"cases": [{"prompt": "build it", "expected": "ab-demo-other"}]}))
     r = RUN(RC, q); check("route_check fails a wrong expectation", r.returncode == 1 and "FAIL" in r.stdout, r.stdout[-300:])
     fake = "gh" + "p_" + "Ab1" * 12

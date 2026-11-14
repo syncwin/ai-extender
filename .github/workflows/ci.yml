@@ -33,16 +33,16 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Self-test the scripts
         run: python dev/aiaddon-review/scripts/selftest.py
-      - name: Validate for the Claude plugin directory
-        run: python dev/aiaddon-review/scripts/validate_extension.py . --strict --target directory --require-meta author,company
+      - name: Validate the shipped plugin for the Claude plugin directory (adapters/claude)
+        run: python dev/aiaddon-review/scripts/validate_extension.py adapters/claude --strict --target directory --require-meta author,company
       - name: Scan for plain-text secrets
         run: python dev/aiaddon-review/scripts/scan_secrets.py .
       - name: Screen docs for prompt injection
-        run: python dev/aiaddon-review/scripts/screen_text.py .
+        run: python dev/aiaddon-review/scripts/screen_text.py adapters/claude
       - name: Check the router against its evals
-        run: python dev/aiaddon-review/scripts/route_check.py .
+        run: python dev/aiaddon-review/scripts/route_check.py adapters/claude
       - name: Simulate skill triggers
-        run: python dev/aiaddon-review/scripts/simulate.py . triggers
+        run: python dev/aiaddon-review/scripts/simulate.py adapters/claude triggers
       - name: Self-test as a non-root user
         if: matrix.python == '3.13'
         run: test "$(id -u)" != 0 && python dev/aiaddon-review/scripts/selftest.py | grep -q "PASS read-only source is staged, not written"
@@ -63,52 +63,5 @@ jobs:
         run: python dev/aiaddon-review/scripts/scan_secrets.py . --history
       - name: Scan built packages, when present (blocking)
         run: |
-          python dev/aiaddon-package/scripts/build_skill_zips.py . --out "$RUNNER_TEMP/skill-zips"
+          python dev/aiaddon-package/scripts/build_skill_zips.py adapters/claude --out "$RUNNER_TEMP/skill-zips"
           python dev/aiaddon-review/scripts/scan_secrets.py . --artifacts "$RUNNER_TEMP/skill-zips"
-
-  release-branch:
-    # Publishes the shipped plugin (repo minus maintainer-only files) to the `release` branch,
-    # which the Anthropic directory submission tracks. Same plugin content as main; no hooks,
-    # scripts or non-text files (directory policy for non-Verified organizations).
-    name: Update the release branch
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [checks, public-safety]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.13"
-      - name: Build the shipped tree
-        run: |
-          git rm -r -q --cached --ignore-unmatch dev evals .github .claude IMPROVEMENTS.md .public-safety-allow assets/icon.svg
-          git clean -fdxq
-          rm -rf dev evals .github .claude IMPROVEMENTS.md .public-safety-allow assets/icon.svg
-      - name: Validate the shipped tree for the directory (blocking)
-        run: |
-          # The validator imports its neighbours (route check, public safety, screen), so extract the whole folder.
-          git archive HEAD dev/aiaddon-review/scripts | tar -x -C "$RUNNER_TEMP"
-          # The maintainer allowlist (public support address) is needed to validate but is never shipped:
-          # it is restored in the working tree only, the index (what gets pushed) stays without it.
-          git show HEAD:.public-safety-allow > .public-safety-allow
-          trap 'rm -f .public-safety-allow' EXIT
-          python "$RUNNER_TEMP/dev/aiaddon-review/scripts/validate_extension.py" . --strict --target directory --require-meta author,company
-          python "$RUNNER_TEMP/dev/aiaddon-review/scripts/scan_secrets.py" .
-      - name: Push the release branch
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: |
-          # Fast-forward only (no force-push): a new commit on top of the current release branch.
-          tree=$(git write-tree)
-          parent=$(git rev-parse -q --verify origin/release || true)
-          if [ -n "$parent" ] && [ "$(git rev-parse "$parent^{tree}")" = "$tree" ]; then echo "release branch already up to date"; exit 0; fi
-          commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} -m "release: shipped plugin from ${GITHUB_SHA::7}")
-          git push origin "$commit:refs/heads/release"

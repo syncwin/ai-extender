@@ -32,7 +32,7 @@ The README section "What it runs, reads, and sends" lists every case in plain wo
 
 - **Build provenance:** the release `.plugin` is built from the tagged commit on GitHub's runners and signed with a provenance attestation. Verify a download:
   ```
-  gh attestation verify "AI.Add-on.Builder.v1.0.0.plugin" --repo syncwin/aiaddon
+  gh attestation verify "aiaddon.plugin" --repo syncwin/aiaddon
   sha256sum -c SHA256SUMS
   ```
 - **Maintainer CI** (dev tools in `dev/`, not shipped): every push and pull request runs 113 self-tests (one pass as a non-root user), the directory validator in strict mode, a secret scan, the injection screen, the trigger simulation, and CodeQL (`security-extended`) on the Python and the workflows. OpenSSF Scorecard runs weekly.
