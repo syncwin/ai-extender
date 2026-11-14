@@ -166,6 +166,20 @@ def load_allowlist(path):
         rules.append((parts[0].strip(), parts[1].strip(), parts[2].strip() if len(parts) > 2 else ""))
     return rules
 
+def load_allowlist_for(root):
+    """Allowlist for a scanned folder: its own .public-safety-allow, else the one at the enclosing repo root (single-branch layout,
+    where the shipped plugin sits in a subfolder and the maintainer allowlist stays at the repo root). Rules written with the
+    subfolder prefix (adapters/claude/...) also apply with that prefix removed."""
+    root = Path(root).resolve(); own = root / ALLOW_FILE
+    if own.is_file(): return load_allowlist(own)
+    for up in root.parents:
+        if (up / ".git").exists():
+            if not (up / ALLOW_FILE).is_file(): break
+            pre = root.relative_to(up).as_posix() + "/"
+            rules = load_allowlist(up / ALLOW_FILE)
+            return rules + [(r, g[len(pre):], v) for r, g, v in rules if g.startswith(pre)]
+    return []
+
 def is_text(b):
     return b"\0" not in b[:2048]
 

@@ -746,7 +746,7 @@ def check_public_safety(root, plugin=True, history=True):
     """X008 secrets or private data in the files git would publish, X009 .gitignore preset, X010 PUBLIC-SAFETY.md, X011 .env.example,
     X012 secrets or private files anywhere in git history, X013 secrets inside built packages (dist/ and *.plugin/*.zip)."""
     if psafe is None: add("warn", "X008", root, "public_safety.py missing next to the validator: secret and private-data scan skipped"); return
-    rules = psafe.load_allowlist(root / psafe.ALLOW_FILE)
+    rules = psafe.load_allowlist_for(root)
     n = 0
     for h in psafe.scan_tree(root, rules):
         n += 1

@@ -2,9 +2,9 @@
 
 Tell Claude what you want. Use your own words, and AI Add-on Builder turns that into a working Claude skill or plugin. It plans the build, writes the files, checks them, and hands you something you can install, plus a companion prompt you can import into Prompt Builder to start it from a short form. You don't need to know what a manifest or an MCP server is.
 
-**Download:** [aiaddon.plugin](https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin) (asset of the latest GitHub release) or the [rolling next build](https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin)
+**Download:** [aiaddon.plugin](https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin) (asset of the latest GitHub release)
 
-**Version** 0.2.1 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
+**Version** 0.3.0 · **Author** @wasimness · **Company** SyncWin · **Contact** support@syncwin.com · **License** MIT
 
 ## What you can build
 
@@ -123,7 +123,7 @@ Every change also runs CodeQL, a secret scan, the injection screen, and the full
 
 ## Status
 
-Version 0.2.0. Maintainer CI (dev tools in `dev/`, not shipped): every push to `main` and every pull request runs the 195 self-tests and 43 router cases, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. If you find a mismatch, please open an issue.
+Version 0.3.0. Maintainer CI (dev tools in `dev/`, not shipped): every push to `main` and every pull request runs the 195 self-tests and 43 router cases, the directory validator, the secret scan, the injection screen, and the trigger simulation on Python 3.9 to 3.13, and `claude plugin validate --strict` passed before release. The `evals/` folder holds five live cases for `claude plugin eval`; the last full run (2026-10-12, Sonnet as judge) scored 0.93, 0.73 above the same tasks without the plugin; six-run repeats scored 1.00 on audits, intake, and scaffolding. Run them yourself with `claude plugin eval . --allow-tools Bash Write Edit --judge-model sonnet` (the shell cases need the sandbox tools bubblewrap and socat on Linux; the default small judge misreads long, table-heavy replies). Platform facts were checked against Anthropic's documentation on 2026-10-11. If you find a mismatch, please open an issue.
 
 ## Contributing and credits
 

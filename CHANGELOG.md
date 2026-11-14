@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 0.3.0: Single-branch layout
+
+**Changed**
+- The shipped plugin now lives in `adapters/claude/` on `main`; the root keeps the maintainer files, `dev/`, `evals/` and the marketplace manifest, whose plugin source is `./adapters/claude`.
+- The `release` branch is retired: CI no longer builds it. Releases build `aiaddon.plugin` (and one zip per skill) from `adapters/claude/` when a `v*` tag is pushed.
+- CI validates `adapters/claude/` for the directory (strict), scans the repo and history for secrets, and runs the router check and the self-test.
+- The maintainer scripts, commands and docs point at `adapters/claude/`. The allowlist at the repo root also covers the plugin subfolder.
+
+**Removed**
+- The rolling `next` pre-release (there is one branch now) and the duplicate release workflow: one workflow builds, signs and attaches the release.
+
 ## 0.2.1: Final directory review
 
 **Fixed**

@@ -16,3 +16,11 @@ email:aiaddon/references/standards.md:support@syncwin.com
 drive-path:AGENTS.md:A:\Automation
 drive-path:AGENTS.md:D:\SyncWin
 email:skills/*/references/standards.md:support@syncwin.com
+# Single-branch layout: the shipped plugin sits in adapters/claude/, so the same public contact appears under that prefix (the scans also apply these without the prefix when run inside adapters/claude):
+email:adapters/claude/.claude-plugin/plugin.json:support@syncwin.com
+email:adapters/claude/PRIVACY.md:support@syncwin.com
+email:adapters/claude/PUBLIC-SAFETY.md:support@syncwin.com
+email:adapters/claude/README.md:support@syncwin.com
+email:adapters/claude/SECURITY.md:support@syncwin.com
+email:adapters/claude/skills/aiaddon/references/standards.md:support@syncwin.com
+email:adapters/claude/skills/*/references/standards.md:support@syncwin.com

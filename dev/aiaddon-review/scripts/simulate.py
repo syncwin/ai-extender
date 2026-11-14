@@ -102,8 +102,9 @@ def install(root, out):
         if r.returncode != 0: print(r.stdout + r.stderr); return 1
         f = next(dest.glob("*.plugin"))
         inst = td / "installed"; zipfile.ZipFile(f).extractall(inst)
-        allow = Path(root) / ".public-safety-allow"  # maintainer allowlist, kept out of packages on purpose
-        if allow.is_file(): shutil.copy2(allow, inst / allow.name)
+        sys.path.insert(0, str(HERE)); import public_safety as _ps  # maintainer allowlist (own folder or repo root), kept out of packages on purpose
+        _rules = _ps.load_allowlist_for(root)
+        if _rules: (inst / _ps.ALLOW_FILE).write_text("\n".join(f"{r}:{g}" + (f":{v}" if v else "") for r, g, v in _rules) + "\n", encoding="utf-8")
         vr = subprocess.run([sys.executable, str(v), str(inst), "--strict"], capture_output=True, text=True)
         if vr.returncode != 0:  # evals/ and prompts/ are excluded from packages by design: only their absence is forgiven
             blocking = re.findall(r"^- `([A-Z]\d{3})`", vr.stdout.split("**Info**")[0], re.M)

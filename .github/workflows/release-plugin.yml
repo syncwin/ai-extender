@@ -1,90 +1,97 @@
 name: Release plugin
 
-# Builds aiaddon.plugin from the plugin.json version, plus one <skill>.zip per skill (skills/<name> -> dist/<name>.zip),
-# and attaches them all to the GitHub release.
-# Release (v* tag): https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin
-# Next (push to the next branch): rolling pre-release tagged "next",
-#   https://github.com/syncwin/aiaddon/releases/download/next/aiaddon.plugin
-# The existing release.yml still attaches the signed, dotted-name package to v* releases.
+# Builds aiaddon.plugin from adapters/claude (the shipped plugin) when a v* tag is pushed, plus one <skill>.zip per skill,
+# the Prompt Builder prompt and SHA256SUMS, signs build provenance, and attaches everything to the GitHub release.
+# One-click download: https://github.com/syncwin/aiaddon/releases/latest/download/aiaddon.plugin
+# Verify a download:  gh attestation verify aiaddon.plugin --repo syncwin/aiaddon
 on:
   push:
     tags: ["v*"]
-    branches: [next]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to rebuild, for example v0.3.0
+        required: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: release-plugin-${{ github.ref }}
+  group: release-plugin-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   release:
-    name: Build and attach aiaddon.plugin
+    name: Build, attest, attach aiaddon.plugin
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    permissions:
+      contents: write # create or update the release and attach files
+      id-token: write # sign the build provenance
+      attestations: write # store the provenance attestation
     env:
       NAME: "AI Add-on Builder"
       ASSET: aiaddon.plugin
-      ROOT: .
+      ROOT: adapters/claude
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0  # full history for the secret scan
           persist-credentials: false
-      - name: Build the package
-        id: build
-        run: |
-          python3 - <<'PY'
-          import json, os, zipfile
-          root, asset = os.environ["ROOT"], os.environ["ASSET"]
-          version = json.load(open(os.path.join(root, ".claude-plugin", "plugin.json"), encoding="utf-8"))["version"]
-          skip_dirs = {".git", ".github", ".claude", "tests", "node_modules", "__pycache__", "evals", "prompts", "dist", "dev"}
-          skip_files = {"IMPROVEMENTS.md"}
-          os.makedirs("dist", exist_ok=True)
-          out = os.path.join(os.getcwd(), "dist", asset)
-          if os.path.exists(out):
-              os.remove(out)
-          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-              for d, dirs, files in os.walk(root):
-                  dirs[:] = sorted(x for x in dirs if x not in skip_dirs)
-                  for f in sorted(files):
-                      if f in skip_files or f.endswith(".pyc"):
-                          continue
-                      p = os.path.join(d, f)
-                      z.write(p, os.path.relpath(p, root).replace(os.sep, "/"))
-          with zipfile.ZipFile(out) as z:
-              assert ".claude-plugin/plugin.json" in z.namelist(), "plugin.json missing at zip root"
-          with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a") as g:
-              g.write("version=" + version + "\n")
-          print("built", out, "version", version)
-          PY
-      - name: Build one zip per skill
-        run: python3 dev/aiaddon-package/scripts/build_skill_zips.py . --out dist
-      - name: Scan the built packages for secrets and private data (blocking)
-        run: python3 dev/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
       - name: Check the tag matches the plugin version
-        if: github.ref_type == 'tag'
-        env:
-          VERSION: ${{ steps.build.outputs.version }}
-        run: test "$GITHUB_REF_NAME" = "v$VERSION" || { echo "tag $GITHUB_REF_NAME does not match plugin version $VERSION"; exit 1; }
-      - name: Attach to the version release
-        if: github.ref_type == 'tag'
+        id: version
+        run: |
+          v=$(python -c "import json,os;print(json.load(open(os.environ['ROOT'] + '/.claude-plugin/plugin.json'))['version'])")
+          test "$TAG" = "v$v" || { echo "tag $TAG does not match plugin version $v"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Run every check
+        run: |
+          python dev/aiaddon-review/scripts/selftest.py
+          python dev/aiaddon-review/scripts/validate_extension.py "$ROOT" --strict --target directory --require-meta author,company
+          python dev/aiaddon-review/scripts/scan_secrets.py .
+          python dev/aiaddon-review/scripts/scan_secrets.py . --history
+          python dev/aiaddon-review/scripts/route_check.py "$ROOT"
+          python dev/aiaddon-review/scripts/screen_text.py "$ROOT"
+      - name: Build the package
+        run: |
+          # package_extension leaves out dev/, evals/, prompts/, .github/, .claude/, IMPROVEMENTS.md and .public-safety-allow.
+          python dev/aiaddon-package/scripts/package_extension.py "$ROOT" --format plugin --out dist --repo "$GITHUB_REPOSITORY" --force
+          python dev/aiaddon-package/scripts/build_skill_zips.py "$ROOT" --out dist
+          cd dist
+          mv -- "$(ls -- *.plugin | head -1)" "$ASSET"
+          rm -f -- *" install.md"
+          python - <<'PY'
+          import os, zipfile
+          names = zipfile.ZipFile(os.environ["ASSET"]).namelist()
+          text_ext = {".md", ".json", ".yaml", ".yml", ".txt", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico"}
+          text_names = {"LICENSE", ".gitignore"}
+          assert ".claude-plugin/plugin.json" in names, "plugin.json missing at the package root"
+          bad = [n for n in names if os.path.splitext(n)[1].lower() not in text_ext and os.path.basename(n) not in text_names]
+          assert not bad, "files the directory refuses: " + ", ".join(bad)
+          assert not [n for n in names if n.split("/")[0] in ("hooks", "scripts", "dev", "evals", "prompts") or os.path.basename(n) in (".public-safety-allow", "IMPROVEMENTS.md")], "maintainer files or hooks in the package"
+          print("package ok:", len(names), "files")
+          PY
+          sha256sum -- "$ASSET" ai-add-on-builder.json *.zip > SHA256SUMS
+          cat SHA256SUMS
+      - name: Scan the built packages for secrets and private data (blocking)
+        run: python dev/aiaddon-review/scripts/scan_secrets.py . --artifacts dist
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/${{ env.ASSET }}
+            dist/ai-add-on-builder.json
+      - name: Create or update the release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.build.outputs.version }}
         run: |
-          tag="v$VERSION"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "dist/$ASSET" dist/*.zip --clobber
+          cd dist
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" ai-add-on-builder.json SHA256SUMS *.zip --clobber
           else
-            gh release create "$tag" "dist/$ASSET" dist/*.zip --title "$NAME $tag" --generate-notes --target "$GITHUB_SHA"               || gh release upload "$tag" "dist/$ASSET" dist/*.zip --clobber
+            gh release create "$TAG" "$ASSET" ai-add-on-builder.json SHA256SUMS *.zip --title "$NAME $TAG" --generate-notes --verify-tag
           fi
-      - name: Update the rolling next pre-release
-        if: github.ref_type == 'branch'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.build.outputs.version }}
-        run: |
-          gh release delete next --cleanup-tag --yes || true
-          gh release create next "dist/$ASSET" dist/*.zip --prerelease --target "$GITHUB_SHA"             --title "$NAME next (v$VERSION)"             --notes "Rolling pre-release built from the next branch at $GITHUB_SHA. Not for production; the stable package is on the latest v* release."

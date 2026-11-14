@@ -74,7 +74,7 @@ def engine_rows(paths, arts, allow, hist):
             f = r["file"] if base is None else str(Path(base) / r["file"])
             out.append((f, r["line"], r["rule"], r["value"], r["kind"], r["where"]))
     for p in paths:
-        rules = ps.load_allowlist(allow or (p / ps.ALLOW_FILE if p.is_dir() else ps.ALLOW_FILE))
+        rules = ps.load_allowlist(allow) if allow else (ps.load_allowlist_for(p) if p.is_dir() else ps.load_allowlist(ps.ALLOW_FILE))
         if p.is_file():
             try: take(ps.scan_zip_bytes(p.read_bytes(), str(p), rules))
             except OSError: pass
